@@ -28,15 +28,14 @@ export default function ModeSwitch() {
       aria-label="change mode"
       color="secondary"
       onClick={handleMode}
+      id="mode-switch"
       sx={{
         position: "fixed",
         top: 10,
         right: 15,
       }}
     >
-      {mode === "dark" ?
-        <DarkModeOutlinedIcon />
-      : <LightModeOutlinedIcon />}
+      {mode === "dark" ? <DarkModeOutlinedIcon /> : <LightModeOutlinedIcon />}
     </IconButton>
   );
 }

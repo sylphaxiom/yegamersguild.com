@@ -19,7 +19,7 @@ export const dark: ThemeOptions = {
     },
   },
   typography: {
-    fontFamily: 'Livvic',
+    // fontFamily: 'Livvic',
     h1: {
       fontWeight: 500,
     },
@@ -55,7 +55,7 @@ export const light: ThemeOptions = {
     },
   },
   typography: {
-    fontFamily: 'Livvic',
+    // fontFamily: 'Livvic',
     h1: {
       fontWeight: 500,
     },
