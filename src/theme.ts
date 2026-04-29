@@ -2,84 +2,100 @@ import { createTheme } from '@mui/material/styles';
 import type { ThemeOptions } from '@mui/material/styles';
 
 export const dark: ThemeOptions = {
-  palette: {
-    primary: {
-      main: '#c478e0',
+  "palette": {
+    "primary": {
+      "main": "#aa1111"
     },
-    secondary: {
-      main: '#3544b1',
+    "secondary": {
+      "main": "#387799"
     },
-    info: {
-      main: '#00acc1',
+    "background": {
+      "default": "#281818",
+      "paper": "#281818"
     },
-    divider: '#512da8',
-    background: {
-      default: '#05060f',
-      paper: '#05060f',
+    "info": {
+      "main": "#02d1be"
+    },
+    "success": {
+      "main": "#44c047"
     },
   },
-  typography: {
-    // fontFamily: 'Livvic',
-    h1: {
-      fontWeight: 500,
-    },
-    h2: {
-      fontWeight: 500,
-    },
-    h5: {
-      fontSize: '1.75rem',
-    },
-    fontWeightLight: 400,
-    fontWeightRegular: 500,
-    fontWeightMedium: 600,
-    fontWeightBold: 900,
+  "typography": {
+    "fontFamily": "Cormorant Unicase",
+    "fontSize": 12,
+    "fontWeightLight": 500,
+    "fontWeightRegular": 600,
+    "fontWeightMedium": 700,
+    "fontWeightBold": 900
   },
 };
 
-export const light: ThemeOptions = {
-  palette: {
-    primary: {
-      main: '#8338a8',
-    },
-    secondary: {
-      main: '#2537d2',
-    },
-    info: {
-      main: '#00acc1',
-    },
-    divider: '#512da8',
-    mode: 'light',
-    background: {
-      default: '#f2f7fc',
-      paper: '#f2f7fc',
-    },
-  },
-  typography: {
-    // fontFamily: 'Livvic',
-    h1: {
-      fontWeight: 500,
-    },
-    h2: {
-      fontWeight: 500,
-    },
-    h5: {
-      fontSize: '1.75rem',
-    },
-    fontWeightLight: 400,
-    fontWeightRegular: 500,
-    fontWeightMedium: 600,
-    fontWeightBold: 900,
-  },
-};
+// export const light: ThemeOptions = {
+//   "palette": {
+//     "primary": {
+//       "main": "#aa1111"
+//     },
+//     "secondary": {
+//       "main": "#387799"
+//     },
+//     "background": {
+//       "default": "#e7d7d7",
+//       "paper": "rgb(245, 238, 238)"
+//     },
+//     "info": {
+//       "main": "#02d1be"
+//     },
+//     "success": {
+//       "main": "#44c047"
+//     },
+//     "mode": "light"
+//   },
+//   "typography": {
+//     "fontFamily": "Cormorant Unicase",
+//     "fontSize": 12,
+//     "fontWeightLight": 500,
+//     "fontWeightRegular": 600,
+//     "fontWeightMedium": 700,
+//     "fontWeightBold": 900
+//   },
+// };
 
 const theme = createTheme({
   cssVariables: {
     colorSchemeSelector: 'class'
   },
-  colorSchemes: {
-    light: light,
-    dark: dark,
+  palette: {
+    "primary": {
+      "main": "#aa1111"
+    },
+    "secondary": {
+      "main": "#387799"
+    },
+    "background": {
+      "default": "#281818",
+      "paper": "#281818"
+    },
+    "info": {
+      "main": "#02d1be"
+    },
+    "success": {
+      "main": "#44c047"
+    },
+    "mode":"dark"
   },
+  "typography": {
+    "fontFamily": "Cormorant Unicase",
+    "fontSize": 12,
+    "fontWeightLight": 500,
+    "fontWeightRegular": 600,
+    "fontWeightMedium": 700,
+    "fontWeightBold": 900
+  },
+  // colorSchemes: {
+  //   // light: light,
+  //   dark: dark,
+
+  // },
   components: {
     MuiUseMediaQuery: {
       defaultProps: {

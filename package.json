@@ -11,6 +11,7 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
+    "@andremov/react-ticker": "^1.1.0",
     "@axe-core/playwright": "^4.11.2",
     "@base-ui/react": "^1.4.1",
     "@emotion/react": "^11.14.0",
@@ -19,6 +20,7 @@
     "@mui/material": "^9.0.0",
     "@react-router/node": "7.14.0",
     "@react-router/serve": "7.14.0",
+    "@vis.gl/react-google-maps": "^1.8.3",
     "isbot": "^5.1.36",
     "motion": "^12.38.0",
     "playwright": "^1.59.1",
