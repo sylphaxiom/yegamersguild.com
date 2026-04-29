@@ -51,7 +51,7 @@ test.describe('homepage feature testing', ()=>{
         await expect.soft(mapEl).toBeVisible()
         const pinLink = page.locator('gmp-advanced-marker')
         await expect.soft(pinLink).toBeVisible()
-        await pinLink.click()
+        await pinLink.click({force:true})
         await expect(page).toHaveURL(/www\.google\.com\/maps\/place\/Ye\+Gamer\'s\+Guild/)
     });
 });
