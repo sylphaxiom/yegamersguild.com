@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('homepage feature testing', ()=>{
     test.beforeEach('open page', async ({page})=>{
         await page.goto('/')
-        await expect(page).toHaveTitle('Ye Gamer\'s Guild')
+        await expect.soft(page).toHaveTitle('Ye Gamer\'s Guild')
     });
 
     test.afterEach('close page', async ({page})=>{
@@ -48,9 +48,9 @@ test.describe('homepage feature testing', ()=>{
     });
     test('testing google map', async ({page})=>{
         const mapEl = page.getByRole('figure',{name:'Google Map'})
-        await expect(mapEl).toBeVisible()
+        await expect.soft(mapEl).toBeVisible()
         const pinLink = page.locator('gmp-advanced-marker')
-        await expect(pinLink).toBeVisible()
+        await expect.soft(pinLink).toBeVisible()
         await pinLink.click()
         await expect(page).toHaveURL(/www\.google\.com\/maps\/place\/Ye\+Gamer\'s\+Guild/)
     });
