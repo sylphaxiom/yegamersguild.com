@@ -62,7 +62,7 @@ export default function Location() {
         >
           <AdvancedMarker
             position={{ lat: 39.62146813390072, lng: -86.15762153193997 }}
-            aria-label="Guild-marker"
+            title="guild-marker"
             onClick={() => {
               navigate(
                 "https://www.google.com/maps/place/Ye+Gamer's+Guild/@39.621468,-86.157622,17z/data=!4m6!3m5!1s0x886b5d97c907c011:0x149761c044dfe441!8m2!3d39.6212833!4d-86.1576073!16s%2Fg%2F11fl22nmpn?hl=en-US&entry=ttu&g_ep=EgoyMDI2MDQyNi4wIKXMDSoASAFQAw%3D%3D",
