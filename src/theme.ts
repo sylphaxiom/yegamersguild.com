@@ -1,34 +1,34 @@
 import { createTheme } from '@mui/material/styles';
 import type { ThemeOptions } from '@mui/material/styles';
 
-export const dark: ThemeOptions = {
-  "palette": {
-    "primary": {
-      "main": "#aa1111"
-    },
-    "secondary": {
-      "main": "#387799"
-    },
-    "background": {
-      "default": "#281818",
-      "paper": "#281818"
-    },
-    "info": {
-      "main": "#02d1be"
-    },
-    "success": {
-      "main": "#44c047"
-    },
-  },
-  "typography": {
-    "fontFamily": "Cormorant Unicase",
-    "fontSize": 12,
-    "fontWeightLight": 500,
-    "fontWeightRegular": 600,
-    "fontWeightMedium": 700,
-    "fontWeightBold": 900
-  },
-};
+// export const dark: ThemeOptions = {
+//   "palette": {
+//     "primary": {
+//       "main": "#aa1111"
+//     },
+//     "secondary": {
+//       "main": "#387799"
+//     },
+//     "background": {
+//       "default": "#281818",
+//       "paper": "#281818"
+//     },
+//     "info": {
+//       "main": "#02d1be"
+//     },
+//     "success": {
+//       "main": "#44c047"
+//     },
+//   },
+//   "typography": {
+//     "fontFamily": "Cormorant Unicase",
+//     "fontSize": 12,
+//     "fontWeightLight": 500,
+//     "fontWeightRegular": 600,
+//     "fontWeightMedium": 700,
+//     "fontWeightBold": 900
+//   },
+// };
 
 // export const light: ThemeOptions = {
 //   "palette": {

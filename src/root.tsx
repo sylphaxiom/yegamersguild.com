@@ -10,10 +10,11 @@ import {
 
 import type { Route } from "./+types/root";
 // import TwinkleStars from "./components/baubles/TwinkleStars";
-import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
+// import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-import theme, { dark } from "./theme";
+// import theme, { dark } from "./theme";
+import theme from "./theme";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },

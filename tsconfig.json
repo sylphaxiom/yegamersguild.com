@@ -1,11 +1,5 @@
 {
-  "include": [
-    "**/*",
-    "**/.server/**/*",
-    "**/.client/**/*",
-    ".react-router/types/**/*",
-    "./src"
-  ],
+  "include": ["**/*", ".react-router/types/**/*", "./src"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "types": ["node", "vite/client"],

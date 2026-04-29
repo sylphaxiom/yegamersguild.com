@@ -3,7 +3,7 @@ import {
   AdvancedMarker,
   APIProvider,
   Map,
-  Marker,
+  // Marker,
 } from "@vis.gl/react-google-maps";
 import { useNavigate } from "react-router";
 
@@ -20,18 +20,24 @@ export default function Location() {
         alignContent: "start",
         pb: theme.breakpoints.only("xs") ? 3 : 0,
       }}
+      role="complementary"
+      aria-label="location"
     >
-      <Typography variant="h3" component={"h3"}>
+      <Typography variant="h3" component={"h2"}>
         Located at ...
       </Typography>
       <Divider />
       <br />
-      <Typography variant="h5">2801 Fairview Place, Suite I</Typography>
-      <Typography variant="h5">Greenwood, Indiana 46142</Typography>
+      <Typography variant="h5" component="p">
+        2801 Fairview Place, Suite I
+      </Typography>
+      <Typography variant="h5" component="p">
+        Greenwood, Indiana 46142
+      </Typography>
       <br />
       <Divider />
       <br />
-      <Typography variant="h5">
+      <Typography variant="h5" component="p">
         We're off 135, just south of Fry Road. We look forward to seeing you at
         the Guild!
       </Typography>
@@ -39,7 +45,7 @@ export default function Location() {
   );
 
   const map = (
-    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+    <Grid size={{ xs: 12, sm: 6, md: 4 }} role="figure" aria-label="google map">
       <APIProvider apiKey={token}>
         <Map
           style={{
@@ -76,23 +82,37 @@ export default function Location() {
         alignContent: "start",
         pt: theme.breakpoints.only("xs") ? 3 : 0,
       }}
+      role="complementary"
+      aria-label="hours"
     >
-      <Typography variant="h3" component={"h3"}>
+      <Typography variant="h3" component={"h2"}>
         Hours ...
       </Typography>
       <Divider />
       <br />
       <Grid container sx={{ alignItems: "center" }}>
         <Grid size={{ xs: 12, sm: 6, md: 12 }}>
-          <Typography variant="h5">Monday: 3pm - 10pm</Typography>
-          <Typography variant="h5">Tuesday: 3pm - 10pm</Typography>
-          <Typography variant="h5">Wednesday: Closed</Typography>
+          <Typography variant="h5" component="p">
+            Monday: 3pm - 10pm
+          </Typography>
+          <Typography variant="h5" component="p">
+            Tuesday: 3pm - 10pm
+          </Typography>
+          <Typography variant="h5" component="p">
+            Wednesday: Closed
+          </Typography>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 12 }}>
-          <Typography variant="h5">Thursday: 3pm - 10pm</Typography>
-          <Typography variant="h5">Friday: 3pm - 10pm</Typography>
-          <Typography variant="h5">Saturday/Sunday:</Typography>
-          <Typography variant="h5" sx={{ textIndent: "30px" }}>
+          <Typography variant="h5" component="p">
+            Thursday: 3pm - 10pm
+          </Typography>
+          <Typography variant="h5" component="p">
+            Friday: 3pm - 10pm
+          </Typography>
+          <Typography variant="h5" component="p">
+            Saturday/Sunday:
+          </Typography>
+          <Typography variant="h5" sx={{ textIndent: "30px" }} component="p">
             12 Noon - 10pm
           </Typography>
         </Grid>

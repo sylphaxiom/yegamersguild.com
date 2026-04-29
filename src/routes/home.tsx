@@ -1,7 +1,7 @@
-import type { Route } from "./+types/home";
+import type { Route } from "./+types/Home";
 import Header from "../components/Header";
 import Box from "@mui/material/Box";
-import ModeSwitch from "~/components/bits/ModeSwitch";
+// import ModeSwitch from "~/components/bits/ModeSwitch";
 import Location from "~/components/Location";
 
 export function meta({}: Route.MetaArgs) {
@@ -13,7 +13,7 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Home() {
   return (
-    <Box id="main-cont" role="none">
+    <Box id="main-cont" role="main">
       {/* <ModeSwitch /> */}
       <Header />
       <Location />

@@ -6,7 +6,7 @@ export default function Header() {
   const theme = useTheme();
 
   return (
-    <Grid container id="head-cont" role="heading" sx={{ my: 2 }}>
+    <Grid container id="head-cont" role="heading" aria-level={1} sx={{ my: 2 }}>
       <Grid
         size={12}
         sx={{
@@ -32,9 +32,9 @@ export default function Header() {
           Ye Gamer's Guild
         </Typography>
       </Grid>
-      <Grid size={12} sx={{ textAlign: "center" }}>
+      <Grid size={12} sx={{ textAlign: "center" }} role="marquee">
         <Divider />
-        <Typography variant="h4" sx={{ pt: 1 }}>
+        <Typography variant="h4" component="figure" sx={{ pt: 1 }}>
           Your local source for ...
         </Typography>
         <div style={{ position: "relative" }} role="marquee">
@@ -66,7 +66,7 @@ export default function Header() {
             })}
           </Ticker>
         </div>
-        <Typography variant="h4" sx={{ pb: 1 }}>
+        <Typography variant="h4" sx={{ pb: 1 }} component="figure">
           ... and more! ...
         </Typography>
         <Divider />
