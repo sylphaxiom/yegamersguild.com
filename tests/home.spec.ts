@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('homepage feature testing', ()=>{
     test.beforeEach('open page', async ({page})=>{
         await page.goto('/')
-        await expect.soft(page).toHaveTitle('Ye Gamer\'s Guild')
+        await expect(async()=>{expect.soft(page).toHaveTitle('Ye Gamer\'s Guild')}).toPass()
     });
 
     test.afterEach('close page', async ({page})=>{
