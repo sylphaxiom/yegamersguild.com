@@ -1,0 +1,1 @@
+// Original content from src/routes/home.tsx
