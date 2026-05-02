@@ -42,3 +42,4 @@ build/
 /secrets/
 */mods.json
 tmp*
+# src/api/v1/vendor/*
