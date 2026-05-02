@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     die();
 }
 require_once "/home2/xikihgmy/includes/bucket.php";
-require_once "/home2/xikihgmy/includes/SQDB_bucket.php";
+require_once "SQDB_bucket.php";
 
 require 'vendor/autoload.php';
 require_once('messages.php');
