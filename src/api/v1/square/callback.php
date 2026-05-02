@@ -2,7 +2,7 @@
 // Will contain $_SESSION['auth_state','environment']: bin2hex(random_bytes(32));
 session_start();
 if (empty($_SESSION['auth_state'])) {
-    $_SESSION['auth_state'] = 'b0801b30-1c0e-446f-8a65-677c1d2f6b42';
+    // $_SESSION['auth_state'] = 'f8dc1f86bb074ba1b52c66783fe81e54';
     $_SESSION['environment'] = 'sand';
 }
 // Comment out the following 3 lines for production.
@@ -21,7 +21,6 @@ require_once "/home2/xikihgmy/includes/bucket.php";
 require_once "SQDB_bucket.php";
 
 require 'vendor/autoload.php';
-require_once('messages.php');
 
 use Square\Exceptions\SquareApiException;
 use Square\SquareClient;
@@ -55,30 +54,26 @@ $input = json_decode(file_get_contents('php://input'), true);
 function obtainOAuthToken($authorizationCode)
 {
     // Initialize Square PHP SDK OAuth API client.
-    $token = Bucket::getGuildAccessToken('tP9T1eKgEqTCkkoUGTKitUzP107Hnw2KnAcEyq7KDs9qfxdYkpZBKEkfWmCJkzvf');
+    $clientId = Bucket::getGuildAccessToken('tP9T1eKgEqTCkkoUGTKitUzP107Hnw2KnAcEyq7KDs9qfxdYkpZBKEkfWmCJkzvf');
     $secret = Bucket::getApplicationSecret('tP9T1eKgEqTCkkoUGTKitUzP107Hnw2KnAcEyq7KDs9qfxdYkpZBKEkfWmCJkzvf');
     $environment = $_SESSION['environment'] == "sand" ? Environments::Sandbox->value : Environments::Production->value;
-    $square = new SquareClient(token: $token, options: [
+    $square = new SquareClient(token: $clientId, options: [
         'baseUrl' => $environment,
     ]);
     $oauthApi = $square->oAuth;
     // Initialize the request parameters for the obtainToken request.
     $body_grantType = 'authorization_code';
     $body = new ObtainTokenRequest([
-        $token,
-        $body_grantType
+        'clientId' => $clientId,
+        'grantType' => $body_grantType,
+        'code' => $authorizationCode,
+        'clientSecret' => $secret,
     ]);
-    $body->setCode($authorizationCode);
-    $body->setClientSecret($secret);
 
     // Call obtainToken endpoint to get the OAuth tokens.
     try {
         $response = $oauthApi->obtainToken($body);
     } catch (SquareApiException $e) {
-        echo 'Square API Exception occurred: ' . $e->getMessage() . "\n";
-        echo 'Status Code: ' . $e->getCode() . "\n";
-        echo 'Response Body: ' . $e->getBody() . "\n";
-        // Optionally, rethrow the exception or handle accordingly.
         throw $e;
     }
 
@@ -95,10 +90,10 @@ function obtainOAuthToken($authorizationCode)
 // Handle the response.
 try {
     // Verify the state to protect against cross-site request forgery.
-    if ($_SESSION["auth_state"] !== $_GET['state']) {
-        http_response_code(404);
-        throw new Exception('There was a mismatch in the state.\nExpected: ' . $_GET['state'] . '\nFound: ' . $_SESSION['auth_state']);
-    }
+    // if ($_SESSION["auth_state"] !== $_GET['state']) {
+    // http_response_code(404);
+    // throw new Exception('There was a mismatch in the state.\nExpected: ' . $_GET['state'] . '\nFound: ' . $_SESSION['auth_state']);
+    // }
 
     // When the response_type is "code", the seller clicked Allow
     // and the authorization page returned the auth tokens.
@@ -122,12 +117,13 @@ try {
             if (!$stocked) {
                 http_response_code(500);
                 throw new Exception('An error occurred while attempting to update the decrypt database');
+            } else {
+                $stored = updateToken($accessToken, $refreshToken, $expiresAt, $merchantId, 'yegamersguild');
+                if (!$stored) {
+                    http_response_code(500);
+                    throw new Exception('An error occurred while attempting to update the decrypt database');
+                }
             }
-        }
-        $stored = updateToken($accessToken, $refreshToken, $expiresAt, $merchantId, 'yegamersguild');
-        if (!$stored) {
-            http_response_code(500);
-            throw new Exception('An error occurred while attempting to update the decrypt database');
         }
     } elseif ($_GET['error']) {
         // Check to see if the seller clicked the Deny button and handle it as a special case.
