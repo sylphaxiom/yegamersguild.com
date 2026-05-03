@@ -26,18 +26,20 @@ $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);
 
 if ($method === 'GET') {
-    $client_id = Bucket::getGuildClientId('tP9T1eKgEqTCkkoUGTKitUzP107Hnw2KnAcEyq7KDs9qfxdYkpZBKEkfWmCJkzvf');
+    $client_id = Bucket::getGuildApplicationId('tP9T1eKgEqTCkkoUGTKitUzP107Hnw2KnAcEyq7KDs9qfxdYkpZBKEkfWmCJkzvf');
     $scope = 'INVENTORY_READ+INVENTORY_WRITE+ITEMS_READ+ITEMS_WRITE';
-    $code_verifier = bin2hex(random_bytes(16));
-    // $redirect_uri = 'https://api.sylphaxiom.com/square/callback.php';
-    $code_challenge = base64_encode($code_verifier);
+    $verifier = bin2hex(random_bytes(32));
+    $rawHash = hash('sha256', $verifier, true);
+    $code_challenge = rtrim(strtr(base64_encode($rawHash), '+/', '-_'), '=');
+
+    // Now you save $verifier to your session and send $code_challenge to Square!
 
     // Set session variables and build URL
     $_SESSION['auth_state'] = $state;
     $_SESSION['environment'] = 'sand';
-    $_SESSION['verifier'] = $code_verifier;
+    $_SESSION['verifier'] = $verifier;
 
-    $authURL = "https://connect.squareupsandbox.com/oauth2/authorize?client_id=$client_id&scope=$scope&session=true&state=$state&code_challenge=$code_challenge";
+    $authURL = "https://connect.squareupsandbox.com/oauth2/authorize?client_id=$client_id&scope=$scope&state=$state&code_challenge=$code_challenge";
     error_log("Authorization URL has been constructed: $authURL\nSession variables are:\nauth_state: {$_SESSION['auth_state']}\nenvironment: {$_SESSION['environment']}\nverifier: {$_SESSION['verifier']}");
     http_response_code(200);
     echo $authURL;

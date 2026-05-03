@@ -56,8 +56,9 @@ function obtainOAuthToken($authorizationCode)
 {
     error_log("entered obtainOAuthToken with authcode $authorizationCode");
     // Initialize Square PHP SDK OAuth API client.
-    $clientId = Bucket::getGuildClientId('tP9T1eKgEqTCkkoUGTKitUzP107Hnw2KnAcEyq7KDs9qfxdYkpZBKEkfWmCJkzvf');
-    $secret = Bucket::getApplicationSecret('tP9T1eKgEqTCkkoUGTKitUzP107Hnw2KnAcEyq7KDs9qfxdYkpZBKEkfWmCJkzvf');
+    $dice = Bucket::getDice();
+    $clientId = Bucket::getGuildApplicationId($dice);
+    // $secret = Bucket::getApplicationSecret('tP9T1eKgEqTCkkoUGTKitUzP107Hnw2KnAcEyq7KDs9qfxdYkpZBKEkfWmCJkzvf');
     $environment = $_SESSION['environment'] == "sand" ? Environments::Sandbox->value : Environments::Production->value;
     $square = new SquareClient(token: $clientId, options: [
         'baseUrl' => $environment,
@@ -65,12 +66,11 @@ function obtainOAuthToken($authorizationCode)
     $oauthApi = $square->oAuth;
     // Initialize the request parameters for the obtainToken request.
     $verifier = $_SESSION['verifier'];
-    $body_grantType = 'authorization_code';
     $body = new ObtainTokenRequest([
         'clientId' => $clientId,
-        'grantType' => $body_grantType,
+        'grantType' => 'authorization_code',
         'code' => $authorizationCode,
-        'clientSecret' => $secret,
+        // 'clientSecret' => $secret,
         'codeVerifier' => $verifier,
         'redirectUri' => 'https://api.sylphaxiom.com/square/callback.php'
     ]);
@@ -81,8 +81,8 @@ function obtainOAuthToken($authorizationCode)
         $response = $oauthApi->obtainToken($body);
     } catch (SquareApiException $e) {
         http_response_code(500);
-        error_log("A " . $e->getStatusCode() . " error was thrown while running obtainToken: " . var_dump($e->getErrors()));
-        throw $e;
+        error_log("A " . $e->getStatusCode() . " error was thrown while running obtainToken: " . $e->getMessage());
+        exit(1);
     }
 
     // Extract the tokens from the response.
@@ -100,10 +100,11 @@ function obtainOAuthToken($authorizationCode)
 // Handle the response.
 try {
     // Verify the state to protect against cross-site request forgery.
-    // if ($_SESSION["auth_state"] !== $_GET['state']) {
-    // http_response_code(404);
-    // throw new Exception('There was a mismatch in the state.\nExpected: ' . $_GET['state'] . '\nFound: ' . $_SESSION['auth_state']);
-    // }
+    if ($_SESSION["auth_state"] !== $_GET['state']) {
+        http_response_code(404);
+        error_log('There was a mismatch in the state.\nExpected: ' . $_GET['state'] . '\nFound: ' . $_SESSION['auth_state']);
+        exit(1);
+    }
 
     // When the response_type is "code", the seller clicked Allow
     // and the authorization page returned the auth tokens.
@@ -111,7 +112,14 @@ try {
         error_log("code matches expected response_type, proceeding with obtainOAuthToken...");
         // Get the authorization code and use it to call the obtainOAuthToken wrapper function.
         $authorizationCode = $_GET['code'];
-        [$accessToken, $refreshToken, $expiresAt, $merchantId] = obtainOAuthToken($authorizationCode);
+        try {
+            [$accessToken, $refreshToken, $expiresAt, $merchantId] = obtainOAuthToken($authorizationCode);
+        } catch (SquareApiException $e) {
+            http_response_code(500);
+            error_log("There was an error during the call to obtainToken(): " . $e->getMessage());
+            error_log("Access token: $accessToken\nRefresh token: $refreshToken\nExpiration: $expiresAt\nMerchant Id: $merchantId");
+            error_log(var_dump($_GET));
+        }
         // Because we want to keep things simple and we're using Sandbox, 
         // we call a function that writes the tokens to the page so we can easily copy and use them directly.
         // In production, you should never write tokens to the page. You should encrypt the tokens and handle them securely.
@@ -125,20 +133,24 @@ try {
             error_log("Cipher present, encrypting...");
             $ivlen = openssl_cipher_iv_length($cipher);
             $iv = openssl_random_pseudo_bytes($ivlen);
-            $ciphertext = openssl_encrypt($plaintext, $cipher, $key, $options = 0, $iv, $tag);
+            $key = bin2hex(random_bytes(32));
+            $cipherAccess = openssl_encrypt($accessToken, $cipher, $key, $options = 0, $iv, $tag);
+            $cipherRefresh = openssl_encrypt($refreshToken, $cipher, $key, $options = 0, $iv, $tag);
             //store $cipher, $iv, and $tag for decryption later
             // $original_plaintext = openssl_decrypt($ciphertext, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
-            $stocked = updateDecrypt('yegamersguild', $cipher, $iv, $tag);
-            error_log("Return from updating the decrypt table: $stocked");
-            if (!$stocked) {
+            $stored = updateToken(access: $cipherAccess, refresh: $cipherRefresh, expires: $expiresAt, merchantId: $merchantId, merchantName: 'yegamersguild');
+            error_log("Return from updating the token table: $stored");
+            if (!$stored) {
                 http_response_code(500);
-                throw new Exception('An error occurred while attempting to update the decrypt database');
+                error_log('An error occurred while attempting to update the decrypt database');
+                exit(1);
             } else {
-                $stored = updateToken($accessToken, $refreshToken, $expiresAt, $merchantId, 'yegamersguild');
-                error_log("Return from updating the token table: $stored");
-                if (!$stored) {
+                $stocked = updateDecrypt(owner: 'yegamersguild', cipher: $cipher, iv: $iv, tag: $tag);
+                error_log("Return from updating the decrypt table: $stocked");
+                if (!$stocked) {
                     http_response_code(500);
-                    throw new Exception('An error occurred while attempting to update the decrypt database');
+                    error_log('An error occurred while attempting to update the decrypt database');
+                    exit(1);
                 }
             }
         }
@@ -148,25 +160,29 @@ try {
         if (("access_denied" === $_GET["error"]) && ("user_denied" === $_GET["error_description"])) {
             http_response_code(403);
             error_log("Client denied the request explicityly: " . $_GET['error_description']);
-            throw new Exception("The requested access was denied. Please contact the client");
+            error_log("The requested access was denied. Please contact the client");
+            exit(1);
         }
         // Display the error and description for all other errors.
         else {
             http_response_code(403);
             error_log("The error was: " . $_GET['error'] . "\nDescribed as: " . $_GET['error_description']);
-            throw new Exception("An error occurred: {$_GET["error"]} => {$_GET["error_description"]}");
+            error_log("An error occurred: {$_GET["error"]} => {$_GET["error_description"]}");
+            exit(1);
         }
     } else {
         // No recognizable parameters were returned.
         http_response_code(404);
         error_log("Something went quite wrong and the response was not as expected: " . $_GET['error']);
-        throw new Exception("An unknown error occurred and no recognizable parameters were returned.");
+        error_log("An unknown error occurred and no recognizable parameters were returned.");
+        exit(1);
     }
 } catch (Exception $e) {
     // If the obtainToken call fails, you'll fall through to here.
     http_response_code(500);
     error_log("Obtain Token failed and fell through to the bottom: " . $e->getMessage());
-    throw new Exception("An unknown exception occurred: " . $e->getMessage());
+    error_log("An unknown exception occurred: " . $e->getMessage());
+    exit(1);
 }
 
 ?>
