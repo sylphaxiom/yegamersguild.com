@@ -15,6 +15,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 // import theme, { dark } from "./theme";
 import theme from "./theme";
+import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -35,6 +36,7 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const queryClient = new QueryClient();
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -49,7 +51,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <React.Fragment>
           <ThemeProvider disableTransitionOnChange={false} noSsr theme={theme}>
             <CssBaseline enableColorScheme />
-            {children}
+            <QueryClientProvider client={queryClient}>
+              {children}
+            </QueryClientProvider>
             <ScrollRestoration />
           </ThemeProvider>
         </React.Fragment>

@@ -1,10 +1,8 @@
 <?php
 // Will contain $_SESSION['auth_state','environment']: bin2hex(random_bytes(32));
+$session = $_GET['state'];
+session_id($session);
 session_start();
-if (empty($_SESSION['auth_state'])) {
-    // $_SESSION['auth_state'] = 'f8dc1f86bb074ba1b52c66783fe81e54';
-    $_SESSION['environment'] = 'sand';
-}
 // Comment out the following 3 lines for production.
 error_reporting(-1);
 ini_set('display_errors', 'On');
@@ -12,7 +10,7 @@ set_error_handler("var_dump");
 header('Access-Control-Allow-Origin:*');
 header('Access-Control-Max-Age:3600');
 header('Access-Control-Allow-Headers:Content-type,Rain');
-header('Access-Control-Allow-Methods:PUT,OPTIONS');
+header('Access-Control-Allow-Methods:GET,OPTIONS');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     header("HTTP/1.1 200 OK");
     die();
@@ -28,6 +26,9 @@ use Square\Environments;
 use Square\OAuth\Requests\ObtainTokenRequest;
 
 header("Content-Type: application/json");
+
+error_log("========== Initialized callback ==========");
+error_log("Session variables:\nauth: {$_SESSION['auth_state']}\nenvironment: {$_SESSION['environment']}\nverifier: {$_SESSION['verifier']}");
 
 $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);
@@ -53,8 +54,9 @@ $input = json_decode(file_get_contents('php://input'), true);
 // with the OAuth API with the authorization code returned to OAuth callback.
 function obtainOAuthToken($authorizationCode)
 {
+    error_log("entered obtainOAuthToken with authcode $authorizationCode");
     // Initialize Square PHP SDK OAuth API client.
-    $clientId = Bucket::getGuildAccessToken('tP9T1eKgEqTCkkoUGTKitUzP107Hnw2KnAcEyq7KDs9qfxdYkpZBKEkfWmCJkzvf');
+    $clientId = Bucket::getGuildClientId('tP9T1eKgEqTCkkoUGTKitUzP107Hnw2KnAcEyq7KDs9qfxdYkpZBKEkfWmCJkzvf');
     $secret = Bucket::getApplicationSecret('tP9T1eKgEqTCkkoUGTKitUzP107Hnw2KnAcEyq7KDs9qfxdYkpZBKEkfWmCJkzvf');
     $environment = $_SESSION['environment'] == "sand" ? Environments::Sandbox->value : Environments::Production->value;
     $square = new SquareClient(token: $clientId, options: [
@@ -62,18 +64,24 @@ function obtainOAuthToken($authorizationCode)
     ]);
     $oauthApi = $square->oAuth;
     // Initialize the request parameters for the obtainToken request.
+    $verifier = $_SESSION['verifier'];
     $body_grantType = 'authorization_code';
     $body = new ObtainTokenRequest([
         'clientId' => $clientId,
         'grantType' => $body_grantType,
         'code' => $authorizationCode,
         'clientSecret' => $secret,
+        'codeVerifier' => $verifier,
+        'redirectUri' => 'https://api.sylphaxiom.com/square/callback.php'
     ]);
 
     // Call obtainToken endpoint to get the OAuth tokens.
     try {
+        error_log("Running obtainToken...");
         $response = $oauthApi->obtainToken($body);
     } catch (SquareApiException $e) {
+        http_response_code(500);
+        error_log("A " . $e->getStatusCode() . " error was thrown while running obtainToken: " . var_dump($e->getErrors()));
         throw $e;
     }
 
@@ -82,6 +90,8 @@ function obtainOAuthToken($authorizationCode)
     $refreshToken = $response->getRefreshToken();
     $expiresAt = $response->getExpiresAt();
     $merchantId = $response->getMerchantId();
+
+    error_log("Returned data:\nAccessToken: $accessToken\nRefreshToken: $refreshToken\nExpiresAt: $expiresAt\nMerchantId: $merchantId");
 
     // Return the tokens along with the expiry date/time and merchant ID.
     return [$accessToken, $refreshToken, $expiresAt, $merchantId];
@@ -98,6 +108,7 @@ try {
     // When the response_type is "code", the seller clicked Allow
     // and the authorization page returned the auth tokens.
     if ("code" === $_GET["response_type"]) {
+        error_log("code matches expected response_type, proceeding with obtainOAuthToken...");
         // Get the authorization code and use it to call the obtainOAuthToken wrapper function.
         $authorizationCode = $_GET['code'];
         [$accessToken, $refreshToken, $expiresAt, $merchantId] = obtainOAuthToken($authorizationCode);
@@ -106,19 +117,25 @@ try {
         // In production, you should never write tokens to the page. You should encrypt the tokens and handle them securely.
         // writeTokensOnSuccess($accessToken, $refreshToken, $expiresAt, $merchantId);
         //$key should have been previously generated in a cryptographically safe way, like openssl_random_pseudo_bytes
+
+        error_log("Returned to the main thread, encrypting and submitting to DB...");
+
         $cipher = "aes-256-gcm";
         if (in_array($cipher, openssl_get_cipher_methods())) {
+            error_log("Cipher present, encrypting...");
             $ivlen = openssl_cipher_iv_length($cipher);
             $iv = openssl_random_pseudo_bytes($ivlen);
             $ciphertext = openssl_encrypt($plaintext, $cipher, $key, $options = 0, $iv, $tag);
             //store $cipher, $iv, and $tag for decryption later
             // $original_plaintext = openssl_decrypt($ciphertext, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
             $stocked = updateDecrypt('yegamersguild', $cipher, $iv, $tag);
+            error_log("Return from updating the decrypt table: $stocked");
             if (!$stocked) {
                 http_response_code(500);
                 throw new Exception('An error occurred while attempting to update the decrypt database');
             } else {
                 $stored = updateToken($accessToken, $refreshToken, $expiresAt, $merchantId, 'yegamersguild');
+                error_log("Return from updating the token table: $stored");
                 if (!$stored) {
                     http_response_code(500);
                     throw new Exception('An error occurred while attempting to update the decrypt database');
@@ -127,23 +144,28 @@ try {
         }
     } elseif ($_GET['error']) {
         // Check to see if the seller clicked the Deny button and handle it as a special case.
+        error_log("There was an error returned to callback...");
         if (("access_denied" === $_GET["error"]) && ("user_denied" === $_GET["error_description"])) {
             http_response_code(403);
+            error_log("Client denied the request explicityly: " . $_GET['error_description']);
             throw new Exception("The requested access was denied. Please contact the client");
         }
         // Display the error and description for all other errors.
         else {
             http_response_code(403);
+            error_log("The error was: " . $_GET['error'] . "\nDescribed as: " . $_GET['error_description']);
             throw new Exception("An error occurred: {$_GET["error"]} => {$_GET["error_description"]}");
         }
     } else {
         // No recognizable parameters were returned.
         http_response_code(404);
+        error_log("Something went quite wrong and the response was not as expected: " . $_GET['error']);
         throw new Exception("An unknown error occurred and no recognizable parameters were returned.");
     }
 } catch (Exception $e) {
     // If the obtainToken call fails, you'll fall through to here.
     http_response_code(500);
+    error_log("Obtain Token failed and fell through to the bottom: " . $e->getMessage());
     throw new Exception("An unknown exception occurred: " . $e->getMessage());
 }
 
