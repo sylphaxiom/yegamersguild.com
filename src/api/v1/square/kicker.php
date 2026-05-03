@@ -1,8 +1,9 @@
 <?php
 // Will contain $_SESSION['auth_state','environment']: bin2hex(random_bytes(32));
-$state = bin2hex(random_bytes(16));
+$state = $_SESSION['auth_state'] ?? bin2hex(random_bytes(32));
 session_id($state);
 session_start();
+$_SESSION['auth_state'] = $state;
 
 // Comment out the following 3 lines for production.
 error_reporting(-1);

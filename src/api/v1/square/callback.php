@@ -28,7 +28,6 @@ use Square\OAuth\Requests\ObtainTokenRequest;
 header("Content-Type: application/json");
 
 error_log("========== Initialized callback ==========");
-error_log("Session variables:\nauth: {$_SESSION['auth_state']}\nenvironment: {$_SESSION['environment']}\nverifier: {$_SESSION['verifier']}");
 
 $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);
@@ -37,17 +36,17 @@ $input = json_decode(file_get_contents('php://input'), true);
 //  Square docs OAuth API callback.php content
 //  This needs to be torn apart and rebuilt
 //  Must do the following:
-//  - parse params returned in auth response
-//  - use auth code to call OAuth to get refresh tokens
+//  - parse params returned in auth response                            +
+//  - use auth code to call OAuth to get refresh tokens                 +
 //  - manage and use access and refresh tokens
-//  - encrypt the access and refresh tokens and store securely
-//  - retain code_verifier & submit when ObtainToken
+//  - encrypt the access and refresh tokens and store securely          +
+//  - retain code_verifier & submit when ObtainToken                    +
 //  - verify the token for each API call is valid
 //  - refresh access token in a timely manner
 //  - use refresh token within 90 days (7 is pref)
 //  - Provide seller with ability to revoke access and refresh tokens
 //  - Show the permissions granted by the seller and let them manage
-//  - handle errors.
+//  - handle errors.                                                    +
 /////////////////////////////////////////////////
 
 // The obtainOAuthToken function shows you how to obtain a OAuth access token
@@ -108,7 +107,25 @@ try {
 
     // When the response_type is "code", the seller clicked Allow
     // and the authorization page returned the auth tokens.
-    if ("code" === $_GET["response_type"]) {
+    if (isset($_GET['error'])) {
+        // Check to see if the seller clicked the Deny button and handle it as a special case.
+        error_log("There was an error returned to callback...");
+        if (("access_denied" === $_GET["error"]) && ("user_denied" === $_GET["error_description"])) {
+            http_response_code(403);
+            error_log("Client denied the request explicityly: " . $_GET['error_description']);
+            error_log("The requested access was denied. Please contact the client");
+            error_log("There was an error returned in the callback script for Square.\nError: {$_GET['error']}\nMessage: {$_GET['error_description']}\n\nPlease contact the client to see what the issue is. This error usually indicates that authorization was explicitly denied.", 1, "support@sylphaxiom.com", "From: Error Log <error@sylphaxiom.com");
+            header("Location: http://localhost:5173");
+            exit(1);
+        }
+        // Display the error and description for all other errors.
+        else {
+            http_response_code(403);
+            error_log("The error was: " . $_GET['error'] . "\nDescribed as: " . $_GET['error_description']);
+            error_log("An error occurred: {$_GET["error"]} => {$_GET["error_description"]}");
+            exit(1);
+        }
+    } elseif (isset($_GET['response_type']) && "code" === $_GET["response_type"]) {
         error_log("code matches expected response_type, proceeding with obtainOAuthToken...");
         // Get the authorization code and use it to call the obtainOAuthToken wrapper function.
         $authorizationCode = $_GET['code'];
@@ -151,24 +168,10 @@ try {
                     http_response_code(500);
                     error_log('An error occurred while attempting to update the decrypt database');
                     exit(1);
+                } else {
+                    header('Location: http://localhost:5173');
                 }
             }
-        }
-    } elseif ($_GET['error']) {
-        // Check to see if the seller clicked the Deny button and handle it as a special case.
-        error_log("There was an error returned to callback...");
-        if (("access_denied" === $_GET["error"]) && ("user_denied" === $_GET["error_description"])) {
-            http_response_code(403);
-            error_log("Client denied the request explicityly: " . $_GET['error_description']);
-            error_log("The requested access was denied. Please contact the client");
-            exit(1);
-        }
-        // Display the error and description for all other errors.
-        else {
-            http_response_code(403);
-            error_log("The error was: " . $_GET['error'] . "\nDescribed as: " . $_GET['error_description']);
-            error_log("An error occurred: {$_GET["error"]} => {$_GET["error_description"]}");
-            exit(1);
         }
     } else {
         // No recognizable parameters were returned.
