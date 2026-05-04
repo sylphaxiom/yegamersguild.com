@@ -40,10 +40,16 @@ test.describe('homepage feature testing', ()=>{
     ].forEach(({key,src,alt})=>{
         test(`testing ${key} image from ticker`, async ({page})=>{
             const img = page.getByRole('img',{name:alt})
-            
             // They're all the same bc of the marquee, just use the first one.
-            await expect(img.nth(0)).toHaveAttribute('src', src)
-            await expect(img.nth(0)).toHaveAttribute('alt', alt)
+            await expect(img.first()).toHaveAttribute('src', src)
+            await expect(img.first()).toHaveAttribute('alt', alt)
         });
+    });
+    test('test inventory button', async ({page})=>{
+        const button = page.getByRole('button', { name: 'Check out our inventory' })
+
+        await expect(button).toBeVisible();
+        button.click();
+        await expect(page.getByText('Only Joking!This is coming')).toBeVisible();
     });
 });

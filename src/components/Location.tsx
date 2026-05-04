@@ -45,32 +45,21 @@ export default function Location() {
   );
 
   const map = (
-    <Grid size={{ xs: 12, sm: 6, md: 4 }} role="figure" aria-label="google-map">
-      <APIProvider apiKey={token}>
-        <Map
-          style={{
-            width: "300px",
-            height: "300px",
-            margin: "0 auto",
-            padding: "0 1em",
-          }}
-          defaultCenter={{ lat: 39.62146813390072, lng: -86.15762153193997 }}
-          defaultZoom={17}
-          gestureHandling="greedy"
-          mapId="423afd03b213ef8ea8393497"
-          disableDefaultUI
-        >
-          <AdvancedMarker
-            position={{ lat: 39.62146813390072, lng: -86.15762153193997 }}
-            title="guild-marker"
-            onClick={() => {
-              navigate(
-                "https://www.google.com/maps/place/Ye+Gamer's+Guild/@39.621468,-86.157622,17z/data=!4m6!3m5!1s0x886b5d97c907c011:0x149761c044dfe441!8m2!3d39.6212833!4d-86.1576073!16s%2Fg%2F11fl22nmpn?hl=en-US&entry=ttu&g_ep=EgoyMDI2MDQyNi4wIKXMDSoASAFQAw%3D%3D",
-              );
-            }}
-          />
-        </Map>
-      </APIProvider>
+    <Grid
+      size={{ xs: 12, sm: 6, md: 4 }}
+      role="figure"
+      id="google-map"
+      aria-label="google-map"
+      sx={{ textAlign: "center" }}
+    >
+      <iframe
+        width="300"
+        height="300"
+        style={{ border: 0 }}
+        loading="lazy"
+        allowFullScreen
+        src="https://www.google.com/maps/embed/v1/place?q=place_id:ChIJFWn4-chda4gR0Pou2Py3W0Y&key=AIzaSyAUlouPL20QFVnOrQ0QXvLOE-99orktyfs"
+      ></iframe>
     </Grid>
   );
 
