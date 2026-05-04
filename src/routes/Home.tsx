@@ -48,11 +48,13 @@ export default function Home() {
   }
 
   return (
-    <Box id="main-cont" role="main">
-      <Header />
-      <Location />
-      <Divider variant="fullWidth" sx={{ my: 4 }} />
-      <About />
+    <Box id="main-cont">
+      <Box role="main">
+        <Header />
+        <Location />
+        <Divider variant="fullWidth" sx={{ my: 4 }} />
+        <About />
+      </Box>
       <Footer />
     </Box>
   );

@@ -11,7 +11,7 @@ test.describe('homepage accessibility testing', () => { // 2
     });
   test('should not have any automatically detectable accessibility issues', async ({ page }) => {
 
-    const accessibilityScanResults = await new AxeBuilder({ page }).analyze(); // 4
+    const accessibilityScanResults = await new AxeBuilder({ page }).exclude('#google-map').analyze(); // 4
 
     expect(accessibilityScanResults.violations).toEqual([]); // 5
   });

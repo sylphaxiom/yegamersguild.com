@@ -5,15 +5,9 @@ import Facebook from "@mui/icons-material/Facebook";
 
 export default function Footer() {
   return (
-    <Grid
-      id="foot-cont"
-      component={"footer"}
-      size={12}
-      sx={{ mt: 10 }}
-      container
-    >
+    <Grid id="footer" component={"footer"} size={12} sx={{ mt: 10 }} container>
       <Grid size={{ xs: 6, sm: 3, md: 4 }} id="foot-loc">
-        <Typography variant="h5" color="secondary">
+        <Typography variant="h5" component="label" color="secondary">
           Located at ...
         </Typography>
         <Divider />
@@ -22,7 +16,7 @@ export default function Footer() {
         <Typography variant="body2">Greenwood, Indiana 46142</Typography>
       </Grid>
       <Grid size={{ xs: 6, md: 4 }} id="foot-hrs">
-        <Typography variant="h5" color="secondary">
+        <Typography variant="h5" component="label" color="secondary">
           Hours ...
         </Typography>
         <Divider />
@@ -43,7 +37,7 @@ export default function Footer() {
         </Grid>
       </Grid>
       <Grid size={{ xs: 12, sm: 3, md: 4 }} id="foot-link">
-        <Typography variant="h5" color="secondary">
+        <Typography variant="h5" component="label" color="secondary">
           Quick Links ...
         </Typography>
         <Divider />

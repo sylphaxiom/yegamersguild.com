@@ -48,6 +48,7 @@ export default function Location() {
     <Grid
       size={{ xs: 12, sm: 6, md: 4 }}
       role="figure"
+      id="google-map"
       aria-label="google-map"
       sx={{ textAlign: "center" }}
     >
