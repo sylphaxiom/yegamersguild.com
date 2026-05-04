@@ -15,11 +15,11 @@ import { Divider } from "@mui/material";
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "Ye Gamer\'s Guild" },
-    { name: "description", content: "Welcome to Ye Gamer\'s Guild Game Shop!" },
+    { name: "description", content: "Browse the store inventory." },
   ];
 }
 
-export default function Home() {
+export default function Shop() {
   // Query
   const query = useQuery({
     queryKey: ["kicker"],
@@ -50,9 +50,6 @@ export default function Home() {
   return (
     <Box id="main-cont" role="main">
       <Header />
-      <Location />
-      <Divider variant="fullWidth" sx={{ my: 4 }} />
-      <About />
       <Footer />
     </Box>
   );
