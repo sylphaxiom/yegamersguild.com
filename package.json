@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "react-router build",
-    "dev": "react-router dev --host 127.0.0.1",
+    "dev": "react-router dev --host localhost",
     "api": "py C:\\users\\image\\code_projects\\py_scripts\\Deployment\\DevDeploy.py yegamersguild.com --API",
     "prod": "py C:\\users\\image\\code_projects\\py_scripts\\Deployment\\DevDeploy.py yegamersguild.com --SKIP --PROD",
     "test": "py C:\\users\\image\\code_projects\\py_scripts\\Deployment\\DevDeploy.py yegamersguild.com --SKIP --DEV",

@@ -1,18 +1,11 @@
 import * as React from "react";
 import * as motion from "motion/react-client";
-import {
-  Box,
-  Button,
-  Collapse,
-  Grow,
-  List,
-  ListItem,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Collapse, Stack, Typography } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { AnimatePresence } from "motion/react";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import { createCookie, Form, useNavigate } from "react-router";
+
 interface Img {
   key: string;
   src: string;
@@ -37,9 +30,13 @@ function buildImg({ key, src, alt, width, height }: Img) {
   );
 }
 
+export const snickerdoodle = createCookie("snickerdoodle");
+
 export default function About() {
-  const [open, setOpen] = React.useState(false);
   const [img, setImg] = React.useState(0);
+
+  const state = "";
+  const clientId = "sandbox-sq0idb-Zo_kJ9WN2IDavTl6AbFO2g";
 
   React.useEffect(() => {
     const interval = setInterval(() => {
@@ -84,12 +81,21 @@ export default function About() {
             Tournaments, events, snacks...
           </Typography>
         </Stack>
-        <Box sx={{ textAlign: "center", py: 4 }}>
-          <Button variant="contained" onClick={() => setOpen(!open)}>
+        <Form
+          style={{ textAlign: "center", paddingTop: 32, paddingBottom: 32 }}
+          action="https://api.sylphaxiom.com/gateway.php"
+        >
+          <input type="hidden" name="state" value={state} />
+          <input type="hidden" name="clientId" value={clientId} />
+          <Button
+            variant="contained"
+            type="submit"
+            // onClick={() => navigate("shop")}
+          >
             Check out our inventory
           </Button>
-        </Box>
-        <Collapse in={open}>
+        </Form>
+        {/* <Collapse in={open}>
           <Box
             sx={{
               border: "2px solid",
@@ -113,7 +119,7 @@ export default function About() {
               This is coming soon
             </Typography>
           </Box>
-        </Collapse>
+        </Collapse> */}
       </Grid>
       <Grid
         size={{ xs: 12, sm: 4, md: 6 }}

@@ -1,4 +1,17 @@
 <?php
+// Start the session with state or fail
+if (empty($_GET['state'])) {
+    die();
+} else {
+    $state = $_GET['state'];
+}
+session_id($state);
+session_start();
+if (!isset($_SESSION["auth_state"])) {
+    http_response_code(424);
+    error_log("Session was not set prior to refresh call. This is required for security.");
+    die();
+}
 
 // Comment out the following 3 lines for production.
 error_reporting(-1);
@@ -21,7 +34,7 @@ use Square\Exceptions\SquareApiException;
 use Square\SquareClient;
 use Square\Environments;
 use Square\OAuth\Requests\ObtainTokenRequest;
-$environment = Environments::Sandbox->value;
+$environment = $_SESSION['environment'] === "sand" ? Environments::Sandbox->value : Environments::Production->value;
 
 error_log("========== Initialized refresh ==========");
 
@@ -38,7 +51,7 @@ if (!isset($access)) {
 
 // Initialize Square PHP SDK OAuth API client.
 $dice = Bucket::getDice();
-$clientId = Bucket::getGuildApplicationId($dice);
+$clientId = $_SESSION['clientId'];
 $square = new SquareClient(token: $clientId, options: [
     'baseUrl' => $environment,
 ]);
@@ -48,7 +61,10 @@ $body = new ObtainTokenRequest([
     'clientId' => $clientId,
     'grantType' => 'refresh_token',
     'refreshToken' => $refresh,
-    'redirectUri' => 'https://api.sylphaxiom.com/square/refresh.php'
+    'session' => $_SESSION['environment'] === 'sand' ? true : false,
+    'redirectUri' => 'https://api.sylphaxiom.com/square/refresh.php',
+    'useJwt' => true,
+    'shortLived' => true,
 ]);
 
 // Call obtainToken endpoint to get the OAuth tokens.
@@ -67,9 +83,36 @@ $refreshToken = $response->getRefreshToken();
 $expiresAt = $response->getExpiresAt();
 $merchantId = $response->getMerchantId();
 
-error_log("Returned data:\nAccessToken: $accessToken\nRefreshToken: $refreshToken\nExpiresAt: $expiresAt\nMerchantId: $merchantId");
+error_log("Returned to the main thread, encrypting and submitting to DB...");
 
-// Return the tokens along with the expiry date/time and merchant ID.
+$cipher = "aes-256-gcm";
+if (in_array($cipher, openssl_get_cipher_methods())) {
+    error_log("Cipher present, encrypting...");
+    $ivlen = openssl_cipher_iv_length($cipher);
+    $iv = openssl_random_pseudo_bytes($ivlen);
+    $key = Bucket::getDice();
+    $cipherAccess = openssl_encrypt($accessToken, $cipher, $key, $options = 0, $iv, $tag);
+    $cipherRefresh = openssl_encrypt($refreshToken, $cipher, $key, $options = 0, $iv, $tag);
+    //store $cipher, $iv, and $tag for decryption later
+    // $original_plaintext = openssl_decrypt($ciphertext, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
+    $stored = updateToken(access: $cipherAccess, refresh: $cipherRefresh, expires: $expiresAt, merchantId: $merchantId, merchantName: 'yegamersguild');
+    error_log("Return from updating the token table: $stored");
+    if (!$stored) {
+        http_response_code(500);
+        error_log('An error occurred while attempting to update the decrypt database');
+        exit(1);
+    } else {
+        $stocked = updateDecrypt(owner: 'yegamersguild', cipher: $cipher, iv: $iv, tag: $tag);
+        error_log("Return from updating the decrypt table: $stocked");
+        if (!$stocked) {
+            http_response_code(500);
+            error_log('An error occurred while attempting to update the decrypt database');
+            exit(1);
+        }
+    }
+}
+
+// Update database with ENCRYPTED token information
 updateToken(access: $access, refresh: $refresh, expires: $expiresAt, merchantId: $merchantId, merchantName: 'yegamersguild');
 
 ?>

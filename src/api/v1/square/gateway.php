@@ -1,8 +1,5 @@
 <?php
-// Only called to initialize access.
-$state = bin2hex(random_bytes(32));
-session_id($state);
-session_start();
+// We initialize the session after getting state.
 
 // Comment out the following 3 lines for production.
 error_reporting(-1);
@@ -28,9 +25,23 @@ use Square\OAuth\Requests\ObtainTokenRequest;
 
 header("Content-Type: application/json");
 
-error_log("========== Initialized callback ==========");
+error_log("========== Initialized gateway ==========");
 
 $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);
 
 $clientId = $input['clientId'];
+$state = $input['state'];
+
+$environment = "sand";
+
+$rawHash = hash('sha256', $state, true);
+$code_challenge = rtrim(strtr(base64_encode($rawHash), '+/', '-_'), '=');
+
+session_id($state);
+session_start();
+$_SESSION['clientId'] = $clientId;
+$_SESSION['auth_state'] = $state;
+$_SESSION['environment'] = $environment;
+
+// Always send to refresh to check for a current token with state in the URL for GET

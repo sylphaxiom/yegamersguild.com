@@ -1,22 +1,34 @@
 import * as React from "react";
-import type { Route } from "./+types/Home";
+import type { Route } from "./+types/Shop";
 import Header from "../components/Header";
 import Box from "@mui/material/Box";
-// import ModeSwitch from "~/components/bits/ModeSwitch";
-import Location from "~/components/Location";
-import Button from "@mui/material/Button";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { Link } from "react-router";
 import Footer from "~/components/Footer";
-import About from "~/components/About";
-import { Divider } from "@mui/material";
+import { data } from "react-router";
+import { snickerdoodle } from "~/components/About";
 
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "Ye Gamer\'s Guild" },
     { name: "description", content: "Browse the store inventory." },
   ];
+}
+
+export async function clientLoader({ request }: Route.ClientLoaderArgs) {
+  const cookieHeader = request.headers.get("Cookie");
+  const cookie = await snickerdoodle.parse(cookieHeader);
+  return data({ verifier: cookie.verifier });
+}
+
+export async function clientAction({ request }: Route.ClientActionArgs) {
+  const cookieHeader = request.headers.get("Cookie");
+  const cookie = await snickerdoodle.parse(cookieHeader);
+  const formData = await request.formData();
+  const verifier = "";
+  return data(verifier, {
+    headers: { "Set-Cookie": await snickerdoodle.serialize(cookie) },
+  });
 }
 
 export default function Shop() {
