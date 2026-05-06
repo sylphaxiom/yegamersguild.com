@@ -25,7 +25,13 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   const cookieHeader = request.headers.get("Cookie");
   const cookie = await snickerdoodle.parse(cookieHeader);
   const formData = await request.formData();
-  const verifier = "";
+  const origin = request.url;
+  const bytes = new Uint8Array(32);
+  window.crypto.getRandomValues(bytes);
+  const verifier = Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
   return data(verifier, {
     headers: { "Set-Cookie": await snickerdoodle.serialize(cookie) },
   });

@@ -39,7 +39,7 @@ $environment = $_SESSION['environment'] === "sand" ? Environments::Sandbox->valu
 error_log("========== Initialized refresh ==========");
 
 // Get the current token and kickstart the auth process if it's expired or revoked.
-[$access, $refresh, $expires, $merchantId, $merchantName] = getToken();
+[$access, $refresh, $expires, $merchantId, $merchantName] = getToken('yegamersguild');
 // If one is set, they all are.
 if (!isset($access)) {
     http_response_code(503);
@@ -84,35 +84,6 @@ $expiresAt = $response->getExpiresAt();
 $merchantId = $response->getMerchantId();
 
 error_log("Returned to the main thread, encrypting and submitting to DB...");
-
-$cipher = "aes-256-gcm";
-if (in_array($cipher, openssl_get_cipher_methods())) {
-    error_log("Cipher present, encrypting...");
-    $ivlen = openssl_cipher_iv_length($cipher);
-    $iv = openssl_random_pseudo_bytes($ivlen);
-    $key = Bucket::getDice();
-    $cipherAccess = openssl_encrypt($accessToken, $cipher, $key, $options = 0, $iv, $tag);
-    $cipherRefresh = openssl_encrypt($refreshToken, $cipher, $key, $options = 0, $iv, $tag);
-    //store $cipher, $iv, and $tag for decryption later
-    // $original_plaintext = openssl_decrypt($ciphertext, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
-    $stored = updateToken(access: $cipherAccess, refresh: $cipherRefresh, expires: $expiresAt, merchantId: $merchantId, merchantName: 'yegamersguild');
-    error_log("Return from updating the token table: $stored");
-    if (!$stored) {
-        http_response_code(500);
-        error_log('An error occurred while attempting to update the decrypt database');
-        exit(1);
-    } else {
-        $stocked = updateDecrypt(owner: 'yegamersguild', cipher: $cipher, iv: $iv, tag: $tag);
-        error_log("Return from updating the decrypt table: $stocked");
-        if (!$stocked) {
-            http_response_code(500);
-            error_log('An error occurred while attempting to update the decrypt database');
-            exit(1);
-        }
-    }
-}
-
-// Update database with ENCRYPTED token information
-updateToken(access: $access, refresh: $refresh, expires: $expiresAt, merchantId: $merchantId, merchantName: 'yegamersguild');
+saveToken(access: $accessToken, refresh: $refreshToken, merchantId: $merchantId, expires: $expiresAt, merchantName: 'yegamersguild');
 
 ?>
