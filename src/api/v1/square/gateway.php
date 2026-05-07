@@ -39,8 +39,7 @@ try {
     $state = $_GET['state'];
     $environment = $_GET['environment'];
 } catch (Exception $e) {
-    error_log("An error occurred while setting the clientId and state values");
-    error_log("Client ID: $clientId | State: $state");
+    error_log("An error occurred while reading clientId, state, or environment from request.");
     http_response_code(400);
     echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
 }
@@ -51,8 +50,7 @@ try {
     $rawHash = hash('sha256', $state, true);
     $code_challenge = rtrim(strtr(base64_encode($rawHash), '+/', '-_'), '=');
 } catch (Exception $e) {
-    error_log("An error occurred while hashing and converting state to code challenge.");
-    error_log("Raw Hash: $rawHash | Code Challenge: $code_challenge");
+    error_log("An error occurred while generating the code challenge.");
     http_response_code(400);
     echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
 }
@@ -66,7 +64,6 @@ try {
     $_SESSION['environment'] = $environment;
 } catch (Exception $e) {
     error_log("An error occurred while setting session variables clientId, auth_state, and environment.");
-    error_log("Client ID: {$_SESSION['clientId']} | State: {$_SESSION['auth_state']} | Environment: {$_SESSION['environment']}");
     http_response_code(400);
     echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
 }

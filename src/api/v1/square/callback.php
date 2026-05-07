@@ -53,7 +53,7 @@ $input = json_decode(file_get_contents('php://input'), true);
 // with the OAuth API with the authorization code returned to OAuth callback.
 function obtainOAuthToken($authorizationCode)
 {
-    error_log("entered obtainOAuthToken with authcode $authorizationCode");
+    error_log("entered obtainOAuthToken.");
     // Initialize Square PHP SDK OAuth API client.
     $clientId = $_SESSION['clientId'];
     $environment = $_SESSION['environment'] == "sand" ? Environments::Sandbox->value : Environments::Production->value;
@@ -97,7 +97,7 @@ try {
     // Verify the state to protect against cross-site request forgery.
     if ($_SESSION["auth_state"] !== $_GET['state']) {
         http_response_code(404);
-        error_log('There was a mismatch in the state.\nExpected: ' . $_GET['state'] . '\nFound: ' . $_SESSION['auth_state']);
+        error_log("State mismatch in callback. CSRF check failed.");
         exit(1);
     }
 

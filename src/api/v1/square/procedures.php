@@ -25,7 +25,7 @@ function loadToken(string $client)
             exit();
         }
         [$access, $refresh, $expires, $merchantId, $merchantName] = $results;
-        error_log("inside loadToken, returned from the DB: $access");
+        error_log("inside loadToken, token row retrieved from DB.");
     } catch (Exception $e) {
         error_log("An error occurred in loadToken while running getToken.");
         error_log("Message: " . $e->getMessage() . " | Trace:\n" . $e->getLine());
@@ -49,13 +49,13 @@ function loadToken(string $client)
         error_log("Message: " . $e->getMessage() . " | Trace:\n" . $e->getLine());
         throw $e;
     }
-    error_log("Access and cipher are present: access: $access | cipher: $cipher");
+    error_log("Token and cipher loaded for client: $client.");
     $key = hash('sha256', Bucket::getDice(), true);
     // decrypt tokens
     try {
         $decAccess = openssl_decrypt(base64_decode($access), $cipher, $key, OPENSSL_RAW_DATA, $a_iv, $a_tag);
         $decRefresh = openssl_decrypt(base64_decode($refresh), $cipher, $key, OPENSSL_RAW_DATA, $r_iv, $r_tag);
-        error_log("decrypted token is: $decAccess");
+        error_log("Token decrypted successfully for client: $client.");
     } catch (Exception $e) {
         error_log("An error occurred in loadToken while running decryption.");
         error_log("Message: " . $e->getMessage() . " | Trace:\n" . $e->getLine());
@@ -128,8 +128,8 @@ function checkToken(string $token)
         $e_tag = $_SESSION['tag'];
         $iv = $_SESSION['iv'];
     } catch (Exception $e) {
-        error_log('An error occurred while getting the decrip info for the public token, check your session.');
-        error_log($_SESSION);
+        error_log('An error occurred while getting the decrypt info for the public token, check your session.');
+        error_log("Session keys present: " . implode(", ", array_keys($_SESSION)));
     }
     $cipher = "aes-256-gcm";
     $key = hash('sha256', Bucket::getDice(), true);
