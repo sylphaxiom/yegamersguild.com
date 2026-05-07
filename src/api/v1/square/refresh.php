@@ -51,7 +51,7 @@ if (!isset($access)) {
 }
 
 // Initialize Square PHP SDK OAuth API client.
-$dice = Bucket::getDice();
+$dice = hash('sha256', Bucket::getDice(), true);
 $clientId = $_SESSION['clientId'];
 $square = new SquareClient(token: $clientId, options: [
     'baseUrl' => $environment,

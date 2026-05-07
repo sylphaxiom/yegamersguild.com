@@ -55,7 +55,7 @@ function obtainOAuthToken($authorizationCode)
 {
     error_log("entered obtainOAuthToken with authcode $authorizationCode");
     // Initialize Square PHP SDK OAuth API client.
-    $dice = Bucket::getDice();
+    $dice = hash('sha256', Bucket::getDice(), true);
     $clientId = Bucket::getGuildApplicationId($dice);
     // $secret = Bucket::getApplicationSecret('tP9T1eKgEqTCkkoUGTKitUzP107Hnw2KnAcEyq7KDs9qfxdYkpZBKEkfWmCJkzvf');
     $environment = $_SESSION['environment'] == "sand" ? Environments::Sandbox->value : Environments::Production->value;
@@ -162,7 +162,7 @@ try {
                 error_log('An error occurred while attempting to update the decrypt database');
                 exit(1);
             } else {
-                $stocked = updateDecrypt(owner: 'yegamersguild', cipher: $cipher, iv: $iv, tag: $tag);
+                $stocked = updateDecrypt(owner: 'yegamersguild', cipher: $cipher, iv: $iv, a_tag: $a_tag, r_tag: $r_tag);
                 error_log("Return from updating the decrypt table: $stocked");
                 if (!$stocked) {
                     http_response_code(500);

@@ -18,11 +18,12 @@ export async function knockKnock(
     state:string,
     clientId:string,
 ): Promise<{
-    status:'Authorized' | 'Failure';
+    status:'Authorized' | 'Failure' | 'Redirect';
     message:string;
     state:string;
     token?:string;
     error?:string;
+    url?:string;
 }> {
     const response = await api
     .get(`https://api.sylphaxiom.com/square/gateway.php?state=${state}&clientId=${clientId}&environment=sand`, {
@@ -34,6 +35,7 @@ export async function knockKnock(
         console.log("An error occurred in the gateway: %s", error);
         throw error
     })
+    console.log("Response info is: %o", response.data)
     return response.data;
 }
 

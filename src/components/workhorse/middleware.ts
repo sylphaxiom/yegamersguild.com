@@ -2,6 +2,7 @@ import { getSession, commitSession } from "./sessions";
 import { checker, knockKnock, queryClient } from "./queries";
 import type { Route } from "../../routes/+types/Shop";
 import { sqContext } from "~/root";
+import { redirect } from "react-router";
 
 
 export const authMiddleware: Route.ClientMiddlewareFunction = async ({
@@ -34,6 +35,13 @@ export const authMiddleware: Route.ClientMiddlewareFunction = async ({
             console.log("Gate is authorized.")
             if (gate.token) {
                 token = gate.token;
+            }
+        }
+        if (gate.status === "Redirect") {
+            console.log("Gate says we need to redirect...")
+            if (gate.url) {
+                console.log("URL is present, attempting to redirect...")
+                throw redirect(gate.url)
             }
         } else {
             console.log("Status of Gate was: %s", gate.error)

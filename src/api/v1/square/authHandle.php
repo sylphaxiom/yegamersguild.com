@@ -147,9 +147,9 @@ try {
             error_log("Cipher present, encrypting...");
             $ivlen = openssl_cipher_iv_length($cipher);
             $iv = openssl_random_pseudo_bytes($ivlen);
-            $key = Bucket::getDice();
-            $cipherAccess = openssl_encrypt($accessToken, $cipher, $key, $options = 0, $iv, $tag);
-            $cipherRefresh = openssl_encrypt($refreshToken, $cipher, $key, $options = 0, $iv, $tag);
+            $key = hash('sha256', Bucket::getDice(), true);
+            $cipherAccess = openssl_encrypt($accessToken, $cipher, $key, $options = 0, $iv, $a_tag);
+            $cipherRefresh = openssl_encrypt($refreshToken, $cipher, $key, $options = 0, $iv, $r_tag);
             //store $cipher, $iv, and $tag for decryption later
             // $original_plaintext = openssl_decrypt($ciphertext, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
             $stored = updateToken(access: $cipherAccess, refresh: $cipherRefresh, expires: $expiresAt, merchantId: $merchantId, merchantName: 'yegamersguild');
@@ -159,7 +159,7 @@ try {
                 error_log('An error occurred while attempting to update the decrypt database');
                 exit(1);
             } else {
-                $stocked = updateDecrypt(owner: 'yegamersguild', cipher: $cipher, iv: $iv, tag: $tag);
+                $stocked = updateDecrypt(owner: 'yegamersguild', cipher: $cipher, iv: $iv, a_tag: $a_tag, r_tag: $r_tag);
                 error_log("Return from updating the decrypt table: $stocked");
                 if (!$stocked) {
                     http_response_code(500);

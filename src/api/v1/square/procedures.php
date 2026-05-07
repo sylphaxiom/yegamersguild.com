@@ -26,8 +26,7 @@ function loadToken(string $client)
         throw $e;
     }
     try {
-        [$cipher, $iv, $tag] = getDecrypt(client: $client);
-        error_log("After getting decrypt info: Cipher: $cipher | IV: $iv | Tag: $tag");
+        [$cipher, $iv, $a_tag, $r_tag] = getDecrypt(client: $client);
     } catch (Exception $e) {
         error_log("An error occurred in loadToken while running getDecrypt.");
         error_log("Message: " . $e->getMessage() . " | Trace:\n" . $e->getLine());
@@ -36,24 +35,15 @@ function loadToken(string $client)
     if (empty($access) || empty($cipher)) {
         error_log("The cipher or access token were not present. Kicking off initial auth flow...");
         require 'kicker.php';
-        exit(1);
+        exit();
     }
     error_log("Access and cipher are present: access: $access | cipher: $cipher");
     $key = hash('sha256', Bucket::getDice(), true);
     // decrypt tokens
     try {
-        error_log("Preparing to decrypt. Data is: Cipher: $cipher | Tag: $tag");
-        $decAccess = openssl_decrypt($access, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
-        $decRefresh = openssl_decrypt($refresh, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
+        $decAccess = openssl_decrypt($access, $cipher, $key, OPENSSL_RAW_DATA, $iv, $a_tag);
+        $decRefresh = openssl_decrypt($refresh, $cipher, $key, OPENSSL_RAW_DATA, $iv, $r_tag);
         error_log("decrypted token is: $decAccess");
-        if ($decAccess === false) {
-            $sslError = openssl_error_string();
-            error_log("Decryption FAILED. OpenSSL Error: " . $sslError);
-            // Check if inputs are empty or wrong type
-            error_log("Lengths (after decrypt) - Access: " . strlen($access) . " | IV: " . strlen($iv) . " | Tag: " . strlen($tag));
-        } else {
-            error_log("Decryption SUCCESS. Token: " . $decAccess);
-        }
     } catch (Exception $e) {
         error_log("An error occurred in loadToken while running decryption.");
         error_log("Message: " . $e->getMessage() . " | Trace:\n" . $e->getLine());
@@ -74,19 +64,18 @@ function loadToken(string $client)
 
 function saveToken(string $access, string $refresh, string $expires, string $merchantId, string $merchantName)
 {
-    [$cipher, $iv, $tag] = getDecrypt(client: $merchantName);
+    [$cipher, $iv, $a_tag, $r_tag] = getDecrypt(client: $merchantName);
     if (!isset($cipher)) {
         $cipher = "aes-256-gcm";
         $ivlen = openssl_cipher_iv_length($cipher);
         $iv = openssl_random_pseudo_bytes($ivlen);
     }
     $key = hash('sha256', Bucket::getDice(), true);
-    $encAccess = openssl_encrypt($access, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
-    $encRefresh = openssl_encrypt($refresh, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
+    $encAccess = openssl_encrypt($access, $cipher, $key, OPENSSL_RAW_DATA, $iv, $a_tag);
+    $encRefresh = openssl_encrypt($refresh, $cipher, $key, OPENSSL_RAW_DATA, $iv, $r_tag);
     // Check if inputs are empty or wrong type
-    error_log("Lengths (after encrypt) - Access: " . strlen($access) . " | IV: " . strlen($iv) . " | Tag: " . strlen($tag));
     if (!empty($encAccess) && !empty($encRefresh)) {
-        $decRes = updateDecrypt(owner: $merchantName, cipher: $cipher, iv: $iv, tag: $tag);
+        $decRes = updateDecrypt(owner: $merchantName, cipher: $cipher, iv: $iv, a_tag: $a_tag, r_tag: $r_tag);
         $tknRes = updateToken(access: $encAccess, refresh: $encRefresh, expires: $expires, merchantId: $merchantId, merchantName: $merchantName);
         if (!empty($tknRes)) {
             error_log("An error occurred while updating the token in the database.");
@@ -104,7 +93,7 @@ function checkToken(string $token)
 {
     $ogToken = loadToken('yegamersguild');
     try {
-        $tag = $_SESSION['tag'];
+        $e_tag = $_SESSION['e_tag'];
         $iv = $_SESSION['iv'];
     } catch (Exception $e) {
         error_log('An error occurred while getting the decrip info for the public token, check your session.');
@@ -112,7 +101,7 @@ function checkToken(string $token)
     }
     $cipher = "aes-256-gcm";
     $key = hash('sha256', Bucket::getDice(), true);
-    $newToken = openssl_decrypt($token, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
+    $newToken = openssl_decrypt($token, $cipher, $key, OPENSSL_RAW_DATA, $iv, $e_tag);
 
     return $ogToken === $newToken;
 }
