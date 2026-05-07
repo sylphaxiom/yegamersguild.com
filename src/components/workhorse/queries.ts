@@ -21,6 +21,7 @@ export async function knockKnock(
     status:'Authorized' | 'Failure';
     message:string;
     state:string;
+    token?:string;
     error?:string;
 }> {
     const response = await api

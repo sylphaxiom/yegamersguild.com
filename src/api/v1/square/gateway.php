@@ -99,5 +99,9 @@ try {
     echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
 }
 
+error_log("Gateway completed, returning cookie and authorized...");
+$cookieData = ['state' => $state, 'token' => $encToken];
+setCookie(name: $state, value: json_encode($cookieData), expires_or_options: $_SESSION['expires'], path: "", domain: $_SERVER['HTTP_ORIGIN'], secure: true, httponly: true);
+
 http_response_code(200);
-echo json_encode(['status' => "Authorized", 'message' => 'Authorization valid for 2 hours.', 'state' => $state]);
+echo json_encode(['status' => "Authorized", 'message' => 'Authorization valid for 2 hours.', 'state' => $state, 'token' => $encToken]);

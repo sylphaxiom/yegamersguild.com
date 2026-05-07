@@ -1,4 +1,4 @@
-// import * as React from "react";
+import * as React from "react";
 import type { Route } from "./+types/Shop";
 import Header from "../components/Header";
 import Box from "@mui/material/Box";
@@ -10,6 +10,8 @@ import { knockKnock } from "~/components/workhorse/queries";
 import Thinking from "~/components/baubles/Thinking";
 import { authMiddleware } from "~/components/workhorse/middleware";
 import { commitSession, getSession } from "~/components/workhorse/sessions";
+import { sqContext } from "~/root";
+import Typography from "@mui/material/Typography";
 
 export const clientMiddleware: Route.ClientMiddlewareFunction[] = [
   authMiddleware,
@@ -22,23 +24,17 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export async function clientLoader({ request }: Route.ClientLoaderArgs) {
-  // const session = await getSession(request.headers.get("Cookie"));
-  // console.log("Current Session data is valid: %s", session.get("isValid"));
-  // const clientId = session.get("clientId");
-  // const state = session.get("state");
-  // const isValid = session.get("isValid");
-  // return data(
-  //   { clientId: clientId, state: state, isValid: isValid },
-  //   { headers: { "Set-Cookie": await commitSession(session) } },
-  // );
-  return { ok: true };
+export async function clientLoader({ context }: Route.ClientLoaderArgs) {
+  const token = context.get(sqContext).token;
+  if (token != "") {
+    console.log("Authenticated and ready for pull...");
+  }
+  return context.get(sqContext);
 }
 
 export default function Shop() {
   const loaderData = useLoaderData();
-  const clientId = loaderData.clientId;
-  const state = loaderData.state;
+  const { clientId, state, token } = loaderData;
   // Query
   const gateKey = useQuery({
     queryKey: ["gateway", state, clientId],
@@ -56,10 +52,12 @@ export default function Shop() {
     );
   }
 
+  React.useEffect(() => {}, [data]);
+
   return (
     <Box id="main-cont" role="main">
       <Header />
-      {isLoading ? <Thinking /> : data?.message}
+      {isLoading ? <Thinking /> : <Typography>Token is {token}</Typography>}
       <Footer />
     </Box>
   );

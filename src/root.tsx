@@ -1,5 +1,6 @@
 import * as React from "react";
 import {
+  createContext,
   isRouteErrorResponse,
   Links,
   Meta,
@@ -13,6 +14,18 @@ import CssBaseline from "@mui/material/CssBaseline";
 import theme from "./theme";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./components/workhorse/queries";
+
+export interface SqContext {
+  clientId: string;
+  state: string;
+  token: string;
+}
+
+export const sqContext = createContext<SqContext>({
+  clientId: "sandbox-sq0idb-Zo_kJ9WN2IDavTl6AbFO2g",
+  state: "",
+  token: "",
+});
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },

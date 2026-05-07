@@ -1,56 +1,46 @@
 import { getSession, commitSession } from "./sessions";
 import { checker, knockKnock, queryClient } from "./queries";
 import type { Route } from "../../routes/+types/Shop";
+import { sqContext } from "~/root";
 
 
 export const authMiddleware: Route.ClientMiddlewareFunction = async ({
-    request,
+    context,
 }) => {
-    const session = await getSession(request.headers.get("Cookie"));
-    console.log("Grabbed session, checking values...")
-    if (!session.has("clientId")) {
-        console.log("No ClientId found in session")
-        session.set("clientId", "sandbox-sq0idb-Zo_kJ9WN2IDavTl6AbFO2g");
-    }
-    if (!session.has("state")) {
-        console.log("No state found in session")
+    const clientId = context.get(sqContext).clientId
+    let state = context.get(sqContext).state
+    let token = context.get(sqContext).token
+    console.log("Grabbed context variables, checking values...")
+    if (state === '') {
+        console.log("No state found in context")
         const bytes = new Uint8Array(32);
         window.crypto.getRandomValues(bytes);
-        const state = Array.from(bytes)
+        state = Array.from(bytes)
             .map((b) => b.toString(16).padStart(2, "0"))
             .join("");
-        session.set("state", state);
     }
     console.log("Sessions should now have clientId and state populated.")
-    const clientId = session.get("clientId")!;
-    const state = session.get("state")!;
-    if (!session.has('token')) {
-        console.log("No token found in session, running gate to obtain.")
-        const gate = await queryClient.ensureQueryData({
-              queryKey: ["gateway", state,clientId],
-              queryFn: () => knockKnock(state,clientId),
+    if (token === '') {
+        console.log("Context shows no token, running gate to obtain.")
+        const gate = await queryClient.fetchQuery({
+              queryKey: ["gateway", state, clientId],
+              queryFn: () => knockKnock(state, clientId),
             })
-        console.log("After the gate has ran: %o", gate)
+        console.log("After the gate has ran: Status: %s", gate.status)
         if (gate.error) {
             console.log("An error occurred going through the Gate: %s", gate.error)
         }
         if (gate.status === "Authorized") {
             console.log("Gate is authorized.")
-            if (session.has('token')) {
-                console.log("Token present in cookie: %s", session.get('token'))
-            } else {
-                console.log("Token was not found in the cookie...")
+            if (gate.token) {
+                token = gate.token;
             }
-            session.set('isValid', true)
         } else {
-            session.set('isValid', false)
-            console.log("status of Gate was: %s", gate.status)
+            console.log("Status of Gate was: %s", gate.error)
         }
     } else {
-        // You can assume there is a token in the context since it should ONLY be token or ''
-        // Same assumption can be made for the token in the session
-        console.log("Token is present in the session data...")
-        const token = session.get('token');
+        // the value is not empty so accept it.
+        console.log("Token is present in the context...")
         const isValid = await queryClient.fetchQuery({queryKey: ["checker", token],  queryFn: ()=>checker()})
         console.log("Validity of token is: %s", isValid)
         if (isValid) {
@@ -59,4 +49,6 @@ export const authMiddleware: Route.ClientMiddlewareFunction = async ({
             console.log("Token is INVALID.")
         }
     }
+    context.set(sqContext, {clientId:clientId, state:state, token:token})
+    console.log("Completed middleware, updated context...")
 }

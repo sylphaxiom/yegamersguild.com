@@ -36,6 +36,7 @@ function loadToken(string $merchantName)
     $key = Bucket::getDice();
     // decrypt tokens
     try {
+        error_log("Preparing to decrypt. Data is: Cipher: $cipher | IV: $iv | Tag: $tag");
         $decAccess = openssl_decrypt($access, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
         $decRefresh = openssl_decrypt($refresh, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
     } catch (Exception $e) {
