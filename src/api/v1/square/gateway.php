@@ -74,7 +74,7 @@ try {
 // Always send to refresh to check for a current token with state in the URL for GET
 // Assume if you get a echo then you are authorized and can proceed.
 try {
-    $token = loadToken(merchantName: 'yegamersguild');
+    $token = loadToken(client: 'yegamersguild');
     error_log("token returned from the load is: $token");
 } catch (Exception $e) {
     error_log("An error occurred while loading the token and setting it in the session.");

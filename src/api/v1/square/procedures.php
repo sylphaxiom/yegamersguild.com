@@ -13,12 +13,12 @@ require_once "SQDB_bucket.php";
 
 error_log("========== Initialized procedures ==========");
 
-function loadToken(string $merchantName)
+function loadToken(string $client)
 {
     // Get data
-    error_log("Entered loadToken with client: $merchantName");
+    error_log("Entered loadToken with client: $client");
     try {
-        [$access, $refresh, $expires, $merchantId, $merchantName] = getToken($merchantName);
+        [$access, $refresh, $expires, $merchantId, $merchantName] = getToken(client: $client);
         error_log("inside loadToken, returned from the DB: $access");
     } catch (Exception $e) {
         error_log("An error occurred in loadToken while running getToken.");
@@ -26,7 +26,7 @@ function loadToken(string $merchantName)
         throw $e;
     }
     try {
-        [$cipher, $iv, $tag] = getDecrypt(owner: $merchantName);
+        [$cipher, $iv, $tag] = getDecrypt(client: $client);
         error_log("After getting decrypt info: Cipher: $cipher | IV: $iv | Tag: $tag");
     } catch (Exception $e) {
         error_log("An error occurred in loadToken while running getDecrypt.");
@@ -39,7 +39,7 @@ function loadToken(string $merchantName)
         exit(1);
     }
     error_log("Access and cipher are present: access: $access | cipher: $cipher");
-    $key = hash('sha256', hash('sha256', Bucket::getDice(), true), true);
+    $key = hash('sha256', Bucket::getDice(), true);
     // decrypt tokens
     try {
         error_log("Preparing to decrypt. Data is: Cipher: $cipher | Tag: $tag");
@@ -74,7 +74,7 @@ function loadToken(string $merchantName)
 
 function saveToken(string $access, string $refresh, string $expires, string $merchantId, string $merchantName)
 {
-    [$cipher, $iv, $tag] = getDecrypt($merchantName);
+    [$cipher, $iv, $tag] = getDecrypt(client: $merchantName);
     if (!isset($cipher)) {
         $cipher = "aes-256-gcm";
         $ivlen = openssl_cipher_iv_length($cipher);
@@ -86,8 +86,8 @@ function saveToken(string $access, string $refresh, string $expires, string $mer
     // Check if inputs are empty or wrong type
     error_log("Lengths (after encrypt) - Access: " . strlen($access) . " | IV: " . strlen($iv) . " | Tag: " . strlen($tag));
     if (!empty($encAccess) && !empty($encRefresh)) {
-        $decRes = updateDecrypt($merchantName, $cipher, $iv, $tag);
-        $tknRes = updateToken($encAccess, $encRefresh, $expires, $merchantId, $merchantName);
+        $decRes = updateDecrypt(owner: $merchantName, cipher: $cipher, iv: $iv, tag: $tag);
+        $tknRes = updateToken(access: $encAccess, refresh: $encRefresh, expires: $expires, merchantId: $merchantId, merchantName: $merchantName);
         if (!empty($tknRes)) {
             error_log("An error occurred while updating the token in the database.");
             exit(1);
