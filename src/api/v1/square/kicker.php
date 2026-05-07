@@ -18,7 +18,6 @@ $code_challenge = rtrim(strtr(base64_encode($rawHash), '+/', '-_'), '=');
 
 // Now you save $verifier to your session and send $code_challenge to Square!
 // Set session variables and build URL
-$_SESSION['environment'] = 'sand';
 $_SESSION['verifier'] = $verifier;
 
 $authURL = "$environment/oauth2/authorize?client_id=$client_id&scope=$scope&session=$session&state=$state&code_challenge=$code_challenge";
@@ -27,7 +26,7 @@ header("Content-Type: application/json");
 echo json_encode([
     "status" => "Redirect",
     "message" => "",
-    "state" => $verifier,
+    "state" => $state,
     "url" => $authURL
 ]);
 exit();

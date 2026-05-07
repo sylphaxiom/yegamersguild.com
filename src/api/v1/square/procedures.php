@@ -18,7 +18,13 @@ function loadToken(string $client)
     // Get data
     error_log("Entered loadToken with client: $client");
     try {
-        [$access, $refresh, $expires, $merchantId, $merchantName] = getToken(client: $client);
+        $results = getToken(client: $client);
+        if ($results === false) {
+            error_log("No token data present, initializing kicker...");
+            require 'kicker.php';
+            exit();
+        }
+        [$access, $refresh, $expires, $merchantId, $merchantName] = $results;
         error_log("inside loadToken, returned from the DB: $access");
     } catch (Exception $e) {
         error_log("An error occurred in loadToken while running getToken.");
@@ -26,26 +32,29 @@ function loadToken(string $client)
         throw $e;
     }
     try {
-        [$cipher, $a_iv, $r_iv, $a_tag, $r_tag] = getDecrypt(client: $client);
-        if (isset($cipher)) {
-            var_dump(openssl_cipher_iv_length($cipher)); // should be 12
+        $results = getDecrypt(client: $client);
+        if ($results === false) {
+            error_log("FATAL: Token exists but decrypt data is missing for $client. DB is in inconsistent state.");
+            http_response_code(500);
+            echo json_encode(["status" => "Error", "message" => "Internal server error."]);
+            exit(1);
         }
+        [$cipher, $a_iv, $r_iv, $a_tag, $r_tag] = $results;
+        $a_iv = base64_decode($a_iv);
+        $r_iv = base64_decode($r_iv);
+        $a_tag = base64_decode($a_tag);
+        $r_tag = base64_decode($r_tag);
     } catch (Exception $e) {
         error_log("An error occurred in loadToken while running getDecrypt.");
         error_log("Message: " . $e->getMessage() . " | Trace:\n" . $e->getLine());
         throw $e;
     }
-    if (empty($access) || empty($cipher)) {
-        error_log("The cipher or access token were not present. Kicking off initial auth flow...");
-        require 'kicker.php';
-        // exit();
-    }
     error_log("Access and cipher are present: access: $access | cipher: $cipher");
     $key = hash('sha256', Bucket::getDice(), true);
     // decrypt tokens
     try {
-        $decAccess = openssl_decrypt($access, $cipher, $key, OPENSSL_RAW_DATA, $iv, $a_tag);
-        $decRefresh = openssl_decrypt($refresh, $cipher, $key, OPENSSL_RAW_DATA, $iv, $r_tag);
+        $decAccess = openssl_decrypt(base64_decode($access), $cipher, $key, OPENSSL_RAW_DATA, $a_iv, $a_tag);
+        $decRefresh = openssl_decrypt(base64_decode($refresh), $cipher, $key, OPENSSL_RAW_DATA, $r_iv, $r_tag);
         error_log("decrypted token is: $decAccess");
     } catch (Exception $e) {
         error_log("An error occurred in loadToken while running decryption.");
@@ -67,8 +76,9 @@ function loadToken(string $client)
 
 function saveToken(string $access, string $refresh, string $expires, string $merchantId, string $merchantName)
 {
-    [$cipher, $a_iv, $r_iv, $a_tag, $r_tag] = getDecrypt(client: $merchantName);
-    if (!isset($cipher)) {
+    $results = getDecrypt(client: $merchantName);
+    if ($results === false) {
+        error_log("No decryption data present, building...");
         $cipher = "aes-256-gcm";
         $ivlen = openssl_cipher_iv_length($cipher);
         $a_iv = openssl_random_pseudo_bytes($ivlen);
@@ -76,14 +86,16 @@ function saveToken(string $access, string $refresh, string $expires, string $mer
         $a_tag = '';
         $r_tag = '';
     } else {
+        [$cipher, $a_iv, $r_iv, $a_tag, $r_tag] = $results;
         $a_iv = base64_decode($a_iv);
         $r_iv = base64_decode($r_iv);
         $a_tag = base64_decode($a_tag);
         $r_tag = base64_decode($r_tag);
     }
+
     $key = hash('sha256', Bucket::getDice(), true);
-    $encAccess = openssl_encrypt($access, $cipher, $key, OPENSSL_RAW_DATA, $a_iv, $a_tag);
-    $encRefresh = openssl_encrypt($refresh, $cipher, $key, OPENSSL_RAW_DATA, $r_iv, $r_tag);
+    $encAccess = base64_encode(openssl_encrypt($access, $cipher, $key, OPENSSL_RAW_DATA, $a_iv, $a_tag));
+    $encRefresh = base64_encode(openssl_encrypt($refresh, $cipher, $key, OPENSSL_RAW_DATA, $r_iv, $r_tag));
     // Check if inputs are empty or wrong type
     if (!empty($encAccess) && !empty($encRefresh)) {
         $enca_iv = base64_encode($a_iv);
@@ -100,7 +112,12 @@ function saveToken(string $access, string $refresh, string $expires, string $mer
             error_log("An error occurred while updating the decryption in the database.");
             exit(1);
         }
+        error_log("saveToken completed successfully.");
         return true;
+    } else {
+        error_log("openssl_encrypt failed. encAccess empty: " . empty($encAccess) . " | encRefresh empty: " . empty($encRefresh));
+        error_log("OpenSSL error: " . openssl_error_string());
+        exit(1);
     }
 }
 
@@ -108,7 +125,7 @@ function checkToken(string $token)
 {
     $ogToken = loadToken('yegamersguild');
     try {
-        $e_tag = $_SESSION['e_tag'];
+        $e_tag = $_SESSION['tag'];
         $iv = $_SESSION['iv'];
     } catch (Exception $e) {
         error_log('An error occurred while getting the decrip info for the public token, check your session.');

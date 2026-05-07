@@ -57,7 +57,7 @@ function obtainOAuthToken($authorizationCode)
     // Initialize Square PHP SDK OAuth API client.
     $clientId = $_SESSION['clientId'];
     $environment = $_SESSION['environment'] == "sand" ? Environments::Sandbox->value : Environments::Production->value;
-    $square = new SquareClient(token: $clientId, options: [
+    $square = new SquareClient(token: '', options: [
         'baseUrl' => $environment,
     ]);
     $oauthApi = $square->oAuth;
@@ -121,7 +121,7 @@ try {
             error_log("An error occurred: {$_GET["error"]} => {$_GET["error_description"]}");
             exit(1);
         }
-    } elseif (isset($_GET['response_type']) && "code" === $_GET["response_type"]) {
+    } elseif (isset($_GET['code'])) {
         error_log("code matches expected response_type, proceeding with obtainOAuthToken...");
         // Get the authorization code and use it to call the obtainOAuthToken wrapper function.
         $authorizationCode = $_GET['code'];
@@ -130,8 +130,6 @@ try {
         } catch (SquareApiException $e) {
             http_response_code(500);
             error_log("There was an error during the call to obtainToken(): " . $e->getMessage());
-            error_log("Access token: $accessToken\nRefresh token: $refreshToken\nExpiration: $expiresAt\nMerchant Id: $merchantId");
-            error_log(var_dump($_GET));
         }
         // Because we want to keep things simple and we're using Sandbox, 
         // we call a function that writes the tokens to the page so we can easily copy and use them directly.
@@ -144,6 +142,9 @@ try {
         require 'procedures.php';
 
         saveToken($accessToken, $refreshToken, $expiresAt, $merchantId, 'yegamersguild');
+
+        header('Location: http://localhost:5173/shop');
+        exit();
 
         // $cipher = "aes-256-gcm";
         // if (in_array($cipher, openssl_get_cipher_methods())) {

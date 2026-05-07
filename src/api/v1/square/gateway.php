@@ -7,7 +7,6 @@ $allowed_origins = [
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 
-// Comment out the following 3 lines for production.
 if (in_array($origin, $allowed_origins)) {
     header("Access-Control-Allow-Origin: $origin");
     header('Access-Control-Allow-Credentials: true');
@@ -16,10 +15,13 @@ if (in_array($origin, $allowed_origins)) {
     header('Access-Control-Allow-Methods:GET, POST, OPTIONS');
 }
 
+$domain = parse_url($_SERVER['HTTP_ORIGIN'], PHP_URL_HOST);
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     header("HTTP/1.1 200 OK");
     exit;
 }
+// Comment out the following 3 lines for production.
 error_reporting(-1);
 ini_set('display_errors', 'On');
 set_error_handler("var_dump");
@@ -99,7 +101,7 @@ try {
 }
 
 $cookieData = ['state' => $state, 'token' => $encToken];
-setCookie(name: $state, value: json_encode($cookieData), expires_or_options: (time() + 7200), path: "", domain: $_SERVER['HTTP_ORIGIN'], secure: true, httponly: true);
+setCookie(name: $state, value: json_encode($cookieData), expires_or_options: (time() + 7200), path: "", domain: $domain, secure: true, httponly: true);
 
 http_response_code(200);
 echo json_encode(['status' => "Authorized", 'message' => 'Authorization valid for 2 hours.', 'state' => $state, 'token' => $encToken]);
