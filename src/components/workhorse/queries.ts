@@ -9,6 +9,11 @@ export const queryClient = new QueryClient({
     },
   });
 
+const api = axios.create({
+    baseURL: "https://api.sylphaxiom.com",
+    withCredentials:true
+})
+
 export async function knockKnock(
     state:string,
     clientId:string,
@@ -18,8 +23,12 @@ export async function knockKnock(
     state:string;
     error?:string;
 }> {
-    const response = await axios
-    .get(`https://api.sylphaxiom.com/gateway.php?state=${state}&clientId=${clientId}&environment=sand`)
+    const response = await api
+    .get(`https://api.sylphaxiom.com/square/gateway.php?state=${state}&clientId=${clientId}&environment=sand`, {
+        headers: {
+            'Content-Type': "application/json",
+        },
+    })
     .catch((error)=>{
         console.log("An error occurred in the gateway: %s", error);
         throw error
@@ -30,8 +39,8 @@ export async function knockKnock(
 export async function checker(): Promise<{
     isValid:boolean;
 }> {
-    const response = await axios
-    .get(`https://api.sylphaxiom.com/checker.php`)
+    const response = await api
+    .post(`https://api.sylphaxiom.com/square/checker.php`)
     .catch((error)=>{
         console.log("An error occurred in the checker: %s", error);
         throw error

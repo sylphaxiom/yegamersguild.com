@@ -16,6 +16,7 @@ const { getSession, commitSession, destroySession } = createCookieSessionStorage
         path: "/shop",
         maxAge: 72000,
         secure: true,
+        secrets: ['WiggityWhimWhamWazzle']
     }
 })
 

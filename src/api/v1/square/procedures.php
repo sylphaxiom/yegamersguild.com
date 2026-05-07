@@ -14,8 +14,20 @@ require_once "SQDB_bucket.php";
 function loadToken(string $merchantName)
 {
     // Get data
-    [$access, $refresh, $expires, $merchantId, $merchantName] = getToken($merchantName);
-    [$cipher, $iv, $tag] = getDecrypt($merchantName);
+    try {
+        [$access, $refresh, $expires, $merchantId, $merchantName] = getToken($merchantName);
+    } catch (Exception $e) {
+        error_log("An error occurred in loadToken while running getToken.");
+        error_log("Message: " . $e->getMessage() . " | Trace:\n" . $e->getLine());
+        throw $e;
+    }
+    try {
+        [$cipher, $iv, $tag] = getDecrypt($merchantName);
+    } catch (Exception $e) {
+        error_log("An error occurred in loadToken while running getDecrypt.");
+        error_log("Message: " . $e->getMessage() . " | Trace:\n" . $e->getLine());
+        throw $e;
+    }
     if (empty($access) || empty($cipher)) {
         error_log("The cipher or access token were not present. Kicking off initial auth flow...");
         require 'kicker.php';
@@ -23,8 +35,14 @@ function loadToken(string $merchantName)
     }
     $key = Bucket::getDice();
     // decrypt tokens
-    $decAccess = openssl_decrypt($access, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
-    $decRefresh = openssl_decrypt($refresh, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
+    try {
+        $decAccess = openssl_decrypt($access, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
+        $decRefresh = openssl_decrypt($refresh, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
+    } catch (Exception $e) {
+        error_log("An error occurred in loadToken while running decryption.");
+        error_log("Message: " . $e->getMessage() . " | Trace:\n" . $e->getLine());
+        throw $e;
+    }
     // Check expiration date
     $exp = new DateTime($expires);
     $now = new DateTime();

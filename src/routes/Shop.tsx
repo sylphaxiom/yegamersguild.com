@@ -2,12 +2,18 @@
 import type { Route } from "./+types/Shop";
 import Header from "../components/Header";
 import Box from "@mui/material/Box";
-import { useQuery, type UseQueryResult } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import Footer from "~/components/Footer";
 import { data, useLoaderData } from "react-router";
 import { knockKnock } from "~/components/workhorse/queries";
-import { getSession, commitSession } from "~/components/workhorse/sessions";
+// import { getSession, commitSession } from "~/components/workhorse/sessions";
 import Thinking from "~/components/baubles/Thinking";
+import { authMiddleware } from "~/components/workhorse/middleware";
+import { commitSession, getSession } from "~/components/workhorse/sessions";
+
+export const clientMiddleware: Route.ClientMiddlewareFunction[] = [
+  authMiddleware,
+];
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -17,15 +23,16 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  console.log("Current Session data is valid: %s", session.get("isValid"));
-  const clientId = session.get("clientId");
-  const state = session.get("state");
-  const isValid = session.get("isValid");
-  return data(
-    { clientId: clientId, state: state, isValid: isValid },
-    { headers: { "Set-Cookie": await commitSession(session) } },
-  );
+  // const session = await getSession(request.headers.get("Cookie"));
+  // console.log("Current Session data is valid: %s", session.get("isValid"));
+  // const clientId = session.get("clientId");
+  // const state = session.get("state");
+  // const isValid = session.get("isValid");
+  // return data(
+  //   { clientId: clientId, state: state, isValid: isValid },
+  //   { headers: { "Set-Cookie": await commitSession(session) } },
+  // );
+  return { ok: true };
 }
 
 export default function Shop() {

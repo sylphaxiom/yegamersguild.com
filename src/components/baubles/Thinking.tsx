@@ -17,7 +17,6 @@ export default function Thinking(props: ThinkingProps) {
   React.useEffect(() => {}, []);
 
   let daddy: SxProps;
-  let logo: React.CSSProperties;
 
   switch (props.sizing) {
     case "large":
@@ -32,13 +31,6 @@ export default function Thinking(props: ThinkingProps) {
         marginRight: "auto",
         overflow: "hidden",
       };
-      logo = {
-        position: "absolute",
-        width: "100px",
-        height: "100px",
-        alignSelf: "center",
-        marginLeft: "75px",
-      };
       break;
     case "medium":
       daddy = {
@@ -50,13 +42,6 @@ export default function Thinking(props: ThinkingProps) {
         display: "flex",
         marginLeft: "auto",
         marginRight: "auto",
-      };
-      logo = {
-        position: "absolute",
-        width: "75px",
-        height: "75px",
-        alignSelf: "center",
-        marginLeft: "50px",
       };
       break;
     case "small":
@@ -70,13 +55,6 @@ export default function Thinking(props: ThinkingProps) {
         marginLeft: "auto",
         marginRight: "auto",
       };
-      logo = {
-        position: "absolute",
-        width: "50px",
-        height: "50px",
-        alignSelf: "center",
-        marginLeft: "25px",
-      };
       break;
     default:
       daddy = {
@@ -86,13 +64,6 @@ export default function Thinking(props: ThinkingProps) {
         display: "flex",
         marginLeft: "auto",
         marginRight: "auto",
-      };
-      logo = {
-        position: "absolute",
-        width: "100px",
-        height: "100px",
-        alignSelf: "center",
-        marginLeft: "75px",
       };
   }
 
@@ -106,12 +77,6 @@ export default function Thinking(props: ThinkingProps) {
           rotate: rotate,
           overflow: "hidden",
         }}
-      />
-      <img
-        src="/kothis.svg"
-        id="logoBG"
-        style={logo}
-        alt="Logo of Kothis which looks like a D20 with a fancy K in the middle and some designs to represent the classes of the original players."
       />
     </Box>
   );

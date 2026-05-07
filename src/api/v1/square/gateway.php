@@ -1,22 +1,30 @@
 <?php
 // We initialize the session after getting state.
+$allowed_origins = [
+    'http://localhost:5173',
+    'https://test.sylphaxiom.com',
+];
+
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 
 // Comment out the following 3 lines for production.
+if (in_array($origin, $allowed_origins)) {
+    header("Access-Control-Allow-Origin: $origin");
+    header('Access-Control-Allow-Credentials: true');
+    header('Access-Control-Max-Age:3600');
+    header('Access-Control-Allow-Headers:Content-type, Authorization');
+    header('Access-Control-Allow-Methods:GET, POST, OPTIONS');
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    header("HTTP/1.1 200 OK");
+    exit;
+}
 error_reporting(-1);
 ini_set('display_errors', 'On');
 set_error_handler("var_dump");
-header('Access-Control-Allow-Origin:*');
-header('Access-Control-Max-Age:3600');
-header('Access-Control-Allow-Headers:Content-type,Rain');
-header('Access-Control-Allow-Methods:GET,OPTIONS');
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    header("HTTP/1.1 200 OK");
-    die();
-}
 require_once "/home2/xikihgmy/includes/bucket.php";
-// require_once "SQDB_bucket.php";
-
-// require 'vendor/autoload.php';
+require_once "procedures.php";
 
 header("Content-Type: application/json");
 
@@ -26,14 +34,14 @@ $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);
 
 try {
-    $clientId = $input['clientId'];
-    $state = $input['state'];
-    $environment = $input['environment'];
+    $clientId = $_GET['clientId'];
+    $state = $_GET['state'];
+    $environment = $_GET['environment'];
 } catch (Exception $e) {
     error_log("An error occurred while setting the clientId and state values");
     error_log("Client ID: $clientId | State: $state");
     http_response_code(400);
-    return json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
+    echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
 }
 
 
@@ -45,7 +53,7 @@ try {
     error_log("An error occurred while hashing and converting state to code challenge.");
     error_log("Raw Hash: $rawHash | Code Challenge: $code_challenge");
     http_response_code(400);
-    return json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
+    echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
 }
 
 
@@ -59,21 +67,22 @@ try {
     error_log("An error occurred while setting session variables clientId, auth_state, and environment.");
     error_log("Client ID: {$_SESSION['clientId']} | State: {$_SESSION['auth_state']} | Environment: {$_SESSION['environment']}");
     http_response_code(400);
-    return json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
+    echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
 }
 
 
 // Always send to refresh to check for a current token with state in the URL for GET
-// Assume if you get a return then you are authorized and can proceed.
+// Assume if you get a echo then you are authorized and can proceed.
 try {
     $token = loadToken('yegamersguild');
-    $_SESSION['expires'] = (new DateTime())->add(DateInterval::createFromDateString('2 hours'));
-    $_SESSION['validator'] = $code_challenge;
 } catch (Exception $e) {
     error_log("An error occurred while loading the token and setting it in the session.");
+    error_log("Message: " . $e->getMessage() . " | Trace:\n" . $e->getLine());
     http_response_code(400);
-    return json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
+    echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
 }
+$_SESSION['expires'] = (new DateTime())->add(DateInterval::createFromDateString('2 hours'));
+$_SESSION['validator'] = $code_challenge;
 
 try {
     $key = Bucket::getDice();
@@ -84,7 +93,11 @@ try {
     $_SESSION['tag'] = $tag;
     $_SESSION['iv'] = $iv;
     $_SESSION["token"] = $encToken;
+} catch (Exception $e) {
+    error_log("An error occurred while doing the final session load and token encryption.");
+    http_response_code(400);
+    echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
 }
 
 http_response_code(200);
-return json_encode(['status' => "Authorized", 'message' => 'Authorization valid for 2 hours.', 'state' => $state]);
+echo json_encode(['status' => "Authorized", 'message' => 'Authorization valid for 2 hours.', 'state' => $state]);

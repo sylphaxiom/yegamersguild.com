@@ -17,10 +17,11 @@ if (!isset($_SESSION["auth_state"])) {
 error_reporting(-1);
 ini_set('display_errors', 'On');
 set_error_handler("var_dump");
-header('Access-Control-Allow-Origin:*');
+header('Access-Control-Allow-Origin: http://localhost:5173');
+header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Max-Age:3600');
-header('Access-Control-Allow-Headers:Content-type,Rain');
-header('Access-Control-Allow-Methods:GET,OPTIONS');
+header('Access-Control-Allow-Headers:Content-type, Authorization, Rain');
+header('Access-Control-Allow-Methods:GET, POST, OPTIONS');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     header("HTTP/1.1 200 OK");
     die();
