@@ -24,7 +24,6 @@ error_reporting(-1);
 ini_set('display_errors', 'On');
 set_error_handler("var_dump");
 require_once "/home2/xikihgmy/includes/bucket.php";
-require_once "procedures.php";
 
 header("Content-Type: application/json");
 
@@ -32,6 +31,7 @@ error_log("========== Initialized gateway ==========");
 
 $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);
+require_once "procedures.php";
 
 try {
     $clientId = $_GET['clientId'];
@@ -74,7 +74,8 @@ try {
 // Always send to refresh to check for a current token with state in the URL for GET
 // Assume if you get a echo then you are authorized and can proceed.
 try {
-    $token = loadToken('yegamersguild');
+    $token = loadToken(merchantName: 'yegamersguild');
+    error_log("token returned from the load is: $token");
 } catch (Exception $e) {
     error_log("An error occurred while loading the token and setting it in the session.");
     error_log("Message: " . $e->getMessage() . " | Trace:\n" . $e->getLine());
@@ -85,11 +86,12 @@ $_SESSION['expires'] = (new DateTime())->add(DateInterval::createFromDateString(
 $_SESSION['validator'] = $code_challenge;
 
 try {
-    $key = Bucket::getDice();
+    $key = hash('sha256', Bucket::getDice(), true);
     $cipher = "aes-256-gcm";
     $ivlen = openssl_cipher_iv_length($cipher);
     $iv = openssl_random_pseudo_bytes($ivlen);
     $encToken = openssl_encrypt($token, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
+    error_log("token after encryption is: $encToken");
     $_SESSION['tag'] = $tag;
     $_SESSION['iv'] = $iv;
     $_SESSION["token"] = $encToken;
@@ -101,7 +103,7 @@ try {
 
 error_log("Gateway completed, returning cookie and authorized...");
 $cookieData = ['state' => $state, 'token' => $encToken];
-setCookie(name: $state, value: json_encode($cookieData), expires_or_options: $_SESSION['expires'], path: "", domain: $_SERVER['HTTP_ORIGIN'], secure: true, httponly: true);
+setCookie(name: $state, value: json_encode($cookieData), expires_or_options: (time() + 7200), path: "", domain: $_SERVER['HTTP_ORIGIN'], secure: true, httponly: true);
 
 http_response_code(200);
 echo json_encode(['status' => "Authorized", 'message' => 'Authorization valid for 2 hours.', 'state' => $state, 'token' => $encToken]);

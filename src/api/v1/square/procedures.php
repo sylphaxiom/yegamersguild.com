@@ -11,18 +11,23 @@ require_once "SQDB_bucket.php";
 // need to call the operation, not all the steps. Removes some bucket deps.
 ///////////////////////////////////////////////////////////////////////////////
 
+error_log("========== Initialized procedures ==========");
+
 function loadToken(string $merchantName)
 {
     // Get data
+    error_log("Entered loadToken with client: $merchantName");
     try {
         [$access, $refresh, $expires, $merchantId, $merchantName] = getToken($merchantName);
+        error_log("inside loadToken, returned from the DB: $access");
     } catch (Exception $e) {
         error_log("An error occurred in loadToken while running getToken.");
         error_log("Message: " . $e->getMessage() . " | Trace:\n" . $e->getLine());
         throw $e;
     }
     try {
-        [$cipher, $iv, $tag] = getDecrypt($merchantName);
+        [$cipher, $iv, $tag] = getDecrypt(owner: $merchantName);
+        error_log("After getting decrypt info: Cipher: $cipher | IV: $iv | Tag: $tag");
     } catch (Exception $e) {
         error_log("An error occurred in loadToken while running getDecrypt.");
         error_log("Message: " . $e->getMessage() . " | Trace:\n" . $e->getLine());
@@ -33,12 +38,22 @@ function loadToken(string $merchantName)
         require 'kicker.php';
         exit(1);
     }
-    $key = Bucket::getDice();
+    error_log("Access and cipher are present: access: $access | cipher: $cipher");
+    $key = hash('sha256', hash('sha256', Bucket::getDice(), true), true);
     // decrypt tokens
     try {
-        error_log("Preparing to decrypt. Data is: Cipher: $cipher | IV: $iv | Tag: $tag");
+        error_log("Preparing to decrypt. Data is: Cipher: $cipher | Tag: $tag");
         $decAccess = openssl_decrypt($access, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
         $decRefresh = openssl_decrypt($refresh, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
+        error_log("decrypted token is: $decAccess");
+        if ($decAccess === false) {
+            $sslError = openssl_error_string();
+            error_log("Decryption FAILED. OpenSSL Error: " . $sslError);
+            // Check if inputs are empty or wrong type
+            error_log("Lengths (after decrypt) - Access: " . strlen($access) . " | IV: " . strlen($iv) . " | Tag: " . strlen($tag));
+        } else {
+            error_log("Decryption SUCCESS. Token: " . $decAccess);
+        }
     } catch (Exception $e) {
         error_log("An error occurred in loadToken while running decryption.");
         error_log("Message: " . $e->getMessage() . " | Trace:\n" . $e->getLine());
@@ -65,9 +80,11 @@ function saveToken(string $access, string $refresh, string $expires, string $mer
         $ivlen = openssl_cipher_iv_length($cipher);
         $iv = openssl_random_pseudo_bytes($ivlen);
     }
-    $key = Bucket::getDice();
+    $key = hash('sha256', Bucket::getDice(), true);
     $encAccess = openssl_encrypt($access, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
     $encRefresh = openssl_encrypt($refresh, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
+    // Check if inputs are empty or wrong type
+    error_log("Lengths (after encrypt) - Access: " . strlen($access) . " | IV: " . strlen($iv) . " | Tag: " . strlen($tag));
     if (!empty($encAccess) && !empty($encRefresh)) {
         $decRes = updateDecrypt($merchantName, $cipher, $iv, $tag);
         $tknRes = updateToken($encAccess, $encRefresh, $expires, $merchantId, $merchantName);
@@ -94,7 +111,7 @@ function checkToken(string $token)
         error_log($_SESSION);
     }
     $cipher = "aes-256-gcm";
-    $key = Bucket::getDice();
+    $key = hash('sha256', Bucket::getDice(), true);
     $newToken = openssl_decrypt($token, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
 
     return $ogToken === $newToken;

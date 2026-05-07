@@ -30,7 +30,7 @@ require_once "procedures.php";
 
 header("Content-Type: application/json");
 
-error_log("========== Initialized gateway ==========");
+error_log("========== Initialized checker ==========");
 
 $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);
