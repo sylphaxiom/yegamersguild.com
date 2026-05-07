@@ -1,5 +1,6 @@
 import * as React from "react";
 import {
+  createContext,
   isRouteErrorResponse,
   Links,
   Meta,
@@ -7,15 +8,12 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-
 import type { Route } from "./+types/root";
-// import TwinkleStars from "./components/baubles/TwinkleStars";
-// import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-// import theme, { dark } from "./theme";
 import theme from "./theme";
-import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./components/workhorse/queries";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -36,7 +34,6 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const queryClient = new QueryClient();
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -46,8 +43,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {/* <TwinkleStars /> */}
-        {/* <InitColorSchemeScript attribute="class" /> */}
         <React.Fragment>
           <ThemeProvider disableTransitionOnChange={false} noSsr theme={theme}>
             <CssBaseline enableColorScheme />

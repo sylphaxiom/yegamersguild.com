@@ -86,31 +86,6 @@ export default function About() {
             Check out our inventory
           </Button>
         </Box>
-        {/* <Collapse in={open}>
-          <Box
-            sx={{
-              border: "2px solid",
-              borderRadius: "5px",
-              mx: "auto",
-              padding: 2,
-              textAlign: "center",
-              margin: 2,
-            }}
-          >
-            <Typography variant="h4" component="aside">
-              Only Joking!
-            </Typography>
-            <img
-              src="construction.svg"
-              width="60%"
-              height="auto"
-              alt="Some stick figures building a website, literally."
-            />
-            <Typography variant="h4" component="aside">
-              This is coming soon
-            </Typography>
-          </Box>
-        </Collapse> */}
       </Grid>
       <Grid
         size={{ xs: 12, sm: 4, md: 6 }}

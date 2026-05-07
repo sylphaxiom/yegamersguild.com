@@ -76,7 +76,7 @@ function checkToken(string $token)
     }
     $cipher = "aes-256-gcm";
     $key = Bucket::getDice();
-    $ckToken = openssl_decrypt($token, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
+    $newToken = openssl_decrypt($token, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
 
-    return $ogToken === $ckToken;
+    return $ogToken === $newToken;
 }

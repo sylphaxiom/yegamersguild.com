@@ -4,6 +4,7 @@ type SessionData = {
     state:string;
     clientId:string;
     token:string;
+    isValid:boolean;
 }
 
 const { getSession, commitSession, destroySession } = createCookieSessionStorage<SessionData>({

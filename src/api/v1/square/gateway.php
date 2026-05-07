@@ -33,7 +33,7 @@ try {
     error_log("An error occurred while setting the clientId and state values");
     error_log("Client ID: $clientId | State: $state");
     http_response_code(400);
-    return json_encode(["status" => "Failure", "message" => $e->getMessage(), "trace" => $e->getTraceAsString()]);
+    return json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
 }
 
 
@@ -45,7 +45,7 @@ try {
     error_log("An error occurred while hashing and converting state to code challenge.");
     error_log("Raw Hash: $rawHash | Code Challenge: $code_challenge");
     http_response_code(400);
-    return json_encode(["status" => "Failure", "message" => $e->getMessage(), "trace" => $e->getTraceAsString()]);
+    return json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
 }
 
 
@@ -59,7 +59,7 @@ try {
     error_log("An error occurred while setting session variables clientId, auth_state, and environment.");
     error_log("Client ID: {$_SESSION['clientId']} | State: {$_SESSION['auth_state']} | Environment: {$_SESSION['environment']}");
     http_response_code(400);
-    return json_encode(["status" => "Failure", "message" => $e->getMessage(), "trace" => $e->getTraceAsString()]);
+    return json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
 }
 
 
@@ -72,7 +72,7 @@ try {
 } catch (Exception $e) {
     error_log("An error occurred while loading the token and setting it in the session.");
     http_response_code(400);
-    return json_encode(["status" => "Failure", "message" => $e->getMessage(), "trace" => $e->getTraceAsString()]);
+    return json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
 }
 
 try {
@@ -87,4 +87,4 @@ try {
 }
 
 http_response_code(200);
-return json_encode(['status' => "Authorized", 'message' => 'Authorization valid for 2 hours.', 'state' => $state, 'token' => $encToken]);
+return json_encode(['status' => "Authorized", 'message' => 'Authorization valid for 2 hours.', 'state' => $state]);
