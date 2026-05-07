@@ -26,7 +26,10 @@ function loadToken(string $client)
         throw $e;
     }
     try {
-        [$cipher, $iv, $a_tag, $r_tag] = getDecrypt(client: $client);
+        [$cipher, $a_iv, $r_iv, $a_tag, $r_tag] = getDecrypt(client: $client);
+        if (isset($cipher)) {
+            var_dump(openssl_cipher_iv_length($cipher)); // should be 12
+        }
     } catch (Exception $e) {
         error_log("An error occurred in loadToken while running getDecrypt.");
         error_log("Message: " . $e->getMessage() . " | Trace:\n" . $e->getLine());
@@ -34,7 +37,6 @@ function loadToken(string $client)
     }
     if (empty($access) || empty($cipher)) {
         error_log("The cipher or access token were not present. Kicking off initial auth flow...");
-        error_log("Type (before kicker): " . gettype($_SESSION['auth_state']));
         require 'kicker.php';
         // exit();
     }
@@ -65,20 +67,32 @@ function loadToken(string $client)
 
 function saveToken(string $access, string $refresh, string $expires, string $merchantId, string $merchantName)
 {
-    [$cipher, $iv, $a_tag, $r_tag] = getDecrypt(client: $merchantName);
+    [$cipher, $a_iv, $r_iv, $a_tag, $r_tag] = getDecrypt(client: $merchantName);
     if (!isset($cipher)) {
         $cipher = "aes-256-gcm";
         $ivlen = openssl_cipher_iv_length($cipher);
-        $iv = openssl_random_pseudo_bytes($ivlen);
+        $a_iv = openssl_random_pseudo_bytes($ivlen);
+        $r_iv = openssl_random_pseudo_bytes($ivlen);
+        $a_tag = '';
+        $r_tag = '';
+    } else {
+        $a_iv = base64_decode($a_iv);
+        $r_iv = base64_decode($r_iv);
+        $a_tag = base64_decode($a_tag);
+        $r_tag = base64_decode($r_tag);
     }
     $key = hash('sha256', Bucket::getDice(), true);
-    $encAccess = openssl_encrypt($access, $cipher, $key, OPENSSL_RAW_DATA, $iv, $a_tag);
-    $encRefresh = openssl_encrypt($refresh, $cipher, $key, OPENSSL_RAW_DATA, $iv, $r_tag);
+    $encAccess = openssl_encrypt($access, $cipher, $key, OPENSSL_RAW_DATA, $a_iv, $a_tag);
+    $encRefresh = openssl_encrypt($refresh, $cipher, $key, OPENSSL_RAW_DATA, $r_iv, $r_tag);
     // Check if inputs are empty or wrong type
     if (!empty($encAccess) && !empty($encRefresh)) {
-        $decRes = updateDecrypt(owner: $merchantName, cipher: $cipher, iv: $iv, a_tag: $a_tag, r_tag: $r_tag);
+        $enca_iv = base64_encode($a_iv);
+        $encr_iv = base64_encode($r_iv);
+        $enca_tag = base64_encode($a_tag);
+        $encr_tag = base64_encode($r_tag);
         $tknRes = updateToken(access: $encAccess, refresh: $encRefresh, expires: $expires, merchantId: $merchantId, merchantName: $merchantName);
-        if (!empty($tknRes)) {
+        $decRes = updateDecrypt(owner: $merchantName, cipher: $cipher, a_iv: $enca_iv, r_iv: $encr_iv, a_tag: $enca_tag, r_tag: $encr_tag);
+        if (empty($tknRes)) {
             error_log("An error occurred while updating the token in the database.");
             exit(1);
         }

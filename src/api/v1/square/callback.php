@@ -88,8 +88,6 @@ function obtainOAuthToken($authorizationCode)
     $expiresAt = $response->getExpiresAt();
     $merchantId = $response->getMerchantId();
 
-    error_log("Returned data:\nAccessToken: $accessToken\nRefreshToken: $refreshToken\nExpiresAt: $expiresAt\nMerchantId: $merchantId");
-
     // Return the tokens along with the expiry date/time and merchant ID.
     return [$accessToken, $refreshToken, $expiresAt, $merchantId];
 }
@@ -143,32 +141,36 @@ try {
 
         error_log("Returned to the main thread, encrypting and submitting to DB...");
 
-        $cipher = "aes-256-gcm";
-        if (in_array($cipher, openssl_get_cipher_methods())) {
-            error_log("Cipher present, encrypting...");
-            $ivlen = openssl_cipher_iv_length($cipher);
-            $iv = openssl_random_pseudo_bytes($ivlen);
-            $key = hash('sha256', Bucket::getDice(), true);
-            $cipherAccess = openssl_encrypt($accessToken, $cipher, $key, OPENSSL_RAW_DATA, $iv, $a_tag);
-            $cipherRefresh = openssl_encrypt($refreshToken, $cipher, $key, OPENSSL_RAW_DATA, $iv, $r_tag);
-            $stored = updateToken(access: $cipherAccess, refresh: $cipherRefresh, expires: $expiresAt, merchantId: $merchantId, merchantName: 'yegamersguild');
-            error_log("Return from updating the token table: $stored");
-            if (!$stored) {
-                http_response_code(500);
-                error_log('An error occurred while attempting to update the decrypt database');
-                exit(1);
-            } else {
-                $stocked = updateDecrypt(owner: 'yegamersguild', cipher: $cipher, iv: $iv, a_tag: $a_tag, r_tag: $r_tag);
-                error_log("Return from updating the decrypt table: $stocked");
-                if (!$stocked) {
-                    http_response_code(500);
-                    error_log('An error occurred while attempting to update the decrypt database');
-                    exit(1);
-                } else {
-                    header('Location: http://localhost:5173/shop');
-                }
-            }
-        }
+        require 'procedures.php';
+
+        saveToken($accessToken, $refreshToken, $expiresAt, $merchantId, 'yegamersguild');
+
+        // $cipher = "aes-256-gcm";
+        // if (in_array($cipher, openssl_get_cipher_methods())) {
+        //     error_log("Cipher present, encrypting...");
+        //     $ivlen = openssl_cipher_iv_length($cipher);
+        //     $iv = openssl_random_pseudo_bytes($ivlen);
+        //     $key = hash('sha256', Bucket::getDice(), true);
+        //     $cipherAccess = openssl_encrypt($accessToken, $cipher, $key, OPENSSL_RAW_DATA, $iv, $a_tag);
+        //     $cipherRefresh = openssl_encrypt($refreshToken, $cipher, $key, OPENSSL_RAW_DATA, $iv, $r_tag);
+        //     $stored = updateToken(access: $cipherAccess, refresh: $cipherRefresh, expires: $expiresAt, merchantId: $merchantId, merchantName: 'yegamersguild');
+        //     error_log("Return from updating the token table: $stored");
+        //     if (!$stored) {
+        //         http_response_code(500);
+        //         error_log('An error occurred while attempting to update the decrypt database');
+        //         exit(1);
+        //     } else {
+        //         $stocked = updateDecrypt(owner: 'yegamersguild', cipher: $cipher, iv: $iv, a_tag: $a_tag, r_tag: $r_tag);
+        //         error_log("Return from updating the decrypt table: $stocked");
+        //         if (!$stocked) {
+        //             http_response_code(500);
+        //             error_log('An error occurred while attempting to update the decrypt database');
+        //             exit(1);
+        //         } else {
+        //             header('Location: http://localhost:5173/shop');
+        //         }
+        //     }
+        // }
     } else {
         // No recognizable parameters were returned.
         http_response_code(404);

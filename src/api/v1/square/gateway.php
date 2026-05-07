@@ -74,7 +74,6 @@ require_once "procedures.php";
 // Assume if you get a echo then you are authorized and can proceed.
 try {
     $token = loadToken(client: 'yegamersguild');
-    error_log("token returned from the load is: $token");
 } catch (Exception $e) {
     error_log("An error occurred while loading the token and setting it in the session.");
     error_log("Message: " . $e->getMessage() . " | Trace:\n" . $e->getLine());
@@ -90,7 +89,6 @@ try {
     $ivlen = openssl_cipher_iv_length($cipher);
     $iv = openssl_random_pseudo_bytes($ivlen);
     $encToken = openssl_encrypt($token, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
-    error_log("token after encryption is: $encToken");
     $_SESSION['tag'] = $tag;
     $_SESSION['iv'] = $iv;
     $_SESSION["token"] = $encToken;
@@ -100,7 +98,6 @@ try {
     echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
 }
 
-error_log("Gateway completed, returning cookie and authorized...");
 $cookieData = ['state' => $state, 'token' => $encToken];
 setCookie(name: $state, value: json_encode($cookieData), expires_or_options: (time() + 7200), path: "", domain: $_SERVER['HTTP_ORIGIN'], secure: true, httponly: true);
 
