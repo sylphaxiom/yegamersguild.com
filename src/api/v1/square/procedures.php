@@ -34,8 +34,9 @@ function loadToken(string $client)
     }
     if (empty($access) || empty($cipher)) {
         error_log("The cipher or access token were not present. Kicking off initial auth flow...");
+        error_log("Type (before kicker): " . gettype($_SESSION['auth_state']));
         require 'kicker.php';
-        exit();
+        // exit();
     }
     error_log("Access and cipher are present: access: $access | cipher: $cipher");
     $key = hash('sha256', Bucket::getDice(), true);

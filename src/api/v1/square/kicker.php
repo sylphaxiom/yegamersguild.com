@@ -2,7 +2,6 @@
 require_once "/home2/xikihgmy/includes/bucket.php";
 require_once 'vendor/autoload.php';
 
-
 error_log("========== Running kicker ==========");
 
 use Square\Environments;
@@ -12,7 +11,8 @@ $session = $_SESSION["environment"] === 'sand' ? 'true' : 'false';
 
 $client_id = $_SESSION['clientId'];
 $scope = 'INVENTORY_READ+INVENTORY_WRITE+ITEMS_READ+ITEMS_WRITE';
-$verifier = $_SESSION['auth_state'];
+$state = $_SESSION['auth_state'];
+$verifier = bin2hex(random_bytes(32));
 $rawHash = hash('sha256', $verifier, true);
 $code_challenge = rtrim(strtr(base64_encode($rawHash), '+/', '-_'), '=');
 
@@ -21,9 +21,7 @@ $code_challenge = rtrim(strtr(base64_encode($rawHash), '+/', '-_'), '=');
 $_SESSION['environment'] = 'sand';
 $_SESSION['verifier'] = $verifier;
 
-error_log("Kicker complete, triggering authURL...");
-
-$authURL = "$environment/oauth2/authorize?client_id=$client_id&scope=$scope&session=$session&state=$verifier&code_challenge=$code_challenge";
+$authURL = "$environment/oauth2/authorize?client_id=$client_id&scope=$scope&session=$session&state=$state&code_challenge=$code_challenge";
 http_response_code(200);
 header("Content-Type: application/json");
 echo json_encode([

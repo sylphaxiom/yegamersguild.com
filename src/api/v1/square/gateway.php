@@ -31,7 +31,6 @@ error_log("========== Initialized gateway ==========");
 
 $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);
-require_once "procedures.php";
 
 try {
     $clientId = $_GET['clientId'];
@@ -69,7 +68,7 @@ try {
     http_response_code(400);
     echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
 }
-
+require_once "procedures.php";
 
 // Always send to refresh to check for a current token with state in the URL for GET
 // Assume if you get a echo then you are authorized and can proceed.

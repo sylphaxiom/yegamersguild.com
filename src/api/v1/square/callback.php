@@ -13,7 +13,7 @@ header('Access-Control-Allow-Headers:Content-type,Rain');
 header('Access-Control-Allow-Methods:GET,OPTIONS');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     header("HTTP/1.1 200 OK");
-    die();
+    exit();
 }
 require_once "/home2/xikihgmy/includes/bucket.php";
 require_once "SQDB_bucket.php";
@@ -55,9 +55,7 @@ function obtainOAuthToken($authorizationCode)
 {
     error_log("entered obtainOAuthToken with authcode $authorizationCode");
     // Initialize Square PHP SDK OAuth API client.
-    $dice = hash('sha256', Bucket::getDice(), true);
-    $clientId = Bucket::getGuildApplicationId($dice);
-    // $secret = Bucket::getApplicationSecret('tP9T1eKgEqTCkkoUGTKitUzP107Hnw2KnAcEyq7KDs9qfxdYkpZBKEkfWmCJkzvf');
+    $clientId = $_SESSION['clientId'];
     $environment = $_SESSION['environment'] == "sand" ? Environments::Sandbox->value : Environments::Production->value;
     $square = new SquareClient(token: $clientId, options: [
         'baseUrl' => $environment,
@@ -115,7 +113,7 @@ try {
             error_log("Client denied the request explicityly: " . $_GET['error_description']);
             error_log("The requested access was denied. Please contact the client");
             error_log("There was an error returned in the callback script for Square.\nError: {$_GET['error']}\nMessage: {$_GET['error_description']}\n\nPlease contact the client to see what the issue is. This error usually indicates that authorization was explicitly denied.", 1, "support@sylphaxiom.com", "From: Error Log <error@sylphaxiom.com");
-            header("Location: http://localhost:5173");
+            header("Location: http://localhost:5173/shop");
             exit(1);
         }
         // Display the error and description for all other errors.
@@ -150,11 +148,9 @@ try {
             error_log("Cipher present, encrypting...");
             $ivlen = openssl_cipher_iv_length($cipher);
             $iv = openssl_random_pseudo_bytes($ivlen);
-            $key = bin2hex(random_bytes(32));
-            $cipherAccess = openssl_encrypt($accessToken, $cipher, $key, $options = 0, $iv, $tag);
-            $cipherRefresh = openssl_encrypt($refreshToken, $cipher, $key, $options = 0, $iv, $tag);
-            //store $cipher, $iv, and $tag for decryption later
-            // $original_plaintext = openssl_decrypt($ciphertext, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
+            $key = hash('sha256', Bucket::getDice(), true);
+            $cipherAccess = openssl_encrypt($accessToken, $cipher, $key, OPENSSL_RAW_DATA, $iv, $a_tag);
+            $cipherRefresh = openssl_encrypt($refreshToken, $cipher, $key, OPENSSL_RAW_DATA, $iv, $r_tag);
             $stored = updateToken(access: $cipherAccess, refresh: $cipherRefresh, expires: $expiresAt, merchantId: $merchantId, merchantName: 'yegamersguild');
             error_log("Return from updating the token table: $stored");
             if (!$stored) {
@@ -169,7 +165,7 @@ try {
                     error_log('An error occurred while attempting to update the decrypt database');
                     exit(1);
                 } else {
-                    header('Location: http://localhost:5173');
+                    header('Location: http://localhost:5173/shop');
                 }
             }
         }
