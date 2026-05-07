@@ -62,5 +62,21 @@ function saveToken(string $access, string $refresh, string $expires, string $mer
         }
         return true;
     }
+}
 
+function checkToken(string $token)
+{
+    $ogToken = loadToken('yegamersguild');
+    try {
+        $tag = $_SESSION['tag'];
+        $iv = $_SESSION['iv'];
+    } catch (Exception $e) {
+        error_log('An error occurred while getting the decrip info for the public token, check your session.');
+        error_log($_SESSION);
+    }
+    $cipher = "aes-256-gcm";
+    $key = Bucket::getDice();
+    $ckToken = openssl_decrypt($token, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
+
+    return $ogToken === $ckToken;
 }

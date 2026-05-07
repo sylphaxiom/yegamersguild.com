@@ -1,10 +1,10 @@
 import * as React from "react";
 import * as motion from "motion/react-client";
-import { Box, Button, Collapse, Stack, Typography } from "@mui/material";
+import { Box, Button, Stack, Typography } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { AnimatePresence } from "motion/react";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
-import { createCookie, Form, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 
 interface Img {
   key: string;
@@ -30,13 +30,9 @@ function buildImg({ key, src, alt, width, height }: Img) {
   );
 }
 
-export const snickerdoodle = createCookie("snickerdoodle");
-
 export default function About() {
   const [img, setImg] = React.useState(0);
-
-  const state = "";
-  const clientId = "sandbox-sq0idb-Zo_kJ9WN2IDavTl6AbFO2g";
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     const interval = setInterval(() => {
@@ -81,20 +77,15 @@ export default function About() {
             Tournaments, events, snacks...
           </Typography>
         </Stack>
-        <Form
-          style={{ textAlign: "center", paddingTop: 32, paddingBottom: 32 }}
-          action="https://api.sylphaxiom.com/gateway.php"
-        >
-          <input type="hidden" name="state" value={state} />
-          <input type="hidden" name="clientId" value={clientId} />
+        <Box sx={{ textAlign: "center", py: 4 }}>
           <Button
             variant="contained"
             type="submit"
-            // onClick={() => navigate("shop")}
+            onClick={() => navigate("shop")}
           >
             Check out our inventory
           </Button>
-        </Form>
+        </Box>
         {/* <Collapse in={open}>
           <Box
             sx={{
