@@ -4,12 +4,14 @@ import Header from "../components/Header";
 import Box from "@mui/material/Box";
 import { useQuery } from "@tanstack/react-query";
 import Footer from "~/components/Footer";
-import { data, useLoaderData } from "react-router";
-import { knockKnock } from "~/components/workhorse/queries";
-// import { getSession, commitSession } from "~/components/workhorse/sessions";
+import { useLoaderData } from "react-router";
+import {
+  fetchCatalog,
+  knockKnock,
+  queryClient,
+} from "~/components/workhorse/queries";
 import Thinking from "~/components/baubles/Thinking";
 import { authMiddleware } from "~/components/workhorse/middleware";
-import { commitSession, getSession } from "~/components/workhorse/sessions";
 import { sqContext } from "~/root";
 import Typography from "@mui/material/Typography";
 
@@ -28,6 +30,7 @@ export async function clientLoader({ context }: Route.ClientLoaderArgs) {
   const token = context.get(sqContext).token;
   if (token != "") {
     console.log("Authenticated and ready for pull...");
+    // Here is where i Prefetch the data needed for the page.
   }
   return context.get(sqContext);
 }

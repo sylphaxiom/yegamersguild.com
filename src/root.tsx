@@ -54,16 +54,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <React.Fragment>
-          <ThemeProvider disableTransitionOnChange={false} noSsr theme={theme}>
+          <ThemeProvider disableTransitionOnChange={false} theme={theme}>
             <CssBaseline enableColorScheme />
             <QueryClientProvider client={queryClient}>
               {children}
             </QueryClientProvider>
-            <ScrollRestoration />
           </ThemeProvider>
         </React.Fragment>
+        <ScrollRestoration />
         <Scripts />
       </body>
     </html>
