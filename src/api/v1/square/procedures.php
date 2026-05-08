@@ -121,11 +121,14 @@ function saveToken(string $access, string $refresh, string $expires, string $mer
     }
 }
 
-function checkToken(string $token)
+function checkToken(string $client)
 {
-    $ogToken = loadToken('yegamersguild');
+    // Requires no token to be passed as it pulls it from COOKIE
+    $state = $_SESSION['auth_state'];
+    $clientToken = $_COOKIE[$state];
+    $ogToken = loadToken($client);
     try {
-        $e_tag = $_SESSION['tag'];
+        $tag = $_SESSION['tag'];
         $iv = $_SESSION['iv'];
     } catch (Exception $e) {
         error_log('An error occurred while getting the decrypt info for the public token, check your session.');
@@ -133,7 +136,12 @@ function checkToken(string $token)
     }
     $cipher = "aes-256-gcm";
     $key = hash('sha256', Bucket::getDice(), true);
-    $newToken = openssl_decrypt($token, $cipher, $key, OPENSSL_RAW_DATA, $iv, $e_tag);
-
-    return $ogToken === $newToken;
+    $newToken = openssl_decrypt($clientToken, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
+    if ($ogToken === $newToken) {
+        return $ogToken;
+    } else {
+        error_log("Tokens did NOT match. Setting header and exiting...");
+        http_response_code(401);
+        exit(1);
+    }
 }

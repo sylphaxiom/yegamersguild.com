@@ -1,6 +1,11 @@
 import axios from "axios";
 import { QueryClient } from "@tanstack/react-query";
 
+type ResponseStatus = 
+        | 'Authorized'
+        | 'Failure'
+        | 'Redirect'
+        | 'Success'
 type RFC3339 = string;
 type ProductType = 
         | 'REGULAR'
@@ -215,7 +220,7 @@ export async function knockKnock(
     state:string,
     clientId:string,
 ): Promise<{
-    status:'Authorized' | 'Failure' | 'Redirect';
+    status:ResponseStatus;
     message:string;
     state:string;
     token?:string;
@@ -330,6 +335,8 @@ export async function fetchCatalog(
     limit?:number,
     cursor?:string,
 ): Promise<{
+    status: ResponseStatus;
+    message: string;
     objects: Item[];
     errors?: Error[];
     cursor?: string;
