@@ -1,6 +1,4 @@
 <?php
-
-use Square\Types\CatalogPricingType;
 // We initialize the session after getting state.
 $allowed_origins = [
     'http://localhost:5173',
@@ -36,6 +34,7 @@ use Square\Environments;
 use Square\SquareClient;
 use Square\Exceptions\SquareApiException;
 use Square\Catalog\Requests\ListCatalogRequest;
+use Square\Types\CatalogPricingType;
 
 // GET state and start session
 $state = $_GET['state'] ?? '';
@@ -86,7 +85,6 @@ switch ($method) {
         $rawItems = [];
         $images = [];
         $categoryNames = [];
-        $cursor = null;
         try {
             foreach ($catalogList->getPages() as $page) {
                 foreach ($page->getItems() as $catalogItem) {
