@@ -1,4 +1,6 @@
 <?php
+
+use Square\Types\CatalogPricingType;
 // We initialize the session after getting state.
 $allowed_origins = [
     'http://localhost:5173',
@@ -14,8 +16,6 @@ if (in_array($origin, $allowed_origins)) {
     header('Access-Control-Allow-Headers:Content-type, Authorization');
     header('Access-Control-Allow-Methods:GET, POST, OPTIONS');
 }
-
-$domain = parse_url($_SERVER['HTTP_ORIGIN'], PHP_URL_HOST);
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     header("HTTP/1.1 200 OK");
@@ -62,12 +62,12 @@ switch ($method) {
         // Validate token
         $token = checkToken('yegamersguild');
         // Grab request filters
-        $filterTypes = $input['filter_catalogTypes'];
+        $filterTypes = $_GET['types'] ?? 'IMAGE,ITEM,CATEGORY';
         // Grab env based URL
-        $baseUrl = $_SESSION['environment'] === 'sand' ? Environments::Production->value : Environments::Production->value;
+        $baseUrl = $_SESSION['environment'] === 'sand' ? Environments::Sandbox->value : Environments::Production->value;
         // build the client
         $sqClient = new SquareClient(token: $token, options: ['baseUrl' => $baseUrl]);
-        // Make the call
+        // Make the call body
         try {
             $catalogList = $sqClient->catalog->list(
                 new ListCatalogRequest([
@@ -76,22 +76,93 @@ switch ($method) {
             );
         } catch (SquareApiException $e) {
             // There is an error so we return failure and the error information
-            error_log("A(n) {$e->getErrors()} exception occurred while obtaining the catalog: {$e->getMessage()}");
-            error_log("Trace: {$e->getTrace()}");
+            error_log("A square API exception occurred while obtaining the catalog: {$e->getMessage()}");
+            error_log("Additional information: {$e->getBody()}");
             http_response_code(503);
             echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
             exit(1);
         }
 
-
-        if ($catalogList) {
-            // Successful call and there's data here so package and return it.
-            http_response_code(200);
-            echo json_encode(["status" => "Success", "message" => "Catalog list returned", 'state' => $state, 'objects' => $catalogList]);
-            exit(0);
-        } else {
-            http_response_code(204);
-            echo json_encode(['status' => 'Success', 'message' => 'The call was successful, but no information was returned.', 'state' => $state]);
+        $rawItems = [];
+        $images = [];
+        $categoryNames = [];
+        $cursor = null;
+        try {
+            foreach ($catalogList->getPages() as $page) {
+                foreach ($page->getItems() as $catalogItem) {
+                    if ($catalogItem->isImage()) {
+                        $image = $catalogItem->asImage();
+                        $images[$image->getId()] = $image->getImageData()->getUrl();
+                    }
+                    if ($catalogItem->isCategory()) {
+                        $category = $catalogItem->asCategory();
+                        $categoryNames[$category->getId()] = $category->getCategoryData()->getName();
+                    }
+                    if ($catalogItem->isItem()) {
+                        $item = $catalogItem->asItem();
+                        $rawItems[$item->getId()] = $item->getItemData();
+                    }
+                }
+            }
+        } catch (SquareApiException $e) {
+            error_log("A Square API exception occurred: {$e->getMessage()}");
+            error_log("Additional details: {$e->getBody()}");
+            http_response_code(503);
+            echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
+            exit(1);
         }
+
+        $catalogItems = [];
+        // Put things together
+        foreach ($rawItems as $item) {
+            $imageUrls = [];
+            $ids = $item->getImageIds();
+            foreach ($ids as $id) {
+                $imageUrls[] = $images[$id];
+            }
+            $categories = [];
+            $categoryList = $item->getCategories();
+            foreach ($categoryList as $category) {
+                $categories[] = $categoryNames[$category->getId()];
+            }
+            $variations = [];
+            $variants = $item->getVariations();
+            foreach ($variants as $variant) {
+                $variant = $variant->asItemVariation();
+                $id = $variant->getId();
+                $name = $variant->getItemVariationData()->getName();
+                $sku = $variant->getItemVariationData()->getSku();
+                if ($variant->getItemVariationData()->getPricingType() === CatalogPricingType::FixedPricing) {
+                    $price = [
+                        'amount' => $variant->getItemVariationData()->getPriceMoney()->getAmount(),
+                        'currency' => $variant->getItemVariationData()->getPriceMoney()->getCurrency()
+                    ];
+                } else {
+                    $price = 'VARIABLE_PRICE';
+                }
+
+                $variations[] = [
+                    'id' => $id,
+                    'name' => $name,
+                    'sku' => $sku,
+                    'price' => $price
+                ];
+            }
+            $outItem = [
+                'name' => $item->getName(),
+                'images' => $imageUrls,
+                'description' => $item->getDescriptionHtml(),
+                'categories' => $categories,
+                'variations' => $variations
+            ];
+            $catalogItems[] = $outItem;
+        }
+        $itemCount = count($catalogItems);
+
+        http_response_code(200);
+        echo json_encode(['status' => "Success", 'message' => '', 'state' => $state, 'count' => $itemCount, 'objects' => $catalogItems]);
         break;
+    default:
+        http_response_code(405);
+        echo json_encode(['status' => 'Failure', 'message' => 'The method used to request this resource was invalid, please try again.', 'state' => $state]);
 }
