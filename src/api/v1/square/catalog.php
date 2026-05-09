@@ -12,7 +12,7 @@ if (in_array($origin, $allowed_origins)) {
     header('Access-Control-Allow-Credentials: true');
     header('Access-Control-Max-Age:3600');
     header('Access-Control-Allow-Headers:Content-type, Authorization');
-    header('Access-Control-Allow-Methods:GET, POST, OPTIONS');
+    header('Access-Control-Allow-Methods:GET, OPTIONS');
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -61,7 +61,7 @@ switch ($method) {
         // Validate token
         $token = checkToken('yegamersguild');
         // Grab request filters
-        $filterTypes = $_GET['types'] ?? 'IMAGE,ITEM,CATEGORY';
+        $filterTypes = 'IMAGE,ITEM,CATEGORY';
         // Grab env based URL
         $baseUrl = $_SESSION['environment'] === 'sand' ? Environments::Sandbox->value : Environments::Production->value;
         // build the client
