@@ -1,7 +1,7 @@
 import type { Route } from "../../components/bits/+types/Details";
 import { sqContext } from "~/root";
 import type { CatalogItem } from "../workhorse/queries";
-import { Grid } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 
 interface DetailProps extends Route.ComponentProps {
   item: CatalogItem;
@@ -21,7 +21,13 @@ export default function Details({ item, inventory, params }: DetailProps) {
   return (
     <Grid container>
       <Grid size={12}>
-        <Grid size={{ xs: 6 }}></Grid>
+        <Grid size={{ xs: 6 }}>
+          <Box
+            component="img"
+            src={item.images[0]}
+            alt={`Stock image of a(n) ${item.name}`}
+          />
+        </Grid>
       </Grid>
     </Grid>
   );
