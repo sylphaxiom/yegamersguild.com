@@ -131,7 +131,7 @@ switch ($method) {
                 $id = $variant->getId();
                 $name = $variant->getItemVariationData()->getName();
                 $sku = $variant->getItemVariationData()->getSku();
-                $price = $variant->getItemVariationData()->getPricingType() === CatalogPricingType::FixedPricing
+                $price = $variant->getItemVariationData()->getPricingType() === CatalogPricingType::FixedPricing->value
                     ? [
                         'amount' => $variant->getItemVariationData()->getPriceMoney()->getAmount(),
                         'currency' => $variant->getItemVariationData()->getPriceMoney()->getCurrency()

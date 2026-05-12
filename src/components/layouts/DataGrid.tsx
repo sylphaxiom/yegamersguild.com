@@ -1,4 +1,4 @@
-import type { Route } from "../../components/bits/+types/DataGrid";
+import type { Route } from "../../components/layouts/+types/DataGrid";
 import { useQuery } from "@tanstack/react-query";
 import { useLoaderData } from "react-router";
 import {
@@ -6,7 +6,6 @@ import {
   fetchInventory,
   queryClient,
 } from "~/components/workhorse/queries";
-import Thinking from "~/components/baubles/Thinking";
 import { sqContext } from "~/root";
 import ProductCard from "~/components/bits/ProductCard";
 import Grid from "@mui/material/Grid";
@@ -63,7 +62,7 @@ export default function DataGrid({ params }: Route.ComponentProps) {
   }
 
   return (
-    <Grid container spacing={2}>
+    <Grid container spacing={2} sx={{ justifyContent: "center" }}>
       {catData?.objects?.map((item) =>
         isLoading ? (
           <Grid
