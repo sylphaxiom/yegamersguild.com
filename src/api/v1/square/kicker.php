@@ -10,7 +10,7 @@ $environment = $_SESSION["environment"] === 'sand' ? Environments::Sandbox->valu
 $session = $_SESSION["environment"] === 'sand' ? 'true' : 'false';
 
 $client_id = $_SESSION['clientId'];
-$scope = 'INVENTORY_READ+INVENTORY_WRITE+ITEMS_READ+ITEMS_WRITE';
+$scope = 'INVENTORY_READ+INVENTORY_WRITE+ITEMS_READ+ITEMS_WRITE+MERCHANT_PROFILE_READ';
 $state = $_SESSION['auth_state'];
 $verifier = bin2hex(random_bytes(32));
 $rawHash = hash('sha256', $verifier, true);

@@ -124,11 +124,23 @@ function saveToken(string $access, string $refresh, string $expires, string $mer
 
 function checkToken(string $client)
 {
-    // Requires no token to be passed as it pulls it from COOKIE
-    $cookieData = json_decode($_COOKIE['snickerdoodle'], true);
-    parse_str($cookieData, $cookie);
-    $clientToken = $cookie['token'];
-    error_log("Token obtained from cookie: $clientToken");
+    if (!isset($_COOKIE['snickerdoodle'])) {
+        error_log('Cookie not present in request.');
+        http_response_code(401);
+        echo json_encode(["status" => "Failure", "message" => "Authentication required."]);
+        exit(1);
+    }
+    $cookie = json_decode($_COOKIE['snickerdoodle'], true);
+    $cookie = json_decode($_COOKIE['snickerdoodle'], true);
+
+    $clientToken = ($cookie['token']) ?? null;
+    if (empty($clientToken)) {
+        error_log('Token missing from cookie data.');
+        http_response_code(401);
+        echo json_encode(["status" => "Failure", "message" => "Authentication required."]);
+        exit(1);
+    }
+    error_log("Token obtained from cookie.");
     $ogToken = loadToken($client);
     try {
         $tag = $_SESSION['tag'];
@@ -145,7 +157,6 @@ function checkToken(string $client)
     } else {
         error_log("Tokens did NOT match. Setting header and exiting...");
         http_response_code(401);
-        return false;
         exit(1);
     }
 }

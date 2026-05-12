@@ -111,11 +111,13 @@ switch ($method) {
 
         $catalogItems = [];
         // Put things together
-        foreach ($rawItems as $item) {
+        foreach ($rawItems as $itemId => $item) {
             $imageUrls = [];
-            $ids = $item->getImageIds();
-            foreach ($ids as $id) {
-                $imageUrls[] = $images[$id];
+            $ids = $item->getImageIds() ?? [];
+            if (count($ids) > 0) {
+                foreach ($ids as $id) {
+                    $imageUrls[] = $images[$id];
+                }
             }
             $categories = [];
             $categoryList = $item->getCategories();
@@ -129,14 +131,13 @@ switch ($method) {
                 $id = $variant->getId();
                 $name = $variant->getItemVariationData()->getName();
                 $sku = $variant->getItemVariationData()->getSku();
-                if ($variant->getItemVariationData()->getPricingType() === CatalogPricingType::FixedPricing) {
-                    $price = [
+                $price = $variant->getItemVariationData()->getPricingType() === CatalogPricingType::FixedPricing
+                    ? [
                         'amount' => $variant->getItemVariationData()->getPriceMoney()->getAmount(),
                         'currency' => $variant->getItemVariationData()->getPriceMoney()->getCurrency()
-                    ];
-                } else {
-                    $price = 'VARIABLE_PRICE';
-                }
+                    ]
+                    : 'VARIABLE_PRICE';
+
 
                 $variations[] = [
                     'id' => $id,
@@ -146,6 +147,7 @@ switch ($method) {
                 ];
             }
             $outItem = [
+                'id' => $itemId,
                 'name' => $item->getName(),
                 'images' => $imageUrls,
                 'description' => $item->getDescriptionHtml(),

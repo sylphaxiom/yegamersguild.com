@@ -54,27 +54,6 @@ use Square\SquareClient;
 use Square\Exceptions\SquareApiException;
 use Square\types\BatchGetInventoryCountsRequest;
 
-// GET state and start session
-$state = $_GET['state'] ?? '';
-if (!$state) {
-    http_response_code(418);
-    error_log("State was missing from GET. Enclude state to ensure session continuity...");
-    exit(1);
-}
-session_id($state);
-session_start();
-if ($_SESSION['auth_state'] != $state) {
-    http_response_code(401);
-    error_log("Auth state does not match current state! Check your code or you're a hacker (jerk)...");
-    exit(1);
-}
-
-$method = $_SERVER['REQUEST_METHOD'];
-$input = json_decode(file_get_contents('php://input'), true);
-$client = $_SESSION['clientName'];
-
-require_once 'procedures.php';
-
 // Validate token
 $token = checkToken($client);
 // Grab env based URL
@@ -105,6 +84,9 @@ switch ($method) {
         }
         // Make the call body
         try {
+            error_log("Environment from session: " . $_SESSION['environment']);
+            error_log("Base URL: " . $baseUrl);
+
             $response = $sqClient->inventory->batchGetCounts(new BatchGetInventoryCountsRequest([
                 'locationIds' => [$locationId],
                 'catalogObjectIds' => $variationIds,

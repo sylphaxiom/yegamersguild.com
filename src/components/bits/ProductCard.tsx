@@ -45,7 +45,7 @@ export default function ProductCard({
   const displayImage = item.images[0] ?? "/placeholder.png";
 
   return (
-    <Link style={{ textDecoration: "none" }} to={`/shop/${item.name}`}>
+    <Link style={{ textDecoration: "none" }} to={`/shop/${item.id}`}>
       <Card
         elevation={4}
         sx={{

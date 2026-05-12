@@ -101,7 +101,7 @@ try {
 }
 error_log("Token re-encrypted for frontend drop...");
 
-$cookieData = "state=$state&token=$encToken";
+$cookieData = ['state' => $state, 'token' => $encToken];
 setCookie('snickerdoodle', json_encode($cookieData), [
     'expires' => (time() + 7200),
     'path' => "/",

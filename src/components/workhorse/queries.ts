@@ -75,6 +75,7 @@ export interface CatalogVariation {
 }
 
 export interface CatalogItem {
+    id: string;
     name: string;
     images: string[];
     description: string; // nullable, ?? check
