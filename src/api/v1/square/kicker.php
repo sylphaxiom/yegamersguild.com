@@ -21,6 +21,7 @@ $code_challenge = rtrim(strtr(base64_encode($rawHash), '+/', '-_'), '=');
 $_SESSION['verifier'] = $verifier;
 
 $authURL = "$environment/oauth2/authorize?client_id=$client_id&scope=$scope&session=$session&state=$state&code_challenge=$code_challenge";
+error_log("Auth URL has been built and is being returned...");
 http_response_code(200);
 header("Content-Type: application/json");
 echo json_encode([

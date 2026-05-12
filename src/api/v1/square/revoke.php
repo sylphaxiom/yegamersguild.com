@@ -1,9 +1,8 @@
 <?php
-
 // Comment out the following 3 lines for production.
 error_reporting(-1);
 ini_set('display_errors', 'On');
-set_error_handler("var_dump");
+
 header('Access-Control-Allow-Origin:*');
 header('Access-Control-Max-Age:3600');
 header('Access-Control-Allow-Headers:Content-type,Rain');
@@ -21,13 +20,14 @@ use Square\Exceptions\SquareApiException;
 use Square\SquareClient;
 use Square\Environments;
 use Square\OAuth\Requests\RevokeTokenRequest;
-$environment = Environments::Sandbox->value;
+$environment = $_SESSION['environment'] === "sand" ? Environments::Sandbox->value : Environments::Production->value;
+$client = $_SESSION["clientName"];
 $revokeAccessOnly = false;
 
 error_log("========== Initialized refresh ==========");
 
 // Get the current token and kickstart the auth process if it's expired or revoked.
-[$access, $refresh, $expires, $merchantId, $merchantName] = getToken();
+[$access, $refresh, $expires, $merchantId, $merchantName] = getToken($client);
 // If one is set, they all are.
 if (!isset($access)) {
     http_response_code(503);
@@ -67,6 +67,6 @@ try {
 error_log('!!!WARNING!!! - Your access token has been revoked by the client. If this is unexpected, please reach out to the client and see what the issue is.', 1, 'administrator@sylphaxiom.com', 'From: Error Log <error@sylphaxiom.com>');
 
 // Return the tokens along with the expiry date/time and merchant ID.
-dropToken(merchantName: 'yegamersguild');
+dropToken(merchantName: $client);
 
 ?>

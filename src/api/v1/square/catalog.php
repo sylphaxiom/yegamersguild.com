@@ -22,20 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // Comment out the following 3 lines for production.
 error_reporting(-1);
 ini_set('display_errors', 'On');
-set_error_handler("var_dump");
+
 require_once "/home2/xikihgmy/includes/bucket.php";
 require_once 'vendor/autoload.php';
-
-header("Content-Type: application/json");
-
-error_log("========== Initialized catalog ==========");
-
-use Square\Environments;
-use Square\SquareClient;
-use Square\Exceptions\SquareApiException;
-use Square\Catalog\Requests\ListCatalogRequest;
-use Square\Types\CatalogPricingType;
-
+require_once 'procedures.php';
 // GET state and start session
 $state = $_GET['state'] ?? '';
 if (!$state) {
@@ -53,13 +43,22 @@ if ($_SESSION['auth_state'] != $state) {
 
 $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);
+$client = $_SESSION['clientName'];
 
-require_once 'procedures.php';
+header("Content-Type: application/json");
+
+error_log("========== Initialized catalog ==========");
+
+use Square\Environments;
+use Square\SquareClient;
+use Square\Exceptions\SquareApiException;
+use Square\Catalog\Requests\ListCatalogRequest;
+use Square\Types\CatalogPricingType;
 
 switch ($method) {
     case 'GET':
         // Validate token
-        $token = checkToken('yegamersguild');
+        $token = checkToken($client);
         // Grab request filters
         $filterTypes = 'IMAGE,ITEM,CATEGORY';
         // Grab env based URL

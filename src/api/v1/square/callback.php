@@ -6,7 +6,7 @@ session_start();
 // Comment out the following 3 lines for production.
 error_reporting(-1);
 ini_set('display_errors', 'On');
-set_error_handler("var_dump");
+
 header('Access-Control-Allow-Origin:*');
 header('Access-Control-Max-Age:3600');
 header('Access-Control-Allow-Headers:Content-type,Rain');
@@ -31,23 +31,7 @@ error_log("========== Initialized callback ==========");
 
 $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);
-
-/////////////////////////////////////////////////
-//  Square docs OAuth API callback.php content
-//  This needs to be torn apart and rebuilt
-//  Must do the following:
-//  - parse params returned in auth response                            +
-//  - use auth code to call OAuth to get refresh tokens                 +
-//  - manage and use access and refresh tokens
-//  - encrypt the access and refresh tokens and store securely          +
-//  - retain code_verifier & submit when ObtainToken                    +
-//  - verify the token for each API call is valid
-//  - refresh access token in a timely manner
-//  - use refresh token within 90 days (7 is pref)
-//  - Provide seller with ability to revoke access and refresh tokens
-//  - Show the permissions granted by the seller and let them manage
-//  - handle errors.                                                    +
-/////////////////////////////////////////////////
+$client = $_SESSION['clientName'];
 
 // The obtainOAuthToken function shows you how to obtain a OAuth access token
 // with the OAuth API with the authorization code returned to OAuth callback.
@@ -67,7 +51,6 @@ function obtainOAuthToken($authorizationCode)
         'clientId' => $clientId,
         'grantType' => 'authorization_code',
         'code' => $authorizationCode,
-        // 'clientSecret' => $secret,
         'codeVerifier' => $verifier,
         'redirectUri' => 'https://api.sylphaxiom.com/square/callback.php'
     ]);
@@ -87,6 +70,8 @@ function obtainOAuthToken($authorizationCode)
     $refreshToken = $response->getRefreshToken();
     $expiresAt = $response->getExpiresAt();
     $merchantId = $response->getMerchantId();
+
+    error_log("Token information obtained, returning...");
 
     // Return the tokens along with the expiry date/time and merchant ID.
     return [$accessToken, $refreshToken, $expiresAt, $merchantId];
@@ -141,37 +126,10 @@ try {
 
         require 'procedures.php';
 
-        saveToken($accessToken, $refreshToken, $expiresAt, $merchantId, 'yegamersguild');
+        saveToken(access: $accessToken, refresh: $refreshToken, expires: $expiresAt, merchantId: $merchantId, merchantName: $client);
 
         header('Location: http://localhost:5173/shop');
         exit();
-
-        // $cipher = "aes-256-gcm";
-        // if (in_array($cipher, openssl_get_cipher_methods())) {
-        //     error_log("Cipher present, encrypting...");
-        //     $ivlen = openssl_cipher_iv_length($cipher);
-        //     $iv = openssl_random_pseudo_bytes($ivlen);
-        //     $key = hash('sha256', Bucket::getDice(), true);
-        //     $cipherAccess = openssl_encrypt($accessToken, $cipher, $key, OPENSSL_RAW_DATA, $iv, $a_tag);
-        //     $cipherRefresh = openssl_encrypt($refreshToken, $cipher, $key, OPENSSL_RAW_DATA, $iv, $r_tag);
-        //     $stored = updateToken(access: $cipherAccess, refresh: $cipherRefresh, expires: $expiresAt, merchantId: $merchantId, merchantName: 'yegamersguild');
-        //     error_log("Return from updating the token table: $stored");
-        //     if (!$stored) {
-        //         http_response_code(500);
-        //         error_log('An error occurred while attempting to update the decrypt database');
-        //         exit(1);
-        //     } else {
-        //         $stocked = updateDecrypt(owner: 'yegamersguild', cipher: $cipher, iv: $iv, a_tag: $a_tag, r_tag: $r_tag);
-        //         error_log("Return from updating the decrypt table: $stocked");
-        //         if (!$stocked) {
-        //             http_response_code(500);
-        //             error_log('An error occurred while attempting to update the decrypt database');
-        //             exit(1);
-        //         } else {
-        //             header('Location: http://localhost:5173/shop');
-        //         }
-        //     }
-        // }
     } else {
         // No recognizable parameters were returned.
         http_response_code(404);

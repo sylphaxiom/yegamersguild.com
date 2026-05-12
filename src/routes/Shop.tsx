@@ -1,19 +1,13 @@
 import * as React from "react";
 import type { Route } from "./+types/Shop";
-import Header from "../components/Header";
-import Box from "@mui/material/Box";
 import { useQuery } from "@tanstack/react-query";
-import Footer from "~/components/Footer";
-import { useLoaderData } from "react-router";
-import {
-  fetchCatalog,
-  knockKnock,
-  queryClient,
-} from "~/components/workhorse/queries";
+import { Outlet, useLoaderData } from "react-router";
+import { knockKnock, type CatalogItem } from "~/components/workhorse/queries";
 import Thinking from "~/components/baubles/Thinking";
 import { authMiddleware } from "~/components/workhorse/middleware";
 import { sqContext } from "~/root";
 import Typography from "@mui/material/Typography";
+import ProductCard from "~/components/bits/ProductCard";
 
 export const clientMiddleware: Route.ClientMiddlewareFunction[] = [
   authMiddleware,
@@ -28,14 +22,22 @@ export function meta({}: Route.MetaArgs) {
 
 export async function clientLoader({ context }: Route.ClientLoaderArgs) {
   const token = context.get(sqContext).token;
+  const state = context.get(sqContext).state;
+  const clientId = context.get(sqContext).clientId;
   if (token != "") {
     console.log("Authenticated and ready for pull...");
     // Here is where i Prefetch the data needed for the page.
   }
+  console.log(
+    "Current context:\nState: %s\nClient ID: %s\nToken: %s",
+    state,
+    clientId,
+    token,
+  );
   return context.get(sqContext);
 }
 
-export default function Shop() {
+export default function Shop({ params }: Route.ComponentProps) {
   const loaderData = useLoaderData();
   const { clientId, state, token } = loaderData;
   // Query
@@ -57,11 +59,37 @@ export default function Shop() {
 
   React.useEffect(() => {}, [data]);
 
+  const item: CatalogItem = {
+    name: "Item",
+    images: ["/mini_paint.jpg"],
+    description:
+      "This is a description for an Item. And now Im\'m going to add a much bigger description in the hopes that I can see the ellipsis thing that this AI came up with, because I didn\'t know it was a thing that could be done.",
+    categories: ["ITEM"],
+    variations: [
+      {
+        id: "SDJGIN14DSLIJGNLKD",
+        name: "Item Variant",
+        sku: "100325",
+        price: { amount: 1999, currency: "USD" },
+      },
+    ],
+  };
+  const inventory: Record<string, number> = {
+    SDJGIN14DSLIJGNLKD: 0,
+  };
+
   return (
-    <Box id="main-cont" role="main">
-      <Header />
+    <>
       {isLoading ? <Thinking /> : <Typography>Token is {token}</Typography>}
-      <Footer />
-    </Box>
+      {!params.item ? (
+        <ProductCard
+          item={item}
+          inventory={inventory}
+          outOfStockMode="subtle"
+        />
+      ) : (
+        <Outlet />
+      )}
+    </>
   );
 }

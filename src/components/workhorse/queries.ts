@@ -46,11 +46,15 @@ export async function knockKnock(
     return response.data;
 }
 
-export async function checker(): Promise<{
+export async function checker(state:string): Promise<{
     isValid:boolean;
 }> {
     const response = await api
-    .post(`/square/checker.php`)
+    .get(`/square/checker.php`, {
+        params: {
+            state:state
+        }
+    })
     .catch((error)=>{
         console.log("An error occurred in the checker: %s", error);
         throw error
