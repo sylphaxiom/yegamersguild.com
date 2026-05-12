@@ -52,7 +52,7 @@ error_log("========== Initialized inventory ==========");
 use Square\Environments;
 use Square\SquareClient;
 use Square\Exceptions\SquareApiException;
-use Square\types\BatchGetInventoryCountsRequest;
+use Square\Types\BatchGetInventoryCountsRequest;
 
 // Validate token
 $token = checkToken($client);
@@ -60,17 +60,26 @@ $token = checkToken($client);
 $baseUrl = $_SESSION['environment'] === 'sand' ? Environments::Sandbox->value : Environments::Production->value;
 // build the client
 $sqClient = new SquareClient(token: $token, options: ['baseUrl' => $baseUrl]);
-// Get the Location Id from the frontend
-if (empty($_SESSION['locationId'])) {
-    $_SESSION['locationId'] = $sqClient->locations->list()->getLocations()[0]->getId();
+if (!isset($_SESSION['locationId'])) {
+    try {
+        $locations = $sqClient->locations->list()->getLocations();
+        if (empty($locations)) {
+            http_response_code(400);
+            error_log('No locations returned from Square...');
+            echo json_encode(['status' => "Failure", 'message' => 'No locations found.', 'state' => $state]);
+            exit(1);
+        }
+        $_SESSION['locationId'] = $locations[0]->getId();
+        error_log("Location information: " . $_SESSION["locationId"]);
+    } catch (SquareApiException $e) {
+        error_log("Square API exception getting locations: {$e->getMessage()}");
+        error_log("Body: {$e->getBody()}");
+        http_response_code(503);
+        echo json_encode(['status' => "Failure", 'message' => $e->getMessage(), 'state' => $state]);
+        exit(1);
+    }
 }
 $locationId = $_SESSION['locationId'];
-if (empty($locationId)) {
-    http_response_code(400);
-    error_log('No location IDs were returned...');
-    echo json_encode(['status' => "Failure", 'message' => 'Location ID could not be obtained. Please contact the webmaster for assistance.', 'state' => $state]);
-    exit(1);
-}
 
 switch ($method) {
     case 'GET':
@@ -93,13 +102,19 @@ switch ($method) {
                 'states' => ['IN_STOCK']
             ]));
         } catch (SquareApiException $e) {
-            // There is an error so we return failure and the error information
-            error_log("A square API exception occurred while obtaining the inventory: {$e->getMessage()}");
-            error_log("Additional information: {$e->getBody()}");
+            error_log("Square API exception: {$e->getMessage()}");
+            error_log("Body: {$e->getBody()}");
             http_response_code(503);
-            echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
+            echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state]);
+            exit(1);
+        } catch (\Throwable $e) {
+            error_log("Throwable (" . get_class($e) . "): {$e->getMessage()}");
+            http_response_code(500);
+            echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state]);
             exit(1);
         }
+
+
 
         $counts = [];
         try {
@@ -114,9 +129,16 @@ switch ($method) {
             error_log("A Square API exception occurred: {$e->getMessage()}");
             error_log("Additional details: {$e->getBody()}");
             http_response_code(503);
-            echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
+            echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state]);
+            exit(1);
+        } catch (\Throwable $e) {
+            error_log("Throwable (" . get_class($e) . "): {$e->getMessage()}");
+            http_response_code(500);
+            echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state]);
             exit(1);
         }
+
+
         $total = count($counts);
         // Return 200 and the response output.
         http_response_code(200);

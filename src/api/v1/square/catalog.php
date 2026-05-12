@@ -150,7 +150,7 @@ switch ($method) {
                 'id' => $itemId,
                 'name' => $item->getName(),
                 'images' => $imageUrls,
-                'description' => $item->getDescriptionHtml(),
+                'description' => $item->getDescription(),
                 'categories' => $categories,
                 'variations' => $variations
             ];

@@ -101,9 +101,13 @@ export interface InventoryResponse {
 
 export async function fetchCatalog(
     state:string,
+    token:string,
 ): Promise<CatalogResponse> {
     const response = await api
     .get(`/square/catalog.php`, {
+        headers:{
+            Authorization: `Bearer ${token}`
+        },
         params: {
             state:state,
         }
@@ -117,10 +121,14 @@ export async function fetchCatalog(
 
 export async function fetchInventory(
     state:string,
+    token:string,
     variationIds:string[]
 ): Promise<InventoryResponse> {
     const response = await api
     .get(`/square/inventory.php`, {
+        headers:{
+            Authorization: `Bearer ${token}`
+        },
         params:{
             state:state,
             variationIds: variationIds.join(','),

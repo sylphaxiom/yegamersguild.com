@@ -49,8 +49,8 @@ export default function ProductCard({
       <Card
         elevation={4}
         sx={{
-          maxWidth: { xs: 200, sm: 300 },
-          height: { xs: 400, sm: 500 },
+          width: { xs: 200, sm: 300 },
+          height: "auto",
           position: "relative",
           borderRadius: "10px",
           m: 2,
@@ -76,29 +76,41 @@ export default function ProductCard({
           image={displayImage}
           component={"img"}
           sx={{
-            maxHeight: { xs: 200, sm: 300 },
+            height: { xs: 200, sm: 300 },
             objectFit: "contain",
             pt: 2,
           }}
         />
         <CardContent>
-          <Typography variant="h6">{item.name}</Typography>
+          <Box sx={{ height: "3em", overflow: "hidden" }}>
+            <Typography
+              variant="h6"
+              sx={{
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }}
+            >
+              {item.name}
+            </Typography>
+          </Box>
+
           <Box
             sx={{ position: "relative", height: "4em", overflowY: "hidden" }}
           >
-            <Typography variant="body2" sx={{ p: 1 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                p: 1,
+                display: "-webkit-box",
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }}
+            >
               {item.description}
             </Typography>
-            <Box
-              sx={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: "2em",
-                background: `linear-gradient(transparent, ${theme.palette.background.paper})`,
-              }}
-            />
           </Box>
           <Typography variant="body2" sx={{ mt: 1 }}>
             {item.categories.join(", ")}

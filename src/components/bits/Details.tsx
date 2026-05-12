@@ -1,20 +1,11 @@
 import type { Route } from "../../components/bits/+types/Details";
-import type { Route as aRoute } from "../../routes/+types/Shop";
-import Location from "~/components/Location";
-import About from "~/components/About";
-import { Divider } from "@mui/material";
-import { authMiddleware } from "~/components/workhorse/middleware";
 import { sqContext } from "~/root";
+import type { CatalogItem } from "../workhorse/queries";
+import { Grid } from "@mui/material";
 
-export const clientMiddleware: aRoute.ClientMiddlewareFunction[] = [
-  authMiddleware,
-];
-
-export function meta({}: Route.MetaArgs) {
-  return [
-    { title: "Ye Gamer\'s Guild" },
-    { name: "description", content: "Browse the store inventory." },
-  ];
+interface DetailProps extends Route.ComponentProps {
+  item: CatalogItem;
+  inventory: Record<string, number>;
 }
 
 export async function clientLoader({ context }: Route.ClientLoaderArgs) {
@@ -26,12 +17,12 @@ export async function clientLoader({ context }: Route.ClientLoaderArgs) {
   return context.get(sqContext);
 }
 
-export default function Details() {
+export default function Details({ item, inventory, params }: DetailProps) {
   return (
-    <>
-      <Location />
-      <Divider variant="fullWidth" sx={{ my: 4 }} />
-      <About />
-    </>
+    <Grid container>
+      <Grid size={12}>
+        <Grid size={{ xs: 6 }}></Grid>
+      </Grid>
+    </Grid>
   );
 }
