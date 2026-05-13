@@ -6,9 +6,6 @@ import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 
 export default function ModeSwitch() {
   const { mode, setMode, systemMode } = useColorScheme();
-  if (!mode) {
-    return null;
-  }
   const [_color, setColor] = React.useState(
     // This is only here to re-trigger the rendering.
     systemMode?.toString(),
@@ -18,7 +15,10 @@ export default function ModeSwitch() {
     if (mode === "system") {
       isDark ? setMode("dark") : setMode("light");
     }
-  }, [mode]);
+  }, [mode, isDark, setMode]);
+  if (!mode) {
+    return null;
+  }
   const handleMode = () => {
     mode === "light" ? setMode("dark") : setMode("light");
     setColor(mode.toString());

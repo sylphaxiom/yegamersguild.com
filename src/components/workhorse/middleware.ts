@@ -1,5 +1,5 @@
 import { checker, knockKnock, queryClient } from "./queries";
-import type { Route } from "../../routes/+types/Shop";
+import type { Route } from "../../components/layouts/+types/Layout";
 import { sqContext } from "~/root";
 import { redirect } from "react-router";
 

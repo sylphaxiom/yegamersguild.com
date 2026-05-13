@@ -75,8 +75,9 @@ export default function Details({ params }: Route.ComponentProps) {
         </Grid>
         <Grid size={{ xs: 6 }}>
           <Skeleton variant="text" sx={{ fontSize: "2rem" }} width="60%" />
-          <Skeleton variant="text" sx={{ fontSize: "15rem" }} width="60%" />
+          <Skeleton variant="text" sx={{ fontSize: "10rem" }} width="60%" />
           <Skeleton variant="text" />
+          <Skeleton variant="rectangular" sx={{ width: 236, height: 36 }} />
         </Grid>
       </Grid>
     );

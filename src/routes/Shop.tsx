@@ -3,9 +3,7 @@ import { Outlet } from "react-router";
 import { authMiddleware } from "~/components/workhorse/middleware";
 import { sqContext } from "~/root";
 
-export const clientMiddleware: Route.ClientMiddlewareFunction[] = [
-  authMiddleware,
-];
+export const clientMiddleware = [authMiddleware];
 
 export function meta({}: Route.MetaArgs) {
   return [
