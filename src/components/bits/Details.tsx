@@ -4,7 +4,6 @@ import {
   fetchCatalog,
   fetchInventory,
   queryClient,
-  type CatalogItem,
   type CatalogVariation,
   type Price,
 } from "../workhorse/queries";
@@ -85,7 +84,7 @@ export default function Details({ params }: Route.ComponentProps) {
           }}
         />
       </Grid>
-      <Grid size={{ xs: 6 }}>
+      <Grid size={{ xs: 5 }} sx={{ mx: 4 }}>
         <Typography variant="h2">{item?.name}</Typography>
         <Typography variant="body1">{item?.description}</Typography>
         <Stack direction={"row"} sx={{ justifyContent: "space-between" }}>
