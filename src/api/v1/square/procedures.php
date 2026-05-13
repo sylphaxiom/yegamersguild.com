@@ -11,7 +11,7 @@ require_once "SQDB_bucket.php";
 // need to call the operation, not all the steps. Removes some bucket deps.
 ///////////////////////////////////////////////////////////////////////////////
 
-error_log("========== Initialized procedures ==========");
+error_log("========== Loaded procedures ==========");
 
 function loadToken(string $client)
 {
@@ -55,12 +55,12 @@ function loadToken(string $client)
     try {
         $decAccess = openssl_decrypt(base64_decode($access), $cipher, $key, OPENSSL_RAW_DATA, $a_iv, $a_tag);
         $decRefresh = openssl_decrypt(base64_decode($refresh), $cipher, $key, OPENSSL_RAW_DATA, $r_iv, $r_tag);
-        error_log("Token decrypted successfully for client: $client.");
     } catch (Exception $e) {
         error_log("An error occurred in loadToken while running decryption.");
         error_log("Message: " . $e->getMessage() . " | Trace:\n" . $e->getLine());
         throw $e;
     }
+    error_log("Token decrypted successfully for client: $client.");
     // Check expiration date
     $exp = new DateTime($expires);
     $now = new DateTime();
@@ -70,6 +70,7 @@ function loadToken(string $client)
         require_once 'refresh.php';
         exit(1);
     }
+    error_log("Returning with access data...");
     // return CLIENT USABLE token/data
     return $decAccess;
 }
@@ -121,11 +122,20 @@ function saveToken(string $access, string $refresh, string $expires, string $mer
     }
 }
 
-function checkToken(string $token)
+function checkToken(string $client)
 {
-    $ogToken = loadToken('yegamersguild');
+    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+    $clientToken = str_replace('Bearer ', '', $authHeader);
+    if (empty($clientToken)) {
+        error_log('Token missing from cookie data.');
+        http_response_code(401);
+        echo json_encode(["status" => "Failure", "message" => "Authentication required."]);
+        exit(1);
+    }
+    error_log("Token obtained from cookie.");
+    $ogToken = loadToken($client);
     try {
-        $e_tag = $_SESSION['tag'];
+        $tag = $_SESSION['tag'];
         $iv = $_SESSION['iv'];
     } catch (Exception $e) {
         error_log('An error occurred while getting the decrypt info for the public token, check your session.');
@@ -133,7 +143,12 @@ function checkToken(string $token)
     }
     $cipher = "aes-256-gcm";
     $key = hash('sha256', Bucket::getDice(), true);
-    $newToken = openssl_decrypt($token, $cipher, $key, OPENSSL_RAW_DATA, $iv, $e_tag);
-
-    return $ogToken === $newToken;
+    $newToken = openssl_decrypt(base64_decode($clientToken), $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
+    if ($ogToken === $newToken) {
+        return $ogToken;
+    } else {
+        error_log("Tokens did NOT match. Setting header and exiting...");
+        http_response_code(401);
+        exit(1);
+    }
 }
