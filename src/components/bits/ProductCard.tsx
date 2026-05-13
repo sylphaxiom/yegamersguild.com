@@ -1,11 +1,4 @@
-import {
-  Box,
-  Card,
-  CardContent,
-  CardMedia,
-  Typography,
-  useTheme,
-} from "@mui/material";
+import { Box, Card, CardContent, CardMedia, Typography } from "@mui/material";
 import type {
   CatalogItem,
   CatalogVariation,
@@ -24,7 +17,6 @@ export default function ProductCard({
   inventory,
   outOfStockMode,
 }: ProductCardProps) {
-  const theme = useTheme();
   // Check if this item is in stock or not.
   const isInStock = item.variations.some((v) => (inventory[v.id] ?? 0) > 0);
   // Price stuff
@@ -45,7 +37,11 @@ export default function ProductCard({
   const displayImage = item.images[0] ?? "/placeholder.png";
 
   return (
-    <Link style={{ textDecoration: "none" }} to={`/shop/${item.id}`}>
+    <Link
+      style={{ textDecoration: "none" }}
+      to={`/shop/${item.id}`}
+      key={item.id + "-link"}
+    >
       <Card
         elevation={4}
         sx={{
@@ -55,6 +51,7 @@ export default function ProductCard({
           borderRadius: "10px",
           m: 2,
         }}
+        key={item.id + "-card"}
       >
         {!isInStock && outOfStockMode === "overlay" && (
           <Box
@@ -68,8 +65,11 @@ export default function ProductCard({
               overflow: "hidden",
               backgroundColor: "rgba(0,0,0,0.5)",
             }}
+            key={item.id + "-overlay"}
           >
-            <Typography variant="body1">Out of Stock</Typography>
+            <Typography variant="body1" key={item.id + "-overlay-label"}>
+              Out of Stock
+            </Typography>
           </Box>
         )}
         <CardMedia
@@ -80,9 +80,13 @@ export default function ProductCard({
             objectFit: "contain",
             pt: 2,
           }}
+          key={item.id + "-img"}
         />
         <CardContent>
-          <Box sx={{ height: "3em", overflow: "hidden" }}>
+          <Box
+            sx={{ height: "3em", overflow: "hidden" }}
+            key={item.id + "-content"}
+          >
             <Typography
               variant="h6"
               sx={{
@@ -91,6 +95,7 @@ export default function ProductCard({
                 WebkitBoxOrient: "vertical",
                 overflow: "hidden",
               }}
+              key={item.id + "-name"}
             >
               {item.name}
             </Typography>
@@ -98,6 +103,7 @@ export default function ProductCard({
 
           <Box
             sx={{ position: "relative", height: "4em", overflowY: "hidden" }}
+            key={item.id + "-body-wrap"}
           >
             <Typography
               variant="body2"
@@ -108,11 +114,16 @@ export default function ProductCard({
                 WebkitBoxOrient: "vertical",
                 overflow: "hidden",
               }}
+              key={item.id + "-description"}
             >
               {item.description}
             </Typography>
           </Box>
-          <Typography variant="body2" sx={{ mt: 1 }}>
+          <Typography
+            variant="body2"
+            sx={{ mt: 1 }}
+            key={item.id + "-categories"}
+          >
             {item.categories.join(", ")}
           </Typography>
           <Box
@@ -122,10 +133,17 @@ export default function ProductCard({
               alignItems: "center",
               mt: 1,
             }}
+            key={item.id + "-subtle-wrapper"}
           >
-            <Typography variant="subtitle1">{displayPrice}</Typography>
+            <Typography variant="subtitle1" key={item.id + "-price"}>
+              {displayPrice}
+            </Typography>
             {!isInStock && outOfStockMode === "subtle" && (
-              <Typography variant="caption" color="error">
+              <Typography
+                variant="caption"
+                color="error"
+                key={item.id + "-subtle-overlay"}
+              >
                 Out of Stock
               </Typography>
             )}

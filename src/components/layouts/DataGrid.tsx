@@ -69,6 +69,7 @@ export default function DataGrid({ params }: Route.ComponentProps) {
             sx={{
               m: 2,
             }}
+            key={item.id + "-grid"}
           >
             <Skeleton
               variant="rounded"
@@ -76,12 +77,17 @@ export default function DataGrid({ params }: Route.ComponentProps) {
                 width: { xs: 200, sm: 300 },
                 height: { xs: 200, sm: 300 },
               }}
+              key={item.id + "-skel0"}
             />
-            <Skeleton variant="text" height={"1.5em"} />
-            <Skeleton variant="rounded" height="3em" />
+            <Skeleton
+              variant="text"
+              height={"1.5em"}
+              key={item.id + "-skel1"}
+            />
+            <Skeleton variant="rounded" height="3em" key={item.id + "-skel2"} />
           </Grid>
         ) : (
-          <Grid>
+          <Grid key={item.id + "-grid"}>
             <ProductCard
               item={item}
               inventory={invData?.objects ?? {}}

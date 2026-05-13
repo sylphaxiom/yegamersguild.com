@@ -29,7 +29,6 @@ export function meta({}: Route.MetaArgs) {
 
 export async function clientLoader({ context }: Route.ClientLoaderArgs) {
   const token = context.get(sqContext).token;
-  const state = context.get(sqContext).state;
   if (token != "") {
   }
   return context.get(sqContext);

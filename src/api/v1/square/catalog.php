@@ -1,4 +1,5 @@
 <?php
+
 // We initialize the session after getting state.
 $allowed_origins = [
     'http://localhost:5173',
@@ -53,6 +54,7 @@ use Square\Environments;
 use Square\SquareClient;
 use Square\Exceptions\SquareApiException;
 use Square\Catalog\Requests\ListCatalogRequest;
+use Square\Catalog\Requests\BatchGetCatalogObjectsRequest;
 use Square\Types\CatalogPricingType;
 
 switch ($method) {
@@ -65,28 +67,36 @@ switch ($method) {
         $baseUrl = $_SESSION['environment'] === 'sand' ? Environments::Sandbox->value : Environments::Production->value;
         // build the client
         $sqClient = new SquareClient(token: $token, options: ['baseUrl' => $baseUrl]);
-        // Make the call body
-        try {
-            $catalogList = $sqClient->catalog->list(
-                new ListCatalogRequest([
-                    'types' => $filterTypes
-                ]),
-            );
-        } catch (SquareApiException $e) {
-            // There is an error so we return failure and the error information
-            error_log("A square API exception occurred while obtaining the catalog: {$e->getMessage()}");
-            error_log("Additional information: {$e->getBody()}");
-            http_response_code(503);
-            echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
-            exit(1);
-        }
-
-        $rawItems = [];
-        $images = [];
-        $categoryNames = [];
-        try {
-            foreach ($catalogList->getPages() as $page) {
-                foreach ($page->getItems() as $catalogItem) {
+        // Check if itemId was added for single search
+        if (isset($_GET['itemId'])) {
+            $itemId = explode(',', $_GET['itemId']);
+            // Make the call body for a single catalog item
+            try {
+                $catalogList = $sqClient->catalog->batchGet(
+                    new BatchGetCatalogObjectsRequest([
+                        'objectIds' => $itemId,
+                        'includeRelatedObjects' => true,
+                    ])
+                );
+            } catch (SquareApiException $e) {
+                // There is an error so we return failure and the error information
+                error_log("A square API exception occurred while obtaining the single catalog: {$e->getMessage()}");
+                error_log("Additional information: {$e->getBody()}");
+                http_response_code(503);
+                echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
+                exit(1);
+            }
+            $rawItems = [];
+            $images = [];
+            $categoryNames = [];
+            try {
+                foreach ($catalogList->getObjects() ?? [] as $catalogItem) {
+                    if ($catalogItem->isItem()) {
+                        $item = $catalogItem->asItem();
+                        $rawItems[$item->getId()] = $item->getItemData();
+                    }
+                }
+                foreach ($catalogList->getRelatedObjects() ?? [] as $catalogItem) {
                     if ($catalogItem->isImage()) {
                         $image = $catalogItem->asImage();
                         $images[$image->getId()] = $image->getImageData()->getUrl();
@@ -95,18 +105,59 @@ switch ($method) {
                         $category = $catalogItem->asCategory();
                         $categoryNames[$category->getId()] = $category->getCategoryData()->getName();
                     }
-                    if ($catalogItem->isItem()) {
-                        $item = $catalogItem->asItem();
-                        $rawItems[$item->getId()] = $item->getItemData();
+                }
+            } catch (\Throwable $e) {
+                error_log("Throwable (" . get_class($e) . "): {$e->getMessage()}");
+                error_log("A Square API exception occurred: {$e->getMessage()}");
+                error_log("Additional details: {$e->getTraceAsString()}");
+                http_response_code(503);
+                echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
+                exit(1);
+            }
+        } else {
+            // Make the call body for all catalog items
+            try {
+                $catalogList = $sqClient->catalog->list(
+                    new ListCatalogRequest([
+                        'types' => $filterTypes
+                    ]),
+                );
+            } catch (\Throwable $e) {
+                error_log("Throwable (" . get_class($e) . "): {$e->getMessage()}");
+                error_log("A square API exception occurred while obtaining the multi catalog: {$e->getMessage()}");
+                error_log("Additional information: {$e->getTraceAsString()}");
+                http_response_code(503);
+                echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
+                exit(1);
+            }
+            $rawItems = [];
+            $images = [];
+            $categoryNames = [];
+            try {
+                foreach ($catalogList->getPages() as $page) {
+                    foreach ($page->getItems() as $catalogItem) {
+                        if ($catalogItem->isImage()) {
+                            $image = $catalogItem->asImage();
+                            $images[$image->getId()] = $image->getImageData()->getUrl();
+                        }
+                        if ($catalogItem->isCategory()) {
+                            $category = $catalogItem->asCategory();
+                            $categoryNames[$category->getId()] = $category->getCategoryData()->getName();
+                        }
+                        if ($catalogItem->isItem()) {
+                            $item = $catalogItem->asItem();
+                            $rawItems[$item->getId()] = $item->getItemData();
+                        }
                     }
                 }
+            } catch (\Throwable $e) {
+                error_log("Throwable (" . get_class($e) . "): {$e->getMessage()}");
+                error_log("A Square API exception occurred: {$e->getMessage()}");
+                error_log("Additional details: {$e->getTraceAsString()}");
+                http_response_code(503);
+                echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
+                exit(1);
             }
-        } catch (SquareApiException $e) {
-            error_log("A Square API exception occurred: {$e->getMessage()}");
-            error_log("Additional details: {$e->getBody()}");
-            http_response_code(503);
-            echo json_encode(["status" => "Failure", "message" => $e->getMessage(), 'state' => $state, "error" => $e->getTraceAsString()]);
-            exit(1);
         }
 
         $catalogItems = [];

@@ -102,6 +102,7 @@ export interface InventoryResponse {
 export async function fetchCatalog(
     state:string,
     token:string,
+    itemId?:string,
 ): Promise<CatalogResponse> {
     const response = await api
     .get(`/square/catalog.php`, {
@@ -110,6 +111,7 @@ export async function fetchCatalog(
         },
         params: {
             state:state,
+            ...(itemId && {itemId}),
         }
     })
     .catch((error)=>{
