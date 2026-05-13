@@ -32,7 +32,7 @@ export async function knockKnock(
     url?:string;
 }> {
     const response = await api
-    .get(`/square/gateway.php`, {
+    .get(`/gateway.php`, {
         params:{
             state:state,
             clientId:clientId,
@@ -50,7 +50,7 @@ export async function checker(state:string): Promise<{
     isValid:boolean;
 }> {
     const response = await api
-    .get(`/square/checker.php`, {
+    .get(`/checker.php`, {
         params: {
             state:state
         }
@@ -105,7 +105,7 @@ export async function fetchCatalog(
     itemId?:string,
 ): Promise<CatalogResponse> {
     const response = await api
-    .get(`/square/catalog.php`, {
+    .get(`/catalog.php`, {
         headers:{
             Authorization: `Bearer ${token}`
         },
@@ -127,7 +127,7 @@ export async function fetchInventory(
     variationIds:string[]
 ): Promise<InventoryResponse> {
     const response = await api
-    .get(`/square/inventory.php`, {
+    .get(`/inventory.php`, {
         headers:{
             Authorization: `Bearer ${token}`
         },
