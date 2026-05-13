@@ -14,6 +14,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import theme from "./theme";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./components/workhorse/queries";
+import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 
 export interface SqContext {
   clientId: string;
@@ -36,7 +37,7 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Cormorant+Unicase:wght@500;600;700;900&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Cormorant+Unicase:wght@500;600;700;900&family=EB+Garamond:wght@400;500;600&display=swap",
   },
   {
     rel: "stylesheet",
@@ -55,6 +56,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body suppressHydrationWarning>
+        <InitColorSchemeScript attribute="class" />
         <React.Fragment>
           <ThemeProvider disableTransitionOnChange={false} theme={theme}>
             <CssBaseline enableColorScheme />

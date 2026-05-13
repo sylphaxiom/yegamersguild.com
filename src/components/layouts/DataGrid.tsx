@@ -16,24 +16,15 @@ export async function clientLoader({ context }: Route.ClientLoaderArgs) {
   const state = context.get(sqContext).state;
   if (token != "") {
     // Grab catalog information
-    const catalogData = await queryClient.fetchQuery({
+    queryClient.prefetchQuery({
       queryKey: ["catalog", state],
       queryFn: () => fetchCatalog(state, token),
-    });
-    // Grab inventory information
-    const variationIds =
-      catalogData.objects?.flatMap((item) =>
-        item.variations.map((v) => v.id),
-      ) ?? [];
-    await queryClient.prefetchQuery({
-      queryKey: ["inventory", state],
-      queryFn: () => fetchInventory(state, token, variationIds),
     });
   }
   return context.get(sqContext);
 }
 
-export default function DataGrid({ params }: Route.ComponentProps) {
+export default function DataGrid() {
   const loaderData = useLoaderData();
   const { state, token } = loaderData;
   // Query
@@ -63,39 +54,29 @@ export default function DataGrid({ params }: Route.ComponentProps) {
 
   return (
     <Grid container spacing={2} sx={{ justifyContent: "center" }}>
-      {catData?.objects?.map((item) =>
-        isLoading ? (
-          <Grid
-            sx={{
-              m: 2,
-            }}
-            key={item.id + "-grid"}
-          >
-            <Skeleton
-              variant="rounded"
-              sx={{
-                width: { xs: 200, sm: 300 },
-                height: { xs: 200, sm: 300 },
-              }}
-              key={item.id + "-skel0"}
-            />
-            <Skeleton
-              variant="text"
-              height={"1.5em"}
-              key={item.id + "-skel1"}
-            />
-            <Skeleton variant="rounded" height="3em" key={item.id + "-skel2"} />
-          </Grid>
-        ) : (
-          <Grid key={item.id + "-grid"}>
-            <ProductCard
-              item={item}
-              inventory={invData?.objects ?? {}}
-              outOfStockMode="subtle"
-            />
-          </Grid>
-        ),
-      )}
+      {isLoading
+        ? Array.from({ length: 6 }).map((_, i) => (
+            <Grid sx={{ m: 2 }} key={`skel-${i}`}>
+              <Skeleton
+                variant="rounded"
+                sx={{
+                  width: { xs: 200, sm: 300 },
+                  height: { xs: 200, sm: 300 },
+                }}
+              />
+              <Skeleton variant="text" height="1.5em" />
+              <Skeleton variant="rounded" height="3em" />
+            </Grid>
+          ))
+        : catData?.objects?.map((item) => (
+            <Grid key={item.id + "-grid"}>
+              <ProductCard
+                item={item}
+                inventory={invData?.objects ?? {}}
+                outOfStockMode="subtle"
+              />
+            </Grid>
+          ))}
     </Grid>
   );
 }

@@ -7,9 +7,10 @@ import {
   type CatalogVariation,
   type Price,
 } from "../workhorse/queries";
-import { Box, Grid, Stack, Typography } from "@mui/material";
-import { useLoaderData } from "react-router";
+import { Box, Button, Grid, Skeleton, Stack, Typography } from "@mui/material";
+import { useLoaderData, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 export async function clientLoader({
   context,
@@ -19,25 +20,16 @@ export async function clientLoader({
   const state = context.get(sqContext).state;
   if (token != "") {
     // params are here which means single search for that item.
-    const catalogData = await queryClient.fetchQuery({
+    queryClient.prefetchQuery({
       queryKey: ["catalog", state, params.item],
       queryFn: () => fetchCatalog(state, token, params.item),
-    });
-
-    // Grab inventory information
-    const variationIds =
-      catalogData?.objects?.flatMap((item) =>
-        item.variations.map((v) => v.id),
-      ) ?? [];
-    await queryClient.prefetchQuery({
-      queryKey: ["inventory", state, params.item],
-      queryFn: () => fetchInventory(state, token, variationIds),
     });
   }
   return context.get(sqContext);
 }
 
 export default function Details({ params }: Route.ComponentProps) {
+  const navigate = useNavigate();
   // Price stuff
   const { state, token } = useLoaderData();
   const { data } = useQuery({
@@ -48,7 +40,7 @@ export default function Details({ params }: Route.ComponentProps) {
   const variationIds =
     data?.objects?.flatMap((item) => item.variations.map((v) => v.id)) ?? [];
   console.log("variationIds: %o", variationIds);
-  const { data: inventory } = useQuery({
+  const { data: inventory, isLoading } = useQuery({
     queryKey: ["inventory", state, params.item],
     queryFn: () => fetchInventory(state, token, variationIds),
   });
@@ -70,6 +62,24 @@ export default function Details({ params }: Route.ComponentProps) {
           return fixedPrices.length > 1 ? `from ${dollarStr}` : dollarStr;
         })();
   const displayImage = item?.images[0] ?? "/placeholder.png";
+  // Check if this item is in stock or not.
+  const isInStock = item?.variations.some(
+    (v) => (inventory?.objects[v.id] ?? 0) > 0,
+  );
+
+  if (isLoading)
+    return (
+      <Grid container>
+        <Grid size={{ xs: 6 }}>
+          <Skeleton variant="rounded" sx={{ width: 300, height: 300 }} />
+        </Grid>
+        <Grid size={{ xs: 6 }}>
+          <Skeleton variant="text" sx={{ fontSize: "2rem" }} width="60%" />
+          <Skeleton variant="text" sx={{ fontSize: "15rem" }} width="60%" />
+          <Skeleton variant="text" />
+        </Grid>
+      </Grid>
+    );
 
   return (
     <Grid container>
@@ -86,15 +96,41 @@ export default function Details({ params }: Route.ComponentProps) {
       </Grid>
       <Grid size={{ xs: 5 }} sx={{ mx: 4 }}>
         <Typography variant="h2">{item?.name}</Typography>
-        <Typography variant="body1">{item?.description}</Typography>
-        <Stack direction={"row"} sx={{ justifyContent: "space-between" }}>
+        <Typography variant="body1" sx={{ height: "12rem" }}>
+          {item?.description}
+        </Typography>
+        <Stack
+          direction={"row"}
+          sx={{ justifyContent: "space-between", maxWidth: "80%" }}
+        >
           {item && (
             <Typography variant="body2">
-              Quantity: {inventory?.objects[item.id] ?? 0}
+              Quantity:{" "}
+              {isInStock ? (
+                inventory?.objects[0]
+              ) : (
+                <Typography
+                  variant="caption"
+                  color="error"
+                  key={item.id + "-subtle-overlay"}
+                >
+                  Out of Stock
+                </Typography>
+              )}
             </Typography>
           )}
           <Typography variant="body2">{displayPrice}</Typography>
         </Stack>
+        <Box sx={{ textAlign: "left", pl: "10%", py: 4 }}>
+          <Button
+            variant="contained"
+            type="submit"
+            onClick={() => navigate(-1)}
+            startIcon={<ArrowBackIcon />}
+          >
+            Back to inventory list
+          </Button>
+        </Box>
       </Grid>
     </Grid>
   );
