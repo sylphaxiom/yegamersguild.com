@@ -1,0 +1,6 @@
+html.light > body {
+    background-image: url("/lt-parchment-bg.jpg");
+    background-size: auto;
+    background-attachment: fixed;
+    background-repeat:repeat;
+}

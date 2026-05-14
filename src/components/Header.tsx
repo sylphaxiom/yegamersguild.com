@@ -1,16 +1,19 @@
 // import * as React from "react";
 import { Divider, Grid, Typography, useTheme } from "@mui/material";
 import Ticker from "@andremov/react-ticker";
+import { useColorScheme } from "@mui/material/styles";
 
 export default function Header() {
   const theme = useTheme();
+  const { mode } = useColorScheme();
+  const isDark = mode === "dark";
 
   return (
     <Grid container id="head-cont" role="heading" aria-level={1} sx={{ my: 2 }}>
       <Grid
         size={12}
         sx={{
-          background: `content-box radial-gradient(${theme.palette.primary.main} , transparent 70%)`,
+          background: `content-box radial-gradient(${isDark ? theme.palette.primary.main : "rgba(180, 100, 30, 0.3)"}, transparent 70%)`,
           marginBottom: 2,
           display: "flex",
         }}
@@ -22,7 +25,7 @@ export default function Header() {
           alt="Logo for Ye Gamer\'s Guild, which is a dragon behind a shield with the name in a banner below it."
           style={{
             margin: "0 auto",
-            boxShadow: `5px 7px 17px ${theme.palette.primary.main}`,
+            boxShadow: `5px 7px 17px ${isDark ? theme.palette.primary.main : "rgba(180, 100, 30, 0.3)"}`,
             maxWidth: "500px",
           }}
         />
@@ -45,7 +48,7 @@ export default function Header() {
                   key={`${img.key}-cont`}
                   style={{
                     margin: theme.breakpoints.only("xs") ? "0 5px" : "0 15px",
-                    background: `content-box radial-gradient(${theme.palette.primary.main} , transparent 70%)`,
+                    background: `content-box radial-gradient(${isDark ? theme.palette.primary.main : "rgba(180, 100, 30, 0.3)"}, transparent 70%)`,
                   }}
                 >
                   <img
@@ -58,7 +61,6 @@ export default function Header() {
                       margin: theme.breakpoints.only("xs")
                         ? "0 25px"
                         : "0 50px",
-                      // boxShadow: `5px 7px 17px ${theme.palette.primary.main}`,
                     }}
                   />
                 </div>

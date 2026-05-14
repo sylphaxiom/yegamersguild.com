@@ -50,6 +50,32 @@ test.describe('homepage feature testing', ()=>{
 
         await expect(button).toBeVisible();
         button.click();
-        await expect(page.getByText('Only Joking!This is coming')).toBeVisible();
+        await expect(page).toHaveURL('/shop');
+    });
+
+    test('logo image loads', async ({page})=>{
+        const logo = page.getByRole('img', { name: /dragon behind a shield/i });
+        await expect(logo).toBeVisible();
+        await expect(logo).toHaveAttribute('src', /guild_logo/);
+    });
+
+    test('mode switch toggles theme', async ({page})=>{
+        const html = page.locator('html');
+        const modeBtn = page.getByRole('button', { name: 'change mode' });
+        await expect(modeBtn).toBeVisible();
+        const initialClass = await html.getAttribute('class');
+        await modeBtn.click();
+        const newClass = await html.getAttribute('class');
+        expect(newClass).not.toEqual(initialClass);
+        // toggle back
+        await modeBtn.click();
+        await expect(html).toHaveAttribute('class', initialClass ?? '');
+    });
+
+    test('key content sections are visible', async ({page})=>{
+        await expect(page.getByText('Your local source for', { exact: false })).toBeVisible({ timeout: 5000 });
+        await expect(page.getByRole('heading', { name: 'Located at', exact: false })).toBeVisible({ timeout: 5000 });
+        await expect(page.getByRole('heading', { name: 'Hours', exact: false })).toBeVisible({ timeout: 5000 });
+        await expect(page.getByRole('heading', { name: 'About The Guild', exact: false })).toBeVisible({ timeout: 5000 });
     });
 });

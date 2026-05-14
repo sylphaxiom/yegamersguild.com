@@ -1,18 +1,11 @@
 import * as React from "react";
 import * as motion from "motion/react-client";
-import {
-  Box,
-  Button,
-  Collapse,
-  Grow,
-  List,
-  ListItem,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Stack, Typography } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { AnimatePresence } from "motion/react";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import { useNavigate } from "react-router";
+
 interface Img {
   key: string;
   src: string;
@@ -38,8 +31,8 @@ function buildImg({ key, src, alt, width, height }: Img) {
 }
 
 export default function About() {
-  const [open, setOpen] = React.useState(false);
   const [img, setImg] = React.useState(0);
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     const interval = setInterval(() => {
@@ -85,35 +78,14 @@ export default function About() {
           </Typography>
         </Stack>
         <Box sx={{ textAlign: "center", py: 4 }}>
-          <Button variant="contained" onClick={() => setOpen(!open)}>
+          <Button
+            variant="contained"
+            type="submit"
+            onClick={() => navigate("shop")}
+          >
             Check out our inventory
           </Button>
         </Box>
-        <Collapse in={open}>
-          <Box
-            sx={{
-              border: "2px solid",
-              borderRadius: "5px",
-              mx: "auto",
-              padding: 2,
-              textAlign: "center",
-              margin: 2,
-            }}
-          >
-            <Typography variant="h4" component="aside">
-              Only Joking!
-            </Typography>
-            <img
-              src="construction.svg"
-              width="60%"
-              height="auto"
-              alt="Some stick figures building a website, literally."
-            />
-            <Typography variant="h4" component="aside">
-              This is coming soon
-            </Typography>
-          </Box>
-        </Collapse>
       </Grid>
       <Grid
         size={{ xs: 12, sm: 4, md: 6 }}

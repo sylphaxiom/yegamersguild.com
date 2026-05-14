@@ -1,5 +1,6 @@
 import * as React from "react";
 import {
+  createContext,
   isRouteErrorResponse,
   Links,
   Meta,
@@ -7,15 +8,25 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-
 import type { Route } from "./+types/root";
-// import TwinkleStars from "./components/baubles/TwinkleStars";
-// import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-// import theme, { dark } from "./theme";
 import theme from "./theme";
-import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./components/workhorse/queries";
+import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
+
+export interface SqContext {
+  clientId: string;
+  state: string;
+  token: string;
+}
+
+export const sqContext = createContext<SqContext>({
+  clientId: "sandbox-sq0idb-Zo_kJ9WN2IDavTl6AbFO2g",
+  state: "",
+  token: "",
+});
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -26,7 +37,7 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Cormorant+Unicase:wght@500;600;700;900&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Cormorant+Unicase:wght@500;600;700;900&family=EB+Garamond:wght@400;500;600&display=swap",
   },
   {
     rel: "stylesheet",
@@ -36,7 +47,6 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const queryClient = new QueryClient();
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -45,18 +55,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
-        {/* <TwinkleStars /> */}
-        {/* <InitColorSchemeScript attribute="class" /> */}
+      <body suppressHydrationWarning>
+        <InitColorSchemeScript attribute="class" />
         <React.Fragment>
-          <ThemeProvider disableTransitionOnChange={false} noSsr theme={theme}>
+          <ThemeProvider disableTransitionOnChange={false} theme={theme}>
             <CssBaseline enableColorScheme />
             <QueryClientProvider client={queryClient}>
               {children}
             </QueryClientProvider>
-            <ScrollRestoration />
           </ThemeProvider>
         </React.Fragment>
+        <ScrollRestoration />
         <Scripts />
       </body>
     </html>
