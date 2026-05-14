@@ -90,8 +90,8 @@ export default function Details({ params }: Route.ComponentProps) {
           src={displayImage}
           alt={`Stock image of a(n) ${item?.name}`}
           sx={{
-            width: { xs: "80vw", sm: "40vw" },
-            height: { xs: "80vw", sm: "40vw" },
+            width: { xs: "100%" },
+            height: { xs: "100%" },
           }}
         />
       </Grid>
