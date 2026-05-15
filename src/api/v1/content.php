@@ -32,6 +32,7 @@ require_once 'CMSDB_bucket.php';
 // Required header check
 $headers = getallheaders();
 $fishHead = $headers["Fish"] ?? null;
+$tokenHead = $headers["Authorization"] ?? null;
 if (!isset($fishHead)) {
     http_response_code(418);
     echo "fish is not present";
@@ -42,7 +43,6 @@ if (!Bucket::fishDance($fishHead)) {
     echo "fish is incorrect";
     exit(1);
 }
-
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -82,12 +82,18 @@ switch ($method) {
         break;
     case 'POST':
         $input = json_decode(file_get_contents('php://input'), true);
+        initSession();
+        requireAuth($fishHead, $tokenHead);
         break;
     case 'DELETE':
         $input = json_decode(file_get_contents('php://input'), true);
+        initSession();
+        requireAuth($fishHead, $tokenHead);
         break;
     case 'PUT':
         $input = json_decode(file_get_contents('php://input'), true);
+        initSession();
+        requireAuth($fishHead, $tokenHead);
         break;
     default:
         http_response_code(405);
@@ -95,6 +101,5 @@ switch ($method) {
             'status' =>
                 'Failure',
             'message' => 'The method used to request this resource was invalid, please try again.',
-            'state' => $state
         ]);
 }
