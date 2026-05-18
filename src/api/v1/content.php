@@ -12,7 +12,7 @@ if (in_array($origin, $allowed_origins)) {
     header('Access-Control-Allow-Credentials: true');
     header('Access-Control-Max-Age:3600');
     header('Access-Control-Allow-Headers:Content-type, Authorization');
-    header('Access-Control-Allow-Methods:GET, POST, PUT, DELETE, OPTIONS');
+    header('Access-Control-Allow-Methods:GET, PUT, OPTIONS');
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -53,18 +53,7 @@ error_log("========== Initialized content ==========");
 switch ($method) {
     case 'GET':
         $contentKey = $_GET['content_key'] ?? null;
-        $type = $_GET['type'] ?? null;
-
-        switch ($type) {
-            case 'text':
-                $contentResult = getContent($contentKey);
-                break;
-            case 'image':
-                $contentResult = getImages($contentKey);
-                break;
-            default:
-                $contentResult = [];
-        }
+        $contentResult = getContent($contentKey);
         if (!empty($contentResult)) {
             http_response_code(200);
             echo json_encode([
@@ -80,20 +69,38 @@ switch ($method) {
             ]);
         }
         break;
-    case 'POST':
-        $input = json_decode(file_get_contents('php://input'), true);
-        initSession();
-        requireAuth($fishHead, $tokenHead);
-        break;
-    case 'DELETE':
-        $input = json_decode(file_get_contents('php://input'), true);
-        initSession();
-        requireAuth($fishHead, $tokenHead);
-        break;
     case 'PUT':
         $input = json_decode(file_get_contents('php://input'), true);
         initSession();
         requireAuth($fishHead, $tokenHead);
+
+        $value = $input['value'] ?? null;
+        $label = $input['label'] ?? null;
+        $contentKey = $_GET['content_key'] ?? null;
+
+        if (!$value || !$label || !$contentKey) {
+            http_response_code(400);
+            echo json_encode([
+                'status' => 'Failure',
+                'message' => 'The request was missing some parameters. Please check that all the required data is being sent in the request as it seems something was missing.',
+            ]);
+            exit;
+        }
+
+        $putResult = putContent($value, $label, $contentKey);
+        if ($putResult) {
+            http_response_code(200);
+            echo json_encode([
+                'status' => "Success",
+                'message' => "Content for $contentKey has been successfully updated.",
+            ]);
+        } else {
+            http_response_code(406);
+            echo json_encode([
+                'status' => 'Failure',
+                'message' => "There was an error updating content for $contentKey. Please check your request. If you believe this is in error, contact the system administrator at support@sylphaxiom.com",
+            ]);
+        }
         break;
     default:
         http_response_code(405);

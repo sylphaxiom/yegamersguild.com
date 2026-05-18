@@ -2,7 +2,6 @@ CREATE TABLE `content` (
     `id` int NOT NULL AUTO_INCREMENT,
     `content_key` varchar(100) NOT NULL,
     `value` text,
-    `type` enum('text', 'image') NOT NULL DEFAULT 'text',
     `label` varchar(100) NOT NULL,
     `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
