@@ -6,7 +6,7 @@ CREATE TABLE `content` (
     `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `content_key` (`content_key`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci
+) ENGINE = InnoDB AUTO_INCREMENT = 10 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci
 
 CREATE TABLE `content_images` (
     `id` int NOT NULL AUTO_INCREMENT,
@@ -17,10 +17,8 @@ CREATE TABLE `content_images` (
     `display_order` int DEFAULT '0',
     `width` int DEFAULT NULL,
     `height` int DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    KEY `content_key` (`content_key`),
-    CONSTRAINT `content_images_ibfk_1` FOREIGN KEY (`content_key`) REFERENCES `content` (`content_key`) ON DELETE CASCADE
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB AUTO_INCREMENT = 17 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci
 
 CREATE TABLE `decrypt` (
     `owner` varchar(25) NOT NULL,

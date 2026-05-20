@@ -142,3 +142,75 @@ export async function fetchInventory(
     })
     return response.data;
 }
+
+export interface ContentResponse {
+    status: string;
+    message: string;
+    objects?: TextContent;
+}
+
+export interface TextContent {
+    contentKey: string;
+    label: string;
+    value: string;
+    updated_at: number;
+}
+
+export interface ImagesResposne {
+    status: string;
+    message: string;
+    objects?: Image[];
+}
+
+export interface Image {
+    shortName: string;
+    contentKey: string;
+    src: string;
+    alt: string;
+    displayOrder:number;
+    width: number;
+    height: number;
+}
+
+export interface StandardResponse {
+    status: string;
+    message: string;
+}
+
+export async function fetchContent(
+    contentKey:string,
+): Promise<ContentResponse> {
+    const response = await api
+    .get(`/content.php`, {
+        headers:{
+            fish: import.meta.env.VITE_FISH,
+        },
+        params:{
+            contentKey:contentKey,
+        }
+    })
+    .catch((error)=>{
+        console.log("An error occurred fetching the content: %s", error);
+        throw error
+    })
+    return response.data;
+}
+
+export async function fetchImages(
+    contentKey:string,
+): Promise<ImagesResposne> {
+    const response = await api
+    .get(`/images.php`, {
+        headers:{
+            fish: import.meta.env.VITE_FISH,
+        },
+        params:{
+            contentKey:contentKey,
+        }
+    })
+    .catch((error)=>{
+        console.log("An error occurred fetching the images: %s", error);
+        throw error
+    })
+    return response.data;
+}

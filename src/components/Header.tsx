@@ -80,27 +80,27 @@ export default function Header() {
 const tickerImgs = [
   {
     key: "pathfinder",
-    src: "guild_pathfinder.png",
+    src: "/uploads/guild_pathfinder.png",
     alt: "Logo for Pathfinder",
   },
   {
     key: "mtg",
-    src: "guild_mtg.jpg",
+    src: "/uploads/guild_mtg.jpg",
     alt: "Logo for Magic the Gathering",
   },
   {
     key: "dnd",
-    src: "guild_dnd.jpg",
+    src: "/uploads/guild_dnd.jpg",
     alt: "Logo for Dungeons and Dragons",
   },
   {
     key: "battletech",
-    src: "guild_battletech.png",
+    src: "/uploads/guild_battletech.png",
     alt: "Logo for Battletech",
   },
   {
     key: "40k",
-    src: "guild_40k.jpg",
+    src: "/uploads/guild_40k.jpg",
     alt: "Logo for Warhammer 40k",
   },
 ];

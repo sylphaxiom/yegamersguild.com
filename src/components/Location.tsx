@@ -1,16 +1,6 @@
-import { Divider, Grid, Typography, useTheme } from "@mui/material";
-import {
-  AdvancedMarker,
-  APIProvider,
-  Map,
-  // Marker,
-} from "@vis.gl/react-google-maps";
-import { useNavigate } from "react-router";
+import { Divider, Grid, Typography } from "@mui/material";
 
 export default function Location() {
-  const navigate = useNavigate();
-  const theme = useTheme();
-  const token = import.meta.env.VITE_GAPI_KEY!;
   const location = (
     <Grid
       size={{ xs: 12, sm: 6, md: 4 }}
@@ -18,7 +8,7 @@ export default function Location() {
         px: 3,
         justifyContent: "center",
         alignContent: "start",
-        pb: theme.breakpoints.only("xs") ? 3 : 0,
+        pb: { xs: 3, sm: 0 },
       }}
       role="complementary"
       aria-label="location"
@@ -70,7 +60,7 @@ export default function Location() {
         px: 3,
         justifyContent: "center",
         alignContent: "start",
-        pt: theme.breakpoints.only("xs") ? 3 : 0,
+        pt: { xs: 3, sm: 0 },
       }}
       role="complementary"
       aria-label="hours"
@@ -82,23 +72,113 @@ export default function Location() {
       <br />
       <Grid container sx={{ alignItems: "center" }}>
         <Grid size={{ xs: 12, sm: 6, md: 12 }}>
-          <Typography variant="h5" component="p">
-            Monday: 3pm - 10pm
-          </Typography>
-          <Typography variant="h5" component="p">
-            Tuesday: 3pm - 10pm
-          </Typography>
-          <Typography variant="h5" component="p">
-            Wednesday: Closed
-          </Typography>
+          <Grid container>
+            <Grid size={5}>
+              <Typography variant="h5" component="p">
+                Monday
+                <span
+                  style={{
+                    display: "inline-block",
+                    float: "right",
+                    margin: "0 10px",
+                  }}
+                >
+                  :
+                </span>
+              </Typography>
+            </Grid>
+            <Grid size={7}>
+              <Typography variant="h5" component="p">
+                3pm - 10pm
+              </Typography>
+            </Grid>
+          </Grid>
+          <Grid container>
+            <Grid size={5}>
+              <Typography variant="h5" component="p">
+                Tuesday
+                <span
+                  style={{
+                    display: "inline-block",
+                    float: "right",
+                    margin: "0 10px",
+                  }}
+                >
+                  :
+                </span>
+              </Typography>
+            </Grid>
+            <Grid size={7}>
+              <Typography variant="h5" component="p">
+                3pm - 10pm
+              </Typography>
+            </Grid>
+          </Grid>
+          <Grid container>
+            <Grid size={5}>
+              <Typography variant="h5" component="p">
+                wednesday
+                <span
+                  style={{
+                    display: "inline-block",
+                    float: "right",
+                    margin: "0 10px",
+                  }}
+                >
+                  :
+                </span>
+              </Typography>
+            </Grid>
+            <Grid size={7}>
+              <Typography variant="h5" component="p">
+                Closed
+              </Typography>
+            </Grid>
+          </Grid>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 12 }}>
-          <Typography variant="h5" component="p">
-            Thursday: 3pm - 10pm
-          </Typography>
-          <Typography variant="h5" component="p">
-            Friday: 3pm - 10pm
-          </Typography>
+          <Grid container>
+            <Grid size={5}>
+              <Typography variant="h5" component="p">
+                Thursday
+                <span
+                  style={{
+                    display: "inline-block",
+                    float: "right",
+                    margin: "0 10px",
+                  }}
+                >
+                  :
+                </span>
+              </Typography>
+            </Grid>
+            <Grid size={7}>
+              <Typography variant="h5" component="p">
+                3pm - 10pm
+              </Typography>
+            </Grid>
+          </Grid>
+          <Grid container>
+            <Grid size={5}>
+              <Typography variant="h5" component="p">
+                Friday
+                <span
+                  style={{
+                    display: "inline-block",
+                    float: "right",
+                    margin: "0 10px",
+                  }}
+                >
+                  :
+                </span>
+              </Typography>
+            </Grid>
+            <Grid size={7}>
+              <Typography variant="h5" component="p">
+                3pm - 10pm
+              </Typography>
+            </Grid>
+          </Grid>
           <Typography variant="h5" component="p">
             Saturday/Sunday:
           </Typography>
