@@ -143,14 +143,18 @@ export async function fetchInventory(
     return response.data;
 }
 
+//////////////////////////////////////////////////
+// These are for the content management system  //
+//////////////////////////////////////////////////
+
 export interface ContentResponse {
     status: string;
     message: string;
-    objects?: TextContent;
+    objects?: TextContent[];
 }
 
 export interface TextContent {
-    contentKey: string;
+    content_key: string;
     label: string;
     value: string;
     updated_at: number;
@@ -164,7 +168,7 @@ export interface ImagesResposne {
 
 export interface Image {
     shortName: string;
-    contentKey: string;
+    content_key: string;
     src: string;
     alt: string;
     displayOrder:number;
@@ -177,17 +181,12 @@ export interface StandardResponse {
     message: string;
 }
 
-export async function fetchContent(
-    contentKey:string,
-): Promise<ContentResponse> {
+export async function fetchContent(): Promise<ContentResponse> {
     const response = await api
     .get(`/content.php`, {
         headers:{
             fish: import.meta.env.VITE_FISH,
         },
-        params:{
-            contentKey:contentKey,
-        }
     })
     .catch((error)=>{
         console.log("An error occurred fetching the content: %s", error);
@@ -196,17 +195,12 @@ export async function fetchContent(
     return response.data;
 }
 
-export async function fetchImages(
-    contentKey:string,
-): Promise<ImagesResposne> {
+export async function fetchImages(): Promise<ImagesResposne> {
     const response = await api
     .get(`/images.php`, {
         headers:{
             fish: import.meta.env.VITE_FISH,
         },
-        params:{
-            contentKey:contentKey,
-        }
     })
     .catch((error)=>{
         console.log("An error occurred fetching the images: %s", error);

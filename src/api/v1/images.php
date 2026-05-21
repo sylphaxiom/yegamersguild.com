@@ -52,9 +52,9 @@ error_log("========== Initialized content ==========");
 
 switch ($method) {
     case 'GET':
-        $contentKey = $_GET['contentKey'] ?? null;
-        $contentResult = getImages($contentKey);
-        if (!empty($contentResult)) {
+        $content_key = $_GET['content_key'] ?? null;
+        if (empty($content_key)) {
+            $contentResult = getAllImages();
             http_response_code(200);
             echo json_encode([
                 'status' => "Success",
@@ -62,10 +62,12 @@ switch ($method) {
                 'objects' => $contentResult,
             ]);
         } else {
-            http_response_code(406);
+            $contentResult = getImages($content_key);
+            http_response_code(200);
             echo json_encode([
-                'status' => 'Failure',
-                'message' => "There was an error obtaining image data for $contentKey. Please check your request. If you believe this is in error, contact the system administrator at support@sylphaxiom.com",
+                'status' => 'Success',
+                'message' => '',
+                'objects' => $contentResult,
             ]);
         }
         break;
@@ -148,19 +150,19 @@ switch ($method) {
                     'message' => 'There was an error removing the file from the server.'
                 ]);
             }
-            $contentKey = $_POST["contentKey"] ?? null;
+            $content_key = $_POST["content_key"] ?? null;
             $shortName = $_POST["shortName"] ?? null;
             $src = $finalPath;
             $alt = $_POST["alt"] ?? null;
             $displayOrder = $_POST["displayOrder"] ?? null;
             $width = $_POST["width"] ?? null;
             $height = $_POST["height"] ?? null;
-            $result = putImages($contentKey, $shortName, $src, $alt, $displayOrder, $width, $height);
+            $result = putImages($content_key, $shortName, $src, $alt, $displayOrder, $width, $height);
             if (!$result) {
                 http_response_code(406);
                 echo json_encode([
                     'status' => 'Failure',
-                    'message' => "There was an error adding $name to $contentKey. Please check your request. If you believe this is in error, contact the system administrator at support@sylphaxiom.com",
+                    'message' => "There was an error adding $name to $content_key. Please check your request. If you believe this is in error, contact the system administrator at support@sylphaxiom.com",
                 ]);
                 exit(1);
             }
@@ -178,19 +180,19 @@ switch ($method) {
 
         error_log("Reached PUT case, updating metadata only...");
         $id = $input["id"] ?? null;
-        $contentKey = $input["contentKey"] ?? null;
+        $content_key = $input["content_key"] ?? null;
         $shortName = $input["shortName"] ?? null;
         $src = $input["src"] ?? null;
         $alt = $input["alt"] ?? null;
         $displayOrder = $input["displayOrder"] ?? null;
         $width = $input["width"] ?? null;
         $height = $input["height"] ?? null;
-        $result = updateMetadata($id, $contentKey, $shortName, $src, $alt, $displayOrder, $width, $height);
+        $result = updateMetadata($id, $content_key, $shortName, $src, $alt, $displayOrder, $width, $height);
         if (!$result) {
             http_response_code(406);
             echo json_encode([
                 'status' => 'Failure',
-                'message' => "There was an error adding $shortName to $contentKey. Please check your request. If you believe this is in error, contact the system administrator at support@sylphaxiom.com",
+                'message' => "There was an error adding $shortName to $content_key. Please check your request. If you believe this is in error, contact the system administrator at support@sylphaxiom.com",
             ]);
             exit(1);
         }

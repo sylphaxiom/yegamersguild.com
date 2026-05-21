@@ -52,9 +52,9 @@ error_log("========== Initialized content ==========");
 
 switch ($method) {
     case 'GET':
-        $contentKey = $_GET['contentKey'] ?? null;
-        $contentResult = getContent($contentKey);
-        if (!empty($contentResult)) {
+        $content_key = $_GET['content_key'] ?? null;
+        if (empty($content_key)) {
+            $contentResult = getAllContent();
             http_response_code(200);
             echo json_encode([
                 'status' => "Success",
@@ -62,10 +62,12 @@ switch ($method) {
                 'objects' => $contentResult,
             ]);
         } else {
-            http_response_code(406);
+            $contentResult = getContent($content_key);
+            http_response_code(200);
             echo json_encode([
-                'status' => 'Failure',
-                'message' => "There was an error obtaining content for $contentKey. Please check your request. If you believe this is in error, contact the system administrator at support@sylphaxiom.com",
+                'status' => 'Success',
+                'message' => '',
+                'objects' => $contentResult,
             ]);
         }
         break;
@@ -76,9 +78,9 @@ switch ($method) {
 
         $value = $input['value'] ?? null;
         $label = $input['label'] ?? null;
-        $contentKey = $_GET['content_key'] ?? null;
+        $content_key = $_GET['content_key'] ?? null;
 
-        if (!$value || !$label || !$contentKey) {
+        if (!$value || !$label || !$content_key) {
             http_response_code(400);
             echo json_encode([
                 'status' => 'Failure',
@@ -87,18 +89,18 @@ switch ($method) {
             exit;
         }
 
-        $putResult = putContent($value, $label, $contentKey);
+        $putResult = putContent($value, $label, $content_key);
         if ($putResult) {
             http_response_code(200);
             echo json_encode([
                 'status' => "Success",
-                'message' => "Content for $contentKey has been successfully updated.",
+                'message' => "Content for $content_key has been successfully updated.",
             ]);
         } else {
             http_response_code(406);
             echo json_encode([
                 'status' => 'Failure',
-                'message' => "There was an error updating content for $contentKey. Please check your request. If you believe this is in error, contact the system administrator at support@sylphaxiom.com",
+                'message' => "There was an error updating content for $content_key. Please check your request. If you believe this is in error, contact the system administrator at support@sylphaxiom.com",
             ]);
         }
         break;

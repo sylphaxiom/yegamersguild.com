@@ -1,6 +1,73 @@
 import { Divider, Grid, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
+import { fetchContent, fetchImages } from "./workhorse/queries";
+
+interface Hours {
+  day: string;
+  start: string;
+  sap: "am" | "pm" | "noon";
+  end: string;
+  eap: "am" | "pm" | "noon";
+}
 
 export default function Location() {
+  let locationHeaderText: string | undefined;
+  let locationBlurbText: string | undefined;
+  let locationAddressText:
+    | { line1: string; line2: string; line3: string }
+    | undefined;
+  let hoursHeaderText: string | undefined;
+  let hoursHoursText: Hours[] | undefined;
+
+  // Grab content data from the server
+  const { data: content } = useQuery({
+    queryKey: ["content"],
+    queryFn: () => fetchContent(),
+  });
+
+  if (content?.objects) {
+    const locationContent = content.objects.filter((content) =>
+      content.content_key.includes("location_"),
+    );
+    const hoursContent = content.objects.filter((content) =>
+      content.content_key.includes("hours_"),
+    );
+    if (locationContent) {
+      const locationBlurb = locationContent.find(
+        (content) => content.content_key === "location_blurb",
+      );
+      const locationHeader = locationContent.find(
+        (content) => content.content_key === "location_header",
+      );
+      const locationAddress = locationContent.find(
+        (content) => content.content_key === "location_address",
+      );
+      if (locationBlurb) {
+        locationBlurbText = locationBlurb.value;
+      }
+      if (locationAddress) {
+        locationAddressText = JSON.parse(locationAddress.value);
+      }
+      if (locationHeader) {
+        locationHeaderText = locationHeader.value;
+      }
+    }
+    if (hoursContent) {
+      const hoursHours = hoursContent.find(
+        (content) => content.content_key === "hours_blurb",
+      );
+      const hoursHeader = hoursContent.find(
+        (content) => content.content_key === "hours_header",
+      );
+      if (hoursHours) {
+        hoursHoursText = JSON.parse(hoursHours.value);
+      }
+      if (hoursHeader) {
+        hoursHeaderText = hoursHeader.value;
+      }
+    }
+  }
+
   const location = (
     <Grid
       size={{ xs: 12, sm: 6, md: 4 }}
@@ -14,22 +81,21 @@ export default function Location() {
       aria-label="location"
     >
       <Typography variant="h3" component={"h2"}>
-        Located at ...
+        {locationHeaderText}
       </Typography>
       <Divider />
       <br />
       <Typography variant="h5" component="p">
-        2801 Fairview Place, Suite I
+        {locationAddressText?.line1 + " " + locationAddressText?.line2}
       </Typography>
       <Typography variant="h5" component="p">
-        Greenwood, Indiana 46142
+        {locationAddressText?.line3}
       </Typography>
       <br />
       <Divider />
       <br />
       <Typography variant="h5" component="p">
-        We're off 135, just south of Fry Road. We look forward to seeing you at
-        the Guild!
+        {locationBlurbText}
       </Typography>
     </Grid>
   );

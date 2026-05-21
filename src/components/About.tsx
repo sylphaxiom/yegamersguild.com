@@ -5,12 +5,7 @@ import Grid from "@mui/material/Grid";
 import { AnimatePresence } from "motion/react";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { useNavigate } from "react-router";
-import {
-  fetchContent,
-  fetchImages,
-  queryClient,
-  type Image,
-} from "./workhorse/queries";
+import { fetchContent, fetchImages, type Image } from "./workhorse/queries";
 import { useQuery } from "@tanstack/react-query";
 
 function buildImg({ shortName, src, alt, width, height }: Image) {
@@ -29,35 +24,63 @@ function buildImg({ shortName, src, alt, width, height }: Image) {
   );
 }
 
-export async function clientLoader() {
-  // Grab catalog information
-  queryClient.prefetchQuery({
-    queryKey: ["content", "about_header"],
-    queryFn: () => fetchContent("about_header"),
-  });
-  queryClient.prefetchQuery({
-    queryKey: ["content", "about_blurb"],
-    queryFn: () => fetchContent("about_blurb"),
-  });
-  queryClient.prefetchQuery({
-    queryKey: ["content", "about_bullets"],
-    queryFn: () => fetchContent("about_bullets"),
-  });
-  queryClient.prefetchQuery({
-    queryKey: ["images", "about_images"],
-    queryFn: () => fetchImages("about_images"),
-  });
-  return;
+function buildBlurb(blurb: string) {
+  const bits = blurb.split("|");
+  const Abit = bits.length > 1 ? bits[0] : null;
+  const Bbit = bits.length > 1 ? bits[1] : bits[0];
+  return (
+    <>
+      <Typography variant="h4" component="span" sx={{ pr: 1 }}>
+        {Abit}
+      </Typography>
+      {Bbit}
+    </>
+  );
 }
 
 export default function About() {
   const [img, setImg] = React.useState(0);
   const navigate = useNavigate();
+  let aboutHeaderText: string | undefined;
+  let blurbOutput: React.ReactElement | undefined;
+  let aboutBulletsText: string[] | undefined;
 
+  // Grab content and images data from the server
   const { data: images } = useQuery({
-    queryKey: ["images", "about_images"],
-    queryFn: () => fetchImages("about_images"),
+    queryKey: ["images"],
+    queryFn: () => fetchImages(),
   });
+  const { data: content } = useQuery({
+    queryKey: ["content"],
+    queryFn: () => fetchContent(),
+  });
+
+  if (content?.objects) {
+    const aboutContent = content.objects.filter((content) =>
+      content.content_key.includes("about_"),
+    );
+    if (aboutContent) {
+      const aboutBlurb = aboutContent.find(
+        (content) => content.content_key === "about_blurb",
+      );
+      const aboutBullets = aboutContent.find(
+        (content) => content.content_key === "about_bullets",
+      );
+      const aboutHeader = aboutContent.find(
+        (content) => content.content_key === "about_header",
+      );
+      if (aboutBlurb) {
+        const aboutBlurbText = aboutBlurb.value;
+        blurbOutput = buildBlurb(aboutBlurbText);
+      }
+      if (aboutBullets) {
+        aboutBulletsText = JSON.parse(aboutBullets.value);
+      }
+      if (aboutHeader) {
+        aboutHeaderText = aboutHeader.value;
+      }
+    }
+  }
 
   React.useEffect(() => {
     const interval = setInterval(() => {
@@ -70,40 +93,23 @@ export default function About() {
       }
     }, 5000);
     return () => clearInterval(interval);
-  }, [img]);
+  }, [img, images]);
 
   return (
     <Grid container id="about-cont" role="article" sx={{ p: 3 }}>
       <Grid size={{ xs: 12, md: 6 }}>
         <Typography variant="h2" sx={{ pb: 4 }} component="h2">
-          About The Guild...
+          {aboutHeaderText}
         </Typography>
-        <Typography sx={{ mb: 2 }}>
-          <Typography variant="h4" component="span" sx={{ pr: 1 }}>
-            Ye Gamer's Guild
-          </Typography>
-          is a locally owned and operated gameshop in Greenwood, IN. We sell
-          TTRPG books, board games, Magic the Gathering cards, dice, minis, and
-          more!
-        </Typography>
-        <Stack direction={"row"} sx={{ alignItems: "center" }}>
-          <AutoAwesomeIcon sx={{ mx: 2 }} />
-          <Typography variant="h5" component={"p"} sx={{ my: 1 }}>
-            Group gaming spaces...
-          </Typography>
-        </Stack>
-        <Stack direction={"row"} sx={{ alignItems: "center" }}>
-          <AutoAwesomeIcon sx={{ mx: 2 }} />
-          <Typography variant="h5" component={"p"} sx={{ my: 1 }}>
-            Books, games, cards...
-          </Typography>
-        </Stack>
-        <Stack direction={"row"} sx={{ alignItems: "center" }}>
-          <AutoAwesomeIcon sx={{ mx: 2 }} />
-          <Typography variant="h5" component={"p"} sx={{ my: 1 }}>
-            Tournaments, events, snacks...
-          </Typography>
-        </Stack>
+        <Typography sx={{ mb: 2 }}>{blurbOutput}</Typography>
+        {aboutBulletsText?.map((bullet) => (
+          <Stack direction={"row"} sx={{ alignItems: "center" }}>
+            <AutoAwesomeIcon sx={{ mx: 2 }} />
+            <Typography variant="h5" component={"p"} sx={{ my: 1 }}>
+              {bullet}
+            </Typography>
+          </Stack>
+        ))}
         <Box sx={{ textAlign: "center", py: 4 }}>
           <Button
             variant="contained"
