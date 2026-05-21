@@ -11,7 +11,7 @@ if (in_array($origin, $allowed_origins)) {
     header("Access-Control-Allow-Origin: $origin");
     header('Access-Control-Allow-Credentials: true');
     header('Access-Control-Max-Age:3600');
-    header('Access-Control-Allow-Headers:Content-type, Authorization');
+    header('Access-Control-Allow-Headers:Content-type, Authorization, Fish');
     header('Access-Control-Allow-Methods:GET, PUT, OPTIONS');
 }
 
@@ -52,7 +52,7 @@ error_log("========== Initialized content ==========");
 
 switch ($method) {
     case 'GET':
-        $contentKey = $_GET['content_key'] ?? null;
+        $contentKey = $_GET['contentKey'] ?? null;
         $contentResult = getContent($contentKey);
         if (!empty($contentResult)) {
             http_response_code(200);

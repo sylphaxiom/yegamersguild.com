@@ -32,10 +32,11 @@ error_log("========== Initialized callback ==========");
 $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);
 $client = $_SESSION['clientName'];
+$origin = $_SESSION['origin'];
 
 // The obtainOAuthToken function shows you how to obtain a OAuth access token
 // with the OAuth API with the authorization code returned to OAuth callback.
-function obtainOAuthToken($authorizationCode)
+function obtainOAuthToken($authorizationCode, $origin)
 {
     error_log("entered obtainOAuthToken.");
     // Initialize Square PHP SDK OAuth API client.
@@ -52,7 +53,7 @@ function obtainOAuthToken($authorizationCode)
         'grantType' => 'authorization_code',
         'code' => $authorizationCode,
         'codeVerifier' => $verifier,
-        'redirectUri' => 'https://api.sylphaxiom.com/square/callback.php'
+        'redirectUri' => "$origin/callback.php"
     ]);
 
     // Call obtainToken endpoint to get the OAuth tokens.
@@ -111,7 +112,7 @@ try {
         // Get the authorization code and use it to call the obtainOAuthToken wrapper function.
         $authorizationCode = $_GET['code'];
         try {
-            [$accessToken, $refreshToken, $expiresAt, $merchantId] = obtainOAuthToken($authorizationCode);
+            [$accessToken, $refreshToken, $expiresAt, $merchantId] = obtainOAuthToken($authorizationCode, $origin);
         } catch (SquareApiException $e) {
             http_response_code(500);
             error_log("There was an error during the call to obtainToken(): " . $e->getMessage());
@@ -128,7 +129,7 @@ try {
 
         saveToken(access: $accessToken, refresh: $refreshToken, expires: $expiresAt, merchantId: $merchantId, merchantName: $client);
 
-        header('Location: http://localhost:5173/shop');
+        header("Location: $origin/shop");
         exit();
     } else {
         // No recognizable parameters were returned.
