@@ -39,7 +39,6 @@ export default function Layout() {
     <Container id="main-cont">
       <ModeSwitch />
       <Box role="main">
-        <Header />
         <Outlet />
       </Box>
       <Footer />

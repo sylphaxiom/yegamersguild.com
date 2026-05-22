@@ -7,6 +7,7 @@ import {
   fetchImages,
   queryClient,
 } from "~/components/workhorse/queries";
+import Header from "~/components/Header";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -31,6 +32,7 @@ export async function clientLoader() {
 export default function Home() {
   return (
     <>
+      <Header />
       <Location />
       <Divider variant="fullWidth" sx={{ my: 4 }} />
       <About />
