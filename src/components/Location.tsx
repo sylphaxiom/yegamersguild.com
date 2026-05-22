@@ -1,6 +1,6 @@
 import { Divider, Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
-import { fetchContent, fetchImages } from "./workhorse/queries";
+import { fetchContent } from "./workhorse/queries";
 
 interface Hours {
   day: string;

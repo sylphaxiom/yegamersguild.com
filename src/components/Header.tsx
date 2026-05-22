@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Divider, Grid, Typography, useTheme } from "@mui/material";
+import { Box, Divider, Grid, Typography, useTheme } from "@mui/material";
 import Ticker from "@andremov/react-ticker";
 import { useColorScheme } from "@mui/material/styles";
 import { useQuery } from "@tanstack/react-query";
@@ -9,8 +9,8 @@ export default function Header() {
   const theme = useTheme();
   const { mode } = useColorScheme();
   const isDark = mode === "dark";
-  let aboutHeaderText: string | undefined;
-  let aboutBulletsText: string[] | undefined;
+  let headerTopText: string | undefined;
+  let headerBottomText: string | undefined;
 
   // Grab content and images data from the server
   const { data: allImages } = useQuery({
@@ -34,21 +34,21 @@ export default function Header() {
   }, [allImages]);
 
   if (content?.objects) {
-    const aboutContent = content.objects.filter((content) =>
-      content.content_key.includes("about_"),
+    const headerContent = content.objects.filter((content) =>
+      content.content_key.includes("header_"),
     );
-    if (aboutContent) {
-      const aboutBullets = aboutContent.find(
-        (content) => content.content_key === "about_bullets",
+    if (headerContent) {
+      const headerTop = headerContent.find(
+        (content) => content.content_key === "header_top",
       );
-      const aboutHeader = aboutContent.find(
-        (content) => content.content_key === "about_header",
+      const headerBottom = headerContent.find(
+        (content) => content.content_key === "header_bottom",
       );
-      if (aboutBullets) {
-        aboutBulletsText = JSON.parse(aboutBullets.value);
+      if (headerTop) {
+        headerTopText = headerTop.value;
       }
-      if (aboutHeader) {
-        aboutHeaderText = aboutHeader.value;
+      if (headerBottom) {
+        headerBottomText = headerBottom.value;
       }
     }
   }
@@ -83,69 +83,43 @@ export default function Header() {
       <Grid size={12} sx={{ textAlign: "center" }} role="marquee">
         <Divider />
         <Typography variant="h4" component="figure" sx={{ pt: 1 }}>
-          Your local source for ...
+          {headerTopText}
         </Typography>
         <div style={{ position: "relative" }} role="marquee">
           <Ticker duration={20}>
-            {tickerImgs.map((img) => {
+            {tickerImages?.map((img) => {
               return (
-                <div
-                  key={`${img.key}-cont`}
-                  style={{
-                    margin: theme.breakpoints.only("xs") ? "0 5px" : "0 15px",
+                <Box
+                  key={`${img.shortName}-cont`}
+                  sx={{
+                    margin: { xs: "0 5px", sm: "0 15px" },
                     background: `content-box radial-gradient(${isDark ? theme.palette.primary.main : "rgba(180, 100, 30, 0.3)"}, transparent 70%)`,
                   }}
                 >
-                  <img
-                    key={`${img.key}-img`}
-                    width={"auto"}
-                    height={theme.breakpoints.down("xs") ? "50px" : "100px"}
+                  <Box
+                    component="img"
+                    key={`${img.shortName}-img`}
                     src={img.src}
                     alt={img.alt}
-                    style={{
-                      margin: theme.breakpoints.only("xs")
-                        ? "0 25px"
-                        : "0 50px",
+                    sx={{
+                      width: "auto",
+                      height: { xs: "50px", sm: "100px" },
+                      margin: {
+                        xs: "0 25px",
+                        sm: "0 50px",
+                      },
                     }}
                   />
-                </div>
+                </Box>
               );
             })}
           </Ticker>
         </div>
         <Typography variant="h4" sx={{ pb: 1 }} component="figure">
-          ... and more! ...
+          {headerBottomText}
         </Typography>
         <Divider />
       </Grid>
     </Grid>
   );
 }
-
-const tickerImgs = [
-  {
-    key: "pathfinder",
-    src: "/uploads/guild_pathfinder.png",
-    alt: "Logo for Pathfinder",
-  },
-  {
-    key: "mtg",
-    src: "/uploads/guild_mtg.jpg",
-    alt: "Logo for Magic the Gathering",
-  },
-  {
-    key: "dnd",
-    src: "/uploads/guild_dnd.jpg",
-    alt: "Logo for Dungeons and Dragons",
-  },
-  {
-    key: "battletech",
-    src: "/uploads/guild_battletech.png",
-    alt: "Logo for Battletech",
-  },
-  {
-    key: "40k",
-    src: "/uploads/guild_40k.jpg",
-    alt: "Logo for Warhammer 40k",
-  },
-];

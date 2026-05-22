@@ -3,10 +3,10 @@ import * as motion from "motion/react-client";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { AnimatePresence } from "motion/react";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { useNavigate } from "react-router";
 import { fetchContent, fetchImages, type Image } from "./workhorse/queries";
 import { useQuery } from "@tanstack/react-query";
+import { iconMap } from "./workhorse/mappings";
 
 function buildImg({ shortName, src, alt, width, height }: Image) {
   return (
@@ -38,12 +38,17 @@ function buildBlurb(blurb: string) {
   );
 }
 
+interface Bullets {
+  icon: string;
+  text: string;
+}
+
 export default function About() {
   const [img, setImg] = React.useState(0);
   const navigate = useNavigate();
   let aboutHeaderText: string | undefined;
   let blurbOutput: React.ReactElement | undefined;
-  let aboutBulletsText: string[] | undefined;
+  let aboutBulletsText: Bullets[] | undefined;
 
   // Grab content and images data from the server
   const { data: allImages } = useQuery({
@@ -114,15 +119,19 @@ export default function About() {
         </Typography>
         <Typography sx={{ mb: 2 }}>{blurbOutput}</Typography>
         {aboutBulletsText?.map((bullet) => (
-          <Stack direction={"row"} key={bullet} sx={{ alignItems: "center" }}>
-            <AutoAwesomeIcon sx={{ mx: 2 }} key={bullet + "-icon"} />
+          <Stack
+            direction={"row"}
+            key={bullet.text + "-stack"}
+            sx={{ alignItems: "center" }}
+          >
+            <span style={{ margin: "0 1em" }}>{iconMap[bullet.icon]}</span>
             <Typography
               variant="h5"
               component={"p"}
-              key={bullet + "-text"}
+              key={bullet.text + "-text"}
               sx={{ my: 1 }}
             >
-              {bullet}
+              {bullet.text}
             </Typography>
           </Stack>
         ))}
