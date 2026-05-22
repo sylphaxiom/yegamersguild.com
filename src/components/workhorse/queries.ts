@@ -185,7 +185,7 @@ export async function fetchContent(): Promise<ContentResponse> {
     const response = await api
     .get(`/content.php`, {
         headers:{
-            fish: import.meta.env.VITE_FISH,
+            Fish: import.meta.env.VITE_FISH,
         },
     })
     .catch((error)=>{
@@ -199,11 +199,79 @@ export async function fetchImages(): Promise<ImagesResposne> {
     const response = await api
     .get(`/images.php`, {
         headers:{
-            fish: import.meta.env.VITE_FISH,
+            Fish: import.meta.env.VITE_FISH,
         },
     })
     .catch((error)=>{
         console.log("An error occurred fetching the images: %s", error);
+        throw error
+    })
+    return response.data;
+}
+
+export async function putContent(content_key: string, value: string, token: string): Promise<StandardResponse> {
+    const response = await api
+    .put(`/content.php`, { content_key, value }, {
+        headers: {
+            Fish: import.meta.env.VITE_FISH,
+            Authorization: `Bearer ${token}`,
+        },
+    })
+    .catch((error) => {
+        console.log("An error occurred updating content: %s", error);
+        throw error
+    })
+    return response.data;
+}
+
+export async function postImage(content_key: string, formData: FormData, token: string): Promise<StandardResponse> {
+    const response = await api
+    .post(`/images.php`, formData, {
+        headers: {
+            Fish: import.meta.env.VITE_FISH,
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+        },
+        params: { content_key },
+    })
+    .catch((error) => {
+        console.log("An error occurred uploading an image: %s", error);
+        throw error
+    })
+    return response.data;
+}
+
+export interface ImageMetadata {
+    alt: string;
+    display_order: number;
+}
+
+export async function putImage(id: string, metadata: ImageMetadata, token: string): Promise<StandardResponse> {
+    const response = await api
+    .put(`/images.php`, { id, ...metadata }, {
+        headers: {
+            Fish: import.meta.env.VITE_FISH,
+            Authorization: `Bearer ${token}`,
+        },
+    })
+    .catch((error) => {
+        console.log("An error occurred updating image metadata: %s", error);
+        throw error
+    })
+    return response.data;
+}
+
+export async function deleteImage(id: string, token: string): Promise<StandardResponse> {
+    const response = await api
+    .delete(`/images.php`, {
+        headers: {
+            Fish: import.meta.env.VITE_FISH,
+            Authorization: `Bearer ${token}`,
+        },
+        data: { id },
+    })
+    .catch((error) => {
+        console.log("An error occurred deleting an image: %s", error);
         throw error
     })
     return response.data;
