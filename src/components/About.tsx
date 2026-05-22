@@ -46,7 +46,7 @@ export default function About() {
   let aboutBulletsText: string[] | undefined;
 
   // Grab content and images data from the server
-  const { data: images } = useQuery({
+  const { data: allImages } = useQuery({
     queryKey: ["images"],
     queryFn: () => fetchImages(),
   });
@@ -54,6 +54,13 @@ export default function About() {
     queryKey: ["content"],
     queryFn: () => fetchContent(),
   });
+
+  let images: Image[] | undefined;
+  if (allImages?.objects) {
+    images = allImages.objects.filter(
+      (image) => image.content_key === "about_images",
+    );
+  }
 
   if (content?.objects) {
     const aboutContent = content.objects.filter((content) =>
@@ -84,8 +91,8 @@ export default function About() {
 
   React.useEffect(() => {
     const interval = setInterval(() => {
-      if (images?.objects) {
-        if (img === images.objects.length - 1) {
+      if (images) {
+        if (img === images.length - 1) {
           setImg(0);
         } else {
           setImg(img + 1);
@@ -103,9 +110,14 @@ export default function About() {
         </Typography>
         <Typography sx={{ mb: 2 }}>{blurbOutput}</Typography>
         {aboutBulletsText?.map((bullet) => (
-          <Stack direction={"row"} sx={{ alignItems: "center" }}>
-            <AutoAwesomeIcon sx={{ mx: 2 }} />
-            <Typography variant="h5" component={"p"} sx={{ my: 1 }}>
+          <Stack direction={"row"} key={bullet} sx={{ alignItems: "center" }}>
+            <AutoAwesomeIcon sx={{ mx: 2 }} key={bullet + "-icon"} />
+            <Typography
+              variant="h5"
+              component={"p"}
+              key={bullet + "-text"}
+              sx={{ my: 1 }}
+            >
               {bullet}
             </Typography>
           </Stack>
@@ -130,7 +142,7 @@ export default function About() {
         }}
       >
         <AnimatePresence mode="wait">
-          {images?.objects && buildImg(images.objects[img])}
+          {images && buildImg(images[img])}
         </AnimatePresence>
       </Grid>
     </Grid>

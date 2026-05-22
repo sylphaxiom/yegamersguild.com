@@ -4,9 +4,9 @@ import { fetchContent, fetchImages } from "./workhorse/queries";
 
 interface Hours {
   day: string;
-  start: string;
+  start: number;
   sap: "am" | "pm" | "noon";
-  end: string;
+  end: number;
   eap: "am" | "pm" | "noon";
 }
 
@@ -17,7 +17,13 @@ export default function Location() {
     | { line1: string; line2: string; line3: string }
     | undefined;
   let hoursHeaderText: string | undefined;
-  let hoursHoursText: Hours[] | undefined;
+  let mondayHours: Hours | undefined;
+  let tuesdayHours: Hours | undefined;
+  let wednesdayHours: Hours | undefined;
+  let thursdayHours: Hours | undefined;
+  let fridayHours: Hours | undefined;
+  let saturdayHours: Hours | undefined;
+  let sundayHours: Hours | undefined;
 
   // Grab content data from the server
   const { data: content } = useQuery({
@@ -54,13 +60,20 @@ export default function Location() {
     }
     if (hoursContent) {
       const hoursHours = hoursContent.find(
-        (content) => content.content_key === "hours_blurb",
+        (content) => content.content_key === "hours_hours",
       );
       const hoursHeader = hoursContent.find(
         (content) => content.content_key === "hours_header",
       );
       if (hoursHours) {
-        hoursHoursText = JSON.parse(hoursHours.value);
+        const parsedHours: Hours[] = JSON.parse(hoursHours.value);
+        mondayHours = parsedHours.find((hr) => hr.day === "Monday");
+        tuesdayHours = parsedHours.find((hr) => hr.day === "Tuesday");
+        wednesdayHours = parsedHours.find((hr) => hr.day === "Wednesday");
+        thursdayHours = parsedHours.find((hr) => hr.day === "Thursday");
+        fridayHours = parsedHours.find((hr) => hr.day === "Friday");
+        saturdayHours = parsedHours.find((hr) => hr.day === "Saturday");
+        sundayHours = parsedHours.find((hr) => hr.day === "Sunday");
       }
       if (hoursHeader) {
         hoursHeaderText = hoursHeader.value;
@@ -132,7 +145,7 @@ export default function Location() {
       aria-label="hours"
     >
       <Typography variant="h3" component={"h2"}>
-        Hours ...
+        {hoursHeaderText}
       </Typography>
       <Divider />
       <br />
@@ -141,12 +154,12 @@ export default function Location() {
           <Grid container>
             <Grid size={5}>
               <Typography variant="h5" component="p">
-                Monday
+                {mondayHours?.day}
                 <span
                   style={{
                     display: "inline-block",
                     float: "right",
-                    margin: "0 10px",
+                    margin: "0 10px 0 0",
                   }}
                 >
                   :
@@ -155,19 +168,21 @@ export default function Location() {
             </Grid>
             <Grid size={7}>
               <Typography variant="h5" component="p">
-                3pm - 10pm
+                {mondayHours?.start === 0
+                  ? "Closed"
+                  : `${mondayHours?.start}${mondayHours?.sap} - ${mondayHours?.end}${mondayHours?.eap}`}
               </Typography>
             </Grid>
           </Grid>
           <Grid container>
             <Grid size={5}>
               <Typography variant="h5" component="p">
-                Tuesday
+                {tuesdayHours?.day}
                 <span
                   style={{
                     display: "inline-block",
                     float: "right",
-                    margin: "0 10px",
+                    margin: "0 10px 0 0",
                   }}
                 >
                   :
@@ -176,19 +191,21 @@ export default function Location() {
             </Grid>
             <Grid size={7}>
               <Typography variant="h5" component="p">
-                3pm - 10pm
+                {tuesdayHours?.start === 0
+                  ? "Closed"
+                  : `${tuesdayHours?.start}${tuesdayHours?.sap} - ${tuesdayHours?.end}${tuesdayHours?.eap}`}
               </Typography>
             </Grid>
           </Grid>
           <Grid container>
             <Grid size={5}>
               <Typography variant="h5" component="p">
-                wednesday
+                {wednesdayHours?.day}
                 <span
                   style={{
                     display: "inline-block",
                     float: "right",
-                    margin: "0 10px",
+                    margin: "0 10px 0 0",
                   }}
                 >
                   :
@@ -197,7 +214,9 @@ export default function Location() {
             </Grid>
             <Grid size={7}>
               <Typography variant="h5" component="p">
-                Closed
+                {wednesdayHours?.start === 0
+                  ? "Closed"
+                  : `${wednesdayHours?.start}${wednesdayHours?.sap} - ${wednesdayHours?.end}${wednesdayHours?.eap}`}
               </Typography>
             </Grid>
           </Grid>
@@ -206,12 +225,12 @@ export default function Location() {
           <Grid container>
             <Grid size={5}>
               <Typography variant="h5" component="p">
-                Thursday
+                {thursdayHours?.day}
                 <span
                   style={{
                     display: "inline-block",
                     float: "right",
-                    margin: "0 10px",
+                    margin: "0 10px 0 0",
                   }}
                 >
                   :
@@ -220,19 +239,21 @@ export default function Location() {
             </Grid>
             <Grid size={7}>
               <Typography variant="h5" component="p">
-                3pm - 10pm
+                {thursdayHours?.start === 0
+                  ? "Closed"
+                  : `${thursdayHours?.start}${thursdayHours?.sap} - ${thursdayHours?.end}${thursdayHours?.eap}`}
               </Typography>
             </Grid>
           </Grid>
           <Grid container>
             <Grid size={5}>
               <Typography variant="h5" component="p">
-                Friday
+                {fridayHours?.day}
                 <span
                   style={{
                     display: "inline-block",
                     float: "right",
-                    margin: "0 10px",
+                    margin: "0 10px 0 0",
                   }}
                 >
                   :
@@ -241,16 +262,58 @@ export default function Location() {
             </Grid>
             <Grid size={7}>
               <Typography variant="h5" component="p">
-                3pm - 10pm
+                {fridayHours?.start === 0
+                  ? "Closed"
+                  : `${fridayHours?.start}${fridayHours?.sap} - ${fridayHours?.end}${fridayHours?.eap}`}
               </Typography>
             </Grid>
           </Grid>
-          <Typography variant="h5" component="p">
-            Saturday/Sunday:
-          </Typography>
-          <Typography variant="h5" sx={{ textIndent: "30px" }} component="p">
-            12 Noon - 10pm
-          </Typography>
+          <Grid container>
+            <Grid size={5}>
+              <Typography variant="h5" component="p">
+                {saturdayHours?.day}
+                <span
+                  style={{
+                    display: "inline-block",
+                    float: "right",
+                    margin: "0 10px 0 0",
+                  }}
+                >
+                  :
+                </span>
+              </Typography>
+            </Grid>
+            <Grid size={7}>
+              <Typography variant="h5" component="p">
+                {saturdayHours?.start === 0
+                  ? "Closed"
+                  : `${saturdayHours?.start}${saturdayHours?.sap} - ${saturdayHours?.end}${saturdayHours?.eap}`}
+              </Typography>
+            </Grid>
+          </Grid>
+          <Grid container>
+            <Grid size={5}>
+              <Typography variant="h5" component="p">
+                {sundayHours?.day}
+                <span
+                  style={{
+                    display: "inline-block",
+                    float: "right",
+                    margin: "0 10px 0 0",
+                  }}
+                >
+                  :
+                </span>
+              </Typography>
+            </Grid>
+            <Grid size={7}>
+              <Typography variant="h5" component="p">
+                {sundayHours?.start === 0
+                  ? "Closed"
+                  : `${sundayHours?.start}${sundayHours?.sap} - ${sundayHours?.end}${sundayHours?.eap}`}
+              </Typography>
+            </Grid>
+          </Grid>
         </Grid>
       </Grid>
     </Grid>
