@@ -152,21 +152,21 @@ export default function Location() {
       <Grid container sx={{ alignItems: "center" }}>
         <Grid size={{ xs: 12, sm: 6, md: 12 }}>
           <Grid container>
-            <Grid size={5}>
+            <Grid size={6}>
               <Typography variant="h5" component="p">
                 {mondayHours?.day}
                 <span
                   style={{
                     display: "inline-block",
                     float: "right",
-                    margin: "0 10px 0 0",
+                    margin: "0 8px 0 0",
                   }}
                 >
                   :
                 </span>
               </Typography>
             </Grid>
-            <Grid size={7}>
+            <Grid size={6}>
               <Typography variant="h5" component="p">
                 {mondayHours?.start === 0
                   ? "Closed"
@@ -175,21 +175,21 @@ export default function Location() {
             </Grid>
           </Grid>
           <Grid container>
-            <Grid size={5}>
+            <Grid size={6}>
               <Typography variant="h5" component="p">
                 {tuesdayHours?.day}
                 <span
                   style={{
                     display: "inline-block",
                     float: "right",
-                    margin: "0 10px 0 0",
+                    margin: "0 8px 0 0",
                   }}
                 >
                   :
                 </span>
               </Typography>
             </Grid>
-            <Grid size={7}>
+            <Grid size={6}>
               <Typography variant="h5" component="p">
                 {tuesdayHours?.start === 0
                   ? "Closed"
@@ -198,21 +198,21 @@ export default function Location() {
             </Grid>
           </Grid>
           <Grid container>
-            <Grid size={5}>
+            <Grid size={6}>
               <Typography variant="h5" component="p">
                 {wednesdayHours?.day}
                 <span
                   style={{
                     display: "inline-block",
                     float: "right",
-                    margin: "0 10px 0 0",
+                    margin: "0 8px 0 0",
                   }}
                 >
                   :
                 </span>
               </Typography>
             </Grid>
-            <Grid size={7}>
+            <Grid size={6}>
               <Typography variant="h5" component="p">
                 {wednesdayHours?.start === 0
                   ? "Closed"
@@ -223,21 +223,21 @@ export default function Location() {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 12 }}>
           <Grid container>
-            <Grid size={5}>
+            <Grid size={6}>
               <Typography variant="h5" component="p">
                 {thursdayHours?.day}
                 <span
                   style={{
                     display: "inline-block",
                     float: "right",
-                    margin: "0 10px 0 0",
+                    margin: "0 8px 0 0",
                   }}
                 >
                   :
                 </span>
               </Typography>
             </Grid>
-            <Grid size={7}>
+            <Grid size={6}>
               <Typography variant="h5" component="p">
                 {thursdayHours?.start === 0
                   ? "Closed"
@@ -246,21 +246,21 @@ export default function Location() {
             </Grid>
           </Grid>
           <Grid container>
-            <Grid size={5}>
+            <Grid size={6}>
               <Typography variant="h5" component="p">
                 {fridayHours?.day}
                 <span
                   style={{
                     display: "inline-block",
                     float: "right",
-                    margin: "0 10px 0 0",
+                    margin: "0 8px 0 0",
                   }}
                 >
                   :
                 </span>
               </Typography>
             </Grid>
-            <Grid size={7}>
+            <Grid size={6}>
               <Typography variant="h5" component="p">
                 {fridayHours?.start === 0
                   ? "Closed"
@@ -269,21 +269,21 @@ export default function Location() {
             </Grid>
           </Grid>
           <Grid container>
-            <Grid size={5}>
+            <Grid size={6}>
               <Typography variant="h5" component="p">
                 {saturdayHours?.day}
                 <span
                   style={{
                     display: "inline-block",
                     float: "right",
-                    margin: "0 10px 0 0",
+                    margin: "0 8px 0 0",
                   }}
                 >
                   :
                 </span>
               </Typography>
             </Grid>
-            <Grid size={7}>
+            <Grid size={6}>
               <Typography variant="h5" component="p">
                 {saturdayHours?.start === 0
                   ? "Closed"
@@ -292,21 +292,21 @@ export default function Location() {
             </Grid>
           </Grid>
           <Grid container>
-            <Grid size={5}>
+            <Grid size={6}>
               <Typography variant="h5" component="p">
                 {sundayHours?.day}
                 <span
                   style={{
                     display: "inline-block",
                     float: "right",
-                    margin: "0 10px 0 0",
+                    margin: "0 8px 0 0",
                   }}
                 >
                   :
                 </span>
               </Typography>
             </Grid>
-            <Grid size={7}>
+            <Grid size={6}>
               <Typography variant="h5" component="p">
                 {sundayHours?.start === 0
                   ? "Closed"

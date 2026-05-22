@@ -1,12 +1,57 @@
-// import * as React from "react";
+import * as React from "react";
 import { Divider, Grid, Typography, useTheme } from "@mui/material";
 import Ticker from "@andremov/react-ticker";
 import { useColorScheme } from "@mui/material/styles";
+import { useQuery } from "@tanstack/react-query";
+import { fetchContent, fetchImages } from "./workhorse/queries";
 
 export default function Header() {
   const theme = useTheme();
   const { mode } = useColorScheme();
   const isDark = mode === "dark";
+  let aboutHeaderText: string | undefined;
+  let aboutBulletsText: string[] | undefined;
+
+  // Grab content and images data from the server
+  const { data: allImages } = useQuery({
+    queryKey: ["images"],
+    queryFn: () => fetchImages(),
+  });
+  const { data: content } = useQuery({
+    queryKey: ["content"],
+    queryFn: () => fetchContent(),
+  });
+
+  const tickerImages = React.useMemo(() => {
+    if (!allImages?.objects) return undefined;
+    const filtered = [...allImages.objects].filter(
+      (image) => image.content_key === "ticker_images",
+    );
+    const sorted = filtered.sort(
+      (a, b) => Number(a.display_order) - Number(b.display_order),
+    );
+    return sorted;
+  }, [allImages]);
+
+  if (content?.objects) {
+    const aboutContent = content.objects.filter((content) =>
+      content.content_key.includes("about_"),
+    );
+    if (aboutContent) {
+      const aboutBullets = aboutContent.find(
+        (content) => content.content_key === "about_bullets",
+      );
+      const aboutHeader = aboutContent.find(
+        (content) => content.content_key === "about_header",
+      );
+      if (aboutBullets) {
+        aboutBulletsText = JSON.parse(aboutBullets.value);
+      }
+      if (aboutHeader) {
+        aboutHeaderText = aboutHeader.value;
+      }
+    }
+  }
 
   return (
     <Grid container id="head-cont" role="heading" aria-level={1} sx={{ my: 2 }}>
