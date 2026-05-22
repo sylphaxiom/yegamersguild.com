@@ -171,7 +171,7 @@ export interface Image {
     content_key: string;
     src: string;
     alt: string;
-    displayOrder:number;
+    display_order:number;
     width: number;
     height: number;
 }

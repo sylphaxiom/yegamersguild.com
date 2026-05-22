@@ -55,12 +55,16 @@ export default function About() {
     queryFn: () => fetchContent(),
   });
 
-  let images: Image[] | undefined;
-  if (allImages?.objects) {
-    images = allImages.objects.filter(
+  const images = React.useMemo(() => {
+    if (!allImages?.objects) return undefined;
+    const filtered = [...allImages.objects].filter(
       (image) => image.content_key === "about_images",
     );
-  }
+    const sorted = filtered.sort(
+      (a, b) => Number(a.display_order) - Number(b.display_order),
+    );
+    return sorted;
+  }, [allImages]);
 
   if (content?.objects) {
     const aboutContent = content.objects.filter((content) =>
@@ -105,7 +109,7 @@ export default function About() {
   return (
     <Grid container id="about-cont" role="article" sx={{ p: 3 }}>
       <Grid size={{ xs: 12, md: 6 }}>
-        <Typography variant="h2" sx={{ pb: 4 }} component="h2">
+        <Typography variant="h3" sx={{ pb: 4 }} component="h2">
           {aboutHeaderText}
         </Typography>
         <Typography sx={{ mb: 2 }}>{blurbOutput}</Typography>

@@ -154,10 +154,10 @@ switch ($method) {
             $shortName = $_POST["shortName"] ?? null;
             $src = $finalPath;
             $alt = $_POST["alt"] ?? null;
-            $displayOrder = $_POST["displayOrder"] ?? null;
+            $display_order = $_POST["display_order"] ?? null;
             $width = $_POST["width"] ?? null;
             $height = $_POST["height"] ?? null;
-            $result = putImages($content_key, $shortName, $src, $alt, $displayOrder, $width, $height);
+            $result = putImages($content_key, $shortName, $src, $alt, $display_order, $width, $height);
             if (!$result) {
                 http_response_code(406);
                 echo json_encode([
@@ -184,10 +184,10 @@ switch ($method) {
         $shortName = $input["shortName"] ?? null;
         $src = $input["src"] ?? null;
         $alt = $input["alt"] ?? null;
-        $displayOrder = $input["displayOrder"] ?? null;
+        $display_order = $input["display_order"] ?? null;
         $width = $input["width"] ?? null;
         $height = $input["height"] ?? null;
-        $result = updateMetadata($id, $content_key, $shortName, $src, $alt, $displayOrder, $width, $height);
+        $result = updateMetadata($id, $content_key, $shortName, $src, $alt, $display_order, $width, $height);
         if (!$result) {
             http_response_code(406);
             echo json_encode([
