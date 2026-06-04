@@ -157,11 +157,11 @@ export default function Console() {
           </Typography>
           <Divider variant="middle" sx={{ my: 4 }} />
           {section &&
-            section!.contentKeys.map((contentKey) => (
+            section!.editors.map((editor) => (
               <ContentField
-                contentKey={contentKey}
-                label={section!.label}
-                type={section!.editors.find((e) => e.key === contentKey)!.type}
+                contentKey={editor.key}
+                label={editor.label}
+                type={editor.type}
               />
             ))}
         </Box>
