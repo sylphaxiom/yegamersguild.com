@@ -216,6 +216,7 @@ export async function putContent(content_key: string, value: string, token: stri
             Fish: import.meta.env.VITE_FISH,
             Authorization: `Bearer ${token}`,
         },
+        params: { content_key },
     })
     .catch((error) => {
         console.log("An error occurred updating content: %s", error);

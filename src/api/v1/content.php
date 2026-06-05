@@ -31,7 +31,7 @@ require_once 'CMSDB_bucket.php';
 
 // Required header check
 $headers = getallheaders();
-$fishHead = $headers["Fish"] ?? null;
+$fishHead = $headers["Fish"] ?? $_SERVER['HTTP_FISH'] ?? null;
 $tokenHead = $headers["Authorization"] ?? null;
 if (!isset($fishHead)) {
     http_response_code(418);
@@ -73,14 +73,12 @@ switch ($method) {
         break;
     case 'PUT':
         $input = json_decode(file_get_contents('php://input'), true);
-        initSession();
-        requireAuth($fishHead, $tokenHead);
+        requireAuth($tokenHead);
 
         $value = $input['value'] ?? null;
-        $label = $input['label'] ?? null;
         $content_key = $_GET['content_key'] ?? null;
 
-        if (!$value || !$label || !$content_key) {
+        if (!$value || !$content_key) {
             http_response_code(400);
             echo json_encode([
                 'status' => 'Failure',
@@ -89,7 +87,7 @@ switch ($method) {
             exit;
         }
 
-        $putResult = putContent($value, $label, $content_key);
+        $putResult = putContent($value, $content_key);
         if ($putResult) {
             http_response_code(200);
             echo json_encode([

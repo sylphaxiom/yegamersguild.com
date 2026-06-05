@@ -14,59 +14,24 @@ require_once "vendor/autoload.php";
 
 error_log("========== Loading procedures ==========");
 
-function initSession()
+function validateJwt(string $token): bool
 {
-    // GET state and start session
-    $state = $_GET['state'] ?? null;
-    if (!$state) {
-        http_response_code(418);
-        error_log("State was missing from GET. Enclude state to ensure session continuity...");
-        exit(1);
-    }
-    session_id($state);
-    session_start();
-    if ($_SESSION['state'] != $state) {
-        http_response_code(401);
-        error_log("Auth state does not match current state! Check your code or you're a hacker (jerk)...");
-        exit(1);
-    }
-}
-
-function validateJwt(string $fish, string $token): bool
-{
-    [$clientId, $clientSecret] = Bucket::getA0Client($fish);
-    if (!$clientId || !$clientSecret) {
-        http_response_code(500);
-        error_log("An issue occurred attempting to grab the A0 info from the bucket...");
-        exit(1);
-    }
-    $domain = "auth.sylphaxiom.com";
-    $audience = "https://api.sylphaxiom.com";
-    // Now instantiate the Auth0 class with our configuration:
-    $auth0 = new \Auth0\SDK\Auth0([
-        'strategy' => \Auth0\SDK\Configuration\SdkConfiguration::STRATEGY_API,
-        'domain' => $domain,
-        'clientId' => $clientId,
-        'clientSecret' => $clientSecret,
-        'audience' => $audience,
-    ]);
-    // Process passed token
     $token = trim($token);
     if (substr($token, 0, 7) === 'Bearer ') {
         $token = substr($token, 7);
     }
 
-    // Attempt to decode the token:
-    try {
-        $token = $auth0->decode($token, null, null, null, null, null, null, \Auth0\SDK\Token::TYPE_TOKEN);
-    } catch (\Auth0\SDK\Exception\InvalidTokenException $exception) {
-        // The token wasn't valid. Return false and leave
-        return false;
-    }
-    return true;
+    $ch = curl_init('https://auth.sylphaxiom.com/userinfo');
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer $token"]);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    return $status === 200;
 }
 
-function requireAuth(string $fish, ?string $token)
+
+function requireAuth(?string $token)
 {
     if (!$token) {
         http_response_code(400);
@@ -77,7 +42,7 @@ function requireAuth(string $fish, ?string $token)
         ]);
         exit(1);
     }
-    if (!validateJwt($fish, $token)) {
+    if (!validateJwt($token)) {
         http_response_code(401);
         error_log("JWT validation failed.");
         echo json_encode([

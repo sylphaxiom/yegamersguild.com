@@ -72,7 +72,6 @@ switch ($method) {
         }
         break;
     case 'POST':
-        initSession();
         requireAuth($fishHead, $tokenHead);
 
         error_log("Reached POST case, adding image and metadata...");
@@ -175,7 +174,6 @@ switch ($method) {
         break;
     case 'PUT':
         $input = json_decode(file_get_contents('php://input'), true);
-        initSession();
         requireAuth($fishHead, $tokenHead);
 
         error_log("Reached PUT case, updating metadata only...");
@@ -204,7 +202,6 @@ switch ($method) {
         break;
     case 'DELETE':
         $input = json_decode(file_get_contents('php://input'), true);
-        initSession();
         requireAuth($fishHead, $tokenHead);
 
         // remove file from disk

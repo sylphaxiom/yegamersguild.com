@@ -1,7 +1,8 @@
 import { Box, Divider, List, ListItemButton, Typography } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import * as React from "react";
-import ContentField from "~/components/bits/ContentField";
+import AddressField from "~/components/bits/AddressField";
+import StringField from "~/components/bits/StringField";
 
 interface Editor {
   key: string;
@@ -156,14 +157,29 @@ export default function Console() {
               : "Please select a section from the left to view and edit its content."}
           </Typography>
           <Divider variant="middle" sx={{ my: 4 }} />
-          {section &&
-            section!.editors.map((editor) => (
-              <ContentField
-                contentKey={editor.key}
-                label={editor.label}
-                type={editor.type}
-              />
-            ))}
+          {section?.editors.map((editor) => {
+            switch (editor.type) {
+              case "string":
+              case "pipe":
+                return (
+                  <StringField
+                    key={editor.key}
+                    contentKey={editor.key}
+                    label={editor.label}
+                    isPipe={editor.type === "pipe"}
+                  />
+                );
+              case "address":
+                return (
+                  <AddressField
+                    key={editor.key}
+                    contentKey={editor.key}
+                    label={editor.label}
+                  />
+                );
+              // etc.
+            }
+          })}
         </Box>
       </Grid>
     </Grid>

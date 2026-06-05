@@ -50,6 +50,7 @@ export const links: Route.LinksFunction = () => [
 
 const onRedirectCallback = (appState: AppState) => {
   return redirectDocument(appState?.returnTo || window.location.pathname);
+  audience: ["https://api.sylphaxiom.com"];
 };
 
 export function Layout({ children }: { children: React.ReactNode }) {
