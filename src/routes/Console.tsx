@@ -1,8 +1,16 @@
 import { Box, Divider, List, ListItemButton, Typography } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import * as React from "react";
+import About from "~/components/About";
+import Location from "~/components/Location";
 import AddressField from "~/components/bits/AddressField";
 import StringField from "~/components/bits/StringField";
+import Header from "~/components/Header";
+import Footer from "~/components/Footer";
+import Thinking from "~/components/baubles/Thinking";
+import { fetchContent } from "~/components/workhorse/queries";
+import { useQuery } from "@tanstack/react-query";
+import { useIsMutating } from "@tanstack/react-query";
 
 interface Editor {
   key: string;
@@ -18,8 +26,30 @@ interface Section {
   editors: Editor[];
 }
 
+function renderPreview(sectionId: string) {
+  switch (sectionId) {
+    case "header":
+      return <Header />;
+    case "about":
+      return <About />;
+    case "location":
+    case "hours":
+      return <Location preview />;
+    case "links":
+      return <Footer preview />;
+    default:
+      return null;
+  }
+}
+
 export default function Console() {
   const [section, setSection] = React.useState<Section | null>(null);
+  const isMutating = useIsMutating();
+  const { isFetching } = useQuery({
+    queryKey: ["content"],
+    queryFn: () => fetchContent(),
+  });
+  const isRefreshing = isMutating > 0 || isFetching;
   const sections: Section[] = [
     {
       id: "header",
@@ -180,6 +210,26 @@ export default function Console() {
               // etc.
             }
           })}
+          {section && (
+            <>
+              <Typography variant="h4" component="h3" sx={{ mt: 4, mb: 2 }}>
+                Preview:
+              </Typography>
+              <Typography variant="body1" component="p">
+                Note: Changes made here will be reflected on the live site
+                immediately after saving.
+              </Typography>
+              <Box
+                sx={{
+                  m: 2,
+                  border: "2px dashed #ccc",
+                  p: 2,
+                }}
+              >
+                {isRefreshing ? <Thinking /> : renderPreview(section.id)}
+              </Box>
+            </>
+          )}
         </Box>
       </Grid>
     </Grid>

@@ -25,7 +25,11 @@ interface QuickLink {
   href: string;
 }
 
-export default function Footer() {
+export interface FooterProps {
+  preview?: boolean;
+}
+
+export default function Footer({ preview }: FooterProps) {
   let locationHeaderText: string | undefined;
   let locationAddressText: LocationAddress | undefined;
   let hoursHeaderText: string | undefined;
@@ -108,97 +112,107 @@ export default function Footer() {
 
   return (
     <Grid id="footer" component={"footer"} size={12} sx={{ mt: 10 }} container>
-      <Grid size={{ xs: 6, sm: 3, md: 4 }} id="foot-loc">
-        <Typography variant="h5" component="label" color="secondary">
-          {locationHeaderText}
-        </Typography>
-        <Divider />
-        <Typography variant="body2">{locationAddressText?.line1}</Typography>
-        <Typography variant="body2">{locationAddressText?.line2}</Typography>
-        <Typography variant="body2">{locationAddressText?.line3}</Typography>
-      </Grid>
-      <Grid size={{ xs: 6, md: 4 }} id="foot-hrs">
-        <Typography variant="h5" component="label" color="secondary">
-          {hoursHeaderText}
-        </Typography>
-        <Divider />
-        <Grid container sx={{ alignItems: "center" }}>
-          <Grid size={{ xs: 12, sm: 6 }}>
+      {!preview && (
+        <>
+          <Grid size={{ xs: 6, sm: 3, md: 4 }} id="foot-loc">
+            <Typography variant="h5" component="label" color="secondary">
+              {locationHeaderText}
+            </Typography>
+            <Divider />
             <Typography variant="body2">
-              {mondayHours?.day}:{" "}
-              {mondayHours?.start === 0
-                ? "Closed"
-                : mondayHours?.start! +
-                  mondayHours?.sap! +
-                  " - " +
-                  mondayHours?.end +
-                  mondayHours?.eap}
+              {locationAddressText?.line1}
             </Typography>
             <Typography variant="body2">
-              {tuesdayHours?.day}:{" "}
-              {tuesdayHours?.start === 0
-                ? "Closed"
-                : tuesdayHours?.start! +
-                  tuesdayHours?.sap! +
-                  " - " +
-                  tuesdayHours?.end +
-                  tuesdayHours?.eap}
+              {locationAddressText?.line2}
             </Typography>
             <Typography variant="body2">
-              {wednesdayHours?.day}:{" "}
-              {wednesdayHours?.start === 0
-                ? "Closed"
-                : wednesdayHours?.start! +
-                  wednesdayHours?.sap! +
-                  " - " +
-                  wednesdayHours?.end +
-                  wednesdayHours?.eap}
+              {locationAddressText?.line3}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Typography variant="body2">
-              {thursdayHours?.day}:{" "}
-              {thursdayHours?.start === 0
-                ? "Closed"
-                : thursdayHours?.start! +
-                  thursdayHours?.sap! +
-                  " - " +
-                  thursdayHours?.end +
-                  thursdayHours?.eap}
+          <Grid size={{ xs: 6, md: 4 }} id="foot-hrs">
+            <Typography variant="h5" component="label" color="secondary">
+              {hoursHeaderText}
             </Typography>
-            <Typography variant="body2">
-              {fridayHours?.day}:{" "}
-              {fridayHours?.start === 0
-                ? "Closed"
-                : fridayHours?.start! +
-                  fridayHours?.sap! +
-                  " - " +
-                  fridayHours?.end +
-                  fridayHours?.eap}
-            </Typography>
-            <Typography variant="body2">
-              {saturdayHours?.day}:{" "}
-              {saturdayHours?.start === 0
-                ? "Closed"
-                : saturdayHours?.start! +
-                  saturdayHours?.sap! +
-                  " - " +
-                  saturdayHours?.end +
-                  saturdayHours?.eap}
-            </Typography>
-            <Typography variant="body2">
-              {sundayHours?.day}:{" "}
-              {sundayHours?.start === 0
-                ? "Closed"
-                : sundayHours?.start! +
-                  sundayHours?.sap! +
-                  " - " +
-                  sundayHours?.end +
-                  sundayHours?.eap}
-            </Typography>
+            <Divider />
+            <Grid container sx={{ alignItems: "center" }}>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="body2">
+                  {mondayHours?.day}:{" "}
+                  {mondayHours?.start === 0
+                    ? "Closed"
+                    : mondayHours?.start! +
+                      mondayHours?.sap! +
+                      " - " +
+                      mondayHours?.end +
+                      mondayHours?.eap}
+                </Typography>
+                <Typography variant="body2">
+                  {tuesdayHours?.day}:{" "}
+                  {tuesdayHours?.start === 0
+                    ? "Closed"
+                    : tuesdayHours?.start! +
+                      tuesdayHours?.sap! +
+                      " - " +
+                      tuesdayHours?.end +
+                      tuesdayHours?.eap}
+                </Typography>
+                <Typography variant="body2">
+                  {wednesdayHours?.day}:{" "}
+                  {wednesdayHours?.start === 0
+                    ? "Closed"
+                    : wednesdayHours?.start! +
+                      wednesdayHours?.sap! +
+                      " - " +
+                      wednesdayHours?.end +
+                      wednesdayHours?.eap}
+                </Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="body2">
+                  {thursdayHours?.day}:{" "}
+                  {thursdayHours?.start === 0
+                    ? "Closed"
+                    : thursdayHours?.start! +
+                      thursdayHours?.sap! +
+                      " - " +
+                      thursdayHours?.end +
+                      thursdayHours?.eap}
+                </Typography>
+                <Typography variant="body2">
+                  {fridayHours?.day}:{" "}
+                  {fridayHours?.start === 0
+                    ? "Closed"
+                    : fridayHours?.start! +
+                      fridayHours?.sap! +
+                      " - " +
+                      fridayHours?.end +
+                      fridayHours?.eap}
+                </Typography>
+                <Typography variant="body2">
+                  {saturdayHours?.day}:{" "}
+                  {saturdayHours?.start === 0
+                    ? "Closed"
+                    : saturdayHours?.start! +
+                      saturdayHours?.sap! +
+                      " - " +
+                      saturdayHours?.end +
+                      saturdayHours?.eap}
+                </Typography>
+                <Typography variant="body2">
+                  {sundayHours?.day}:{" "}
+                  {sundayHours?.start === 0
+                    ? "Closed"
+                    : sundayHours?.start! +
+                      sundayHours?.sap! +
+                      " - " +
+                      sundayHours?.end +
+                      sundayHours?.eap}
+                </Typography>
+              </Grid>
+            </Grid>
           </Grid>
-        </Grid>
-      </Grid>
+        </>
+      )}
       <Grid size={{ xs: 12, sm: 3, md: 4 }} id="foot-link">
         <Typography variant="h5" component="label" color="secondary">
           {quickHeaderText}

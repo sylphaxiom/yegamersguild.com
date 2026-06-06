@@ -38,7 +38,7 @@ function buildBlurb(blurb: string) {
   );
 }
 
-interface Bullets {
+export interface Bullets {
   icon: string;
   text: string;
 }

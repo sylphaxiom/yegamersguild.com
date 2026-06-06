@@ -50,6 +50,7 @@ export default function StringField({
         label={label}
         value={dbValue}
         onChange={(e) => setDbValue(e.target.value)}
+        fullWidth
         helperText={
           isPipe
             ? "Use '|' character (without surrounding spaces) to to enlarge the text preceeding it."
@@ -57,7 +58,13 @@ export default function StringField({
         }
         disabled={isPending}
       />
-      <Button type="submit" color="secondary" sx={{}} disabled={isPending}>
+      <Button
+        variant="contained"
+        type="submit"
+        color="primary"
+        sx={{}}
+        disabled={isPending}
+      >
         Save
       </Button>
     </Box>

@@ -2,7 +2,7 @@ import { Divider, Grid, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { fetchContent } from "./workhorse/queries";
 
-interface Hours {
+export interface Hours {
   day: string;
   start: number;
   sap: "am" | "pm" | "noon";
@@ -10,12 +10,20 @@ interface Hours {
   eap: "am" | "pm" | "noon";
 }
 
-export default function Location() {
+export interface Address {
+  line1: string;
+  line2: string;
+  line3: string;
+}
+
+export interface LocationProps {
+  preview?: boolean;
+}
+
+export default function Location({ preview }: LocationProps) {
   let locationHeaderText: string | undefined;
   let locationBlurbText: string | undefined;
-  let locationAddressText:
-    | { line1: string; line2: string; line3: string }
-    | undefined;
+  let locationAddressText: Address | undefined;
   let hoursHeaderText: string | undefined;
   let mondayHours: Hours | undefined;
   let tuesdayHours: Hours | undefined;
@@ -83,7 +91,7 @@ export default function Location() {
 
   const location = (
     <Grid
-      size={{ xs: 12, sm: 6, md: 4 }}
+      size={preview ? { xs: 12, sm: 6 } : { xs: 12, sm: 6, md: 4 }}
       sx={{
         px: 3,
         justifyContent: "center",
@@ -134,7 +142,7 @@ export default function Location() {
 
   const hours = (
     <Grid
-      size={{ xs: 12, md: 4 }}
+      size={preview ? { xs: 12, sm: 6 } : { xs: 12, md: 4 }}
       sx={{
         px: 3,
         justifyContent: "center",
@@ -322,7 +330,7 @@ export default function Location() {
   return (
     <Grid container id="main-cont" role="article" aria-label="location">
       {location}
-      {map}
+      {!preview && map}
       {hours}
     </Grid>
   );
