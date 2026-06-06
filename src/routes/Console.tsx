@@ -11,6 +11,7 @@ import Thinking from "~/components/baubles/Thinking";
 import { fetchContent } from "~/components/workhorse/queries";
 import { useQuery } from "@tanstack/react-query";
 import { useIsMutating } from "@tanstack/react-query";
+import HoursField from "~/components/bits/HoursField";
 
 interface Editor {
   key: string;
@@ -202,6 +203,14 @@ export default function Console() {
               case "address":
                 return (
                   <AddressField
+                    key={editor.key}
+                    contentKey={editor.key}
+                    label={editor.label}
+                  />
+                );
+              case "hours":
+                return (
+                  <HoursField
                     key={editor.key}
                     contentKey={editor.key}
                     label={editor.label}

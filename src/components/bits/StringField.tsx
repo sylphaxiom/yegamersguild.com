@@ -35,6 +35,7 @@ export default function StringField({
       queryClient.invalidateQueries({ queryKey: ["content"] });
     },
   });
+  const isDirty = dbValue !== currentValue;
 
   return (
     <Box
@@ -63,7 +64,7 @@ export default function StringField({
         type="submit"
         color="primary"
         sx={{}}
-        disabled={isPending}
+        disabled={isPending || !isDirty}
       >
         Save
       </Button>

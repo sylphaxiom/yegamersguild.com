@@ -31,6 +31,7 @@ export default function AddressField({ label, contentKey }: AddressFieldProps) {
       queryClient.invalidateQueries({ queryKey: ["content"] });
     },
   });
+  const isDirty = JSON.stringify(dbValue) !== currentValue;
 
   return (
     <Box
@@ -76,7 +77,7 @@ export default function AddressField({ label, contentKey }: AddressFieldProps) {
           type="submit"
           color="primary"
           sx={{}}
-          disabled={isPending}
+          disabled={isPending || !isDirty}
         >
           Save
         </Button>
