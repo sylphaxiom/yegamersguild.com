@@ -52,11 +52,13 @@ export default function StringField({
         value={dbValue}
         onChange={(e) => setDbValue(e.target.value)}
         fullWidth
+        multiline
         helperText={
           isPipe
-            ? "Use '|' character (without surrounding spaces) to to enlarge the text preceeding it."
+            ? "Use '|' character (without surrounding spaces) to enlarge the text preceding it."
             : undefined
         }
+        slotProps={{ formHelperText: { sx: { fontSize: "0.95rem" } } }}
         disabled={isPending}
       />
       <Button
@@ -71,25 +73,3 @@ export default function StringField({
     </Box>
   );
 }
-
-// Grab content and images data from the server
-//   const { data: allImages } = useQuery({
-//     queryKey: ["images"],
-//     queryFn: () => fetchImages(),
-//   });
-//   const { data: content } = useQuery({
-//     queryKey: ["content"],
-//     queryFn: () => fetchContent(),
-//   });
-
-//   // Mutation
-//   const { mutate, isPending } = useMutation({
-//     mutationFn: async (value: string) => {
-//       const token = await getAccessTokenSilently();
-//       return putContent(contentKey, value, token);
-//     },
-//     onSuccess: () => {
-//       queryClient.invalidateQueries({ queryKey: ["content"] });
-//       queryClient.invalidateQueries({ queryKey: ["images"] });
-//     },
-//   });

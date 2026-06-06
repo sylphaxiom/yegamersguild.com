@@ -4,22 +4,15 @@ import Copyright from "@mui/icons-material/Copyright";
 import { useQuery } from "@tanstack/react-query";
 import { fetchContent } from "./workhorse/queries";
 import { iconMap } from "./workhorse/mappings";
+import type { Hours } from "./Location";
 
-interface Hours {
-  day: string;
-  start: number;
-  sap: "am" | "pm" | "noon";
-  end: number;
-  eap: "am" | "pm" | "noon";
-}
-
-interface LocationAddress {
+export interface LocationAddress {
   line1: string;
   line2: string;
   line3: string;
 }
 
-interface QuickLink {
+export interface QuickLink {
   text: string;
   icon: string;
   href: string;

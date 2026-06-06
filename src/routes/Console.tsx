@@ -12,6 +12,8 @@ import { fetchContent } from "~/components/workhorse/queries";
 import { useQuery } from "@tanstack/react-query";
 import { useIsMutating } from "@tanstack/react-query";
 import HoursField from "~/components/bits/HoursField";
+import BulletsField from "~/components/bits/BulletsField";
+import LinksField from "~/components/bits/LinksField";
 
 interface Editor {
   key: string;
@@ -214,6 +216,22 @@ export default function Console() {
                     key={editor.key}
                     contentKey={editor.key}
                     label={editor.label}
+                  />
+                );
+              case "bullets":
+                return (
+                  <BulletsField
+                    key={editor.key}
+                    label={editor.label}
+                    contentKey={editor.key}
+                  />
+                );
+              case "links":
+                return (
+                  <LinksField
+                    key={editor.key}
+                    label={editor.label}
+                    contentKey={editor.key}
                   />
                 );
               // etc.

@@ -40,6 +40,7 @@ import MoodBadIcon from '@mui/icons-material/MoodBad';
 import AddAlertIcon from '@mui/icons-material/AddAlert';
 import BackHandIcon from '@mui/icons-material/BackHand';
 import AddIcon from '@mui/icons-material/Add';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 
 export const iconMap: Record<string, React.ReactElement> = {
     Facebook: React.createElement(Facebook),
@@ -83,4 +84,5 @@ export const iconMap: Record<string, React.ReactElement> = {
     Alert: React.createElement(AddAlertIcon),
     Hand: React.createElement(BackHandIcon),
     Add: React.createElement(AddIcon),
+    Admin: React.createElement(AdminPanelSettingsIcon)
 };
