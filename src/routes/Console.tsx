@@ -18,7 +18,14 @@ import LinksField from "~/components/bits/LinksField";
 interface Editor {
   key: string;
   label: string;
-  type: "string" | "bullets" | "pipe" | "hours" | "address" | "links";
+  type:
+    | "string"
+    | "bullets"
+    | "pipe"
+    | "hours"
+    | "address"
+    | "links"
+    | "images";
 }
 
 interface Section {

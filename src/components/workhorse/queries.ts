@@ -167,11 +167,12 @@ export interface ImagesResposne {
 }
 
 export interface Image {
+    id: number;
     shortName: string;
     content_key: string;
     src: string;
     alt: string;
-    display_order:number;
+    display_order: number;
     width: number;
     height: number;
 }
@@ -247,7 +248,7 @@ export interface ImageMetadata {
     display_order: number;
 }
 
-export async function putImage(id: string, metadata: ImageMetadata, token: string): Promise<StandardResponse> {
+export async function putImage(id: number, metadata: ImageMetadata, token: string): Promise<StandardResponse> {
     const response = await api
     .put(`/images.php`, { id, ...metadata }, {
         headers: {
@@ -262,7 +263,7 @@ export async function putImage(id: string, metadata: ImageMetadata, token: strin
     return response.data;
 }
 
-export async function deleteImage(id: string, token: string): Promise<StandardResponse> {
+export async function deleteImage(id: number, token: string): Promise<StandardResponse> {
     const response = await api
     .delete(`/images.php`, {
         headers: {

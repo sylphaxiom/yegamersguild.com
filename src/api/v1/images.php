@@ -31,7 +31,7 @@ require_once 'CMSDB_bucket.php';
 
 // Required header check
 $headers = getallheaders();
-$fishHead = $headers["Fish"] ?? null;
+$fishHead = $headers["Fish"] ?? $_SERVER['HTTP_FISH'] ?? null;
 $tokenHead = $headers["Authorization"] ?? null;
 if (!isset($fishHead)) {
     http_response_code(418);
@@ -150,12 +150,11 @@ switch ($method) {
                 ]);
             }
             $content_key = $_POST["content_key"] ?? null;
-            $shortName = $_POST["shortName"] ?? null;
+            $shortName = $filename;
             $src = $finalPath;
-            $alt = $_POST["alt"] ?? null;
-            $display_order = $_POST["display_order"] ?? null;
-            $width = $_POST["width"] ?? null;
-            $height = $_POST["height"] ?? null;
+            $alt = "";
+            $display_order = 0;
+            [$width, $height] = getimagesize($destination);
             $result = putImages($content_key, $shortName, $src, $alt, $display_order, $width, $height);
             if (!$result) {
                 http_response_code(406);
@@ -178,19 +177,14 @@ switch ($method) {
 
         error_log("Reached PUT case, updating metadata only...");
         $id = $input["id"] ?? null;
-        $content_key = $input["content_key"] ?? null;
-        $shortName = $input["shortName"] ?? null;
-        $src = $input["src"] ?? null;
         $alt = $input["alt"] ?? null;
         $display_order = $input["display_order"] ?? null;
-        $width = $input["width"] ?? null;
-        $height = $input["height"] ?? null;
-        $result = updateMetadata($id, $content_key, $shortName, $src, $alt, $display_order, $width, $height);
+        $result = updateMetadata($id, $alt, $display_order);
         if (!$result) {
             http_response_code(406);
             echo json_encode([
                 'status' => 'Failure',
-                'message' => "There was an error adding $shortName to $content_key. Please check your request. If you believe this is in error, contact the system administrator at support@sylphaxiom.com",
+                'message' => "There was an error updating image metadata. Please check your request. If you believe this is in error, contact the system administrator at support@sylphaxiom.com",
             ]);
             exit(1);
         }

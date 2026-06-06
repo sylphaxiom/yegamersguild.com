@@ -27,7 +27,6 @@ export default function StringField({
   // Mutation
   const { mutate, isPending } = useMutation({
     mutationFn: async (value: string) => {
-      console.log("fish:", import.meta.env.VITE_FISH);
       const token = await getAccessTokenSilently();
       return putContent(contentKey, value, token);
     },
