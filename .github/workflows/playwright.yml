@@ -24,13 +24,14 @@ jobs:
           TEST_ADMIN_EMAIL: ${{ secrets.TEST_ADMIN_EMAIL }}
           TEST_ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
           # Auth0 config — these are public values embedded in the JS bundle
-          VITE_AUTH0_DOMAIN: 'auth.sylphaxiom.com'
-          VITE_AUTH0_CLIENT_ID: 'xaBOBCKHa0vNS1EVUvKuNiAlXNTdurLJ'
-          VITE_AUTH0_CALLBACK_URL_D: 'http://localhost:5173/admin'
+          VITE_AUTH0_DOMAIN: "auth.sylphaxiom.com"
+          VITE_AUTH0_CLIENT_ID: "xaBOBCKHa0vNS1EVUvKuNiAlXNTdurLJ"
+          VITE_AUTH0_CALLBACK_URL_D: "http://localhost:5173/admin"
+          VITE_AUTH0_CALLBACK_URL_T: "https://test.sylphaxiom.com/admin"
           # Square API token (GitHub Secret)
           VITE_FISH: ${{ secrets.VITE_FISH }}
           # Tell the app to skip React Query retries so API failures surface immediately
-          VITE_CI: 'true'
+          VITE_CI: "true"
       - uses: actions/upload-artifact@v5
         if: ${{ !cancelled() }}
         with:

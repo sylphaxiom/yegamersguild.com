@@ -1,0 +1,8 @@
+[
+  {
+    "filename": "root.tsx",
+    "search": "VITE_AUTH0_CALLBACK_URL_D",
+    "update": "VITE_AUTH0_CALLBACK_URL_T",
+    "DEV": true
+  }
+]
