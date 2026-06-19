@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// Load .env into process.env — Node 20.12+ built-in, no dotenv package needed
-process.loadEnvFile();
+// Load .env when running locally. In CI the secrets come from environment variables
+// directly, so the file won't exist — the try/catch prevents a crash there.
+try { process.loadEnvFile(); } catch { /* no .env file in CI */ }
 
 export default defineConfig({
   testDir: './tests',
