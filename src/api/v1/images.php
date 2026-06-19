@@ -149,11 +149,55 @@ switch ($method) {
                     'message' => 'There was an error removing the file from the server.'
                 ]);
             }
+            $maxWidth = 400;
+            $maxHeight = 512;
+            // Skip resize for SVG and ICO — GD can't process them
+            if (in_array($type, ["image/svg+xml", "image/x-icon"])) {
+                // skip resize block entirely
+            } else {
+                [$origWidth, $origHeight] = getimagesize($destination);
+                $ratio = min($maxWidth / $origWidth, $maxHeight / $origHeight);
+
+                if ($ratio < 1) {
+                    $newWidth = (int) ($origWidth * $ratio);
+                    $newHeight = (int) ($origHeight * $ratio);
+
+                    $gdSrc = imagecreatefromstring(file_get_contents($destination));
+                    $dst = imagecreatetruecolor($newWidth, $newHeight);
+
+                    // Transparency for PNG, GIF, WEBP
+                    if (in_array($type, ["image/png", "image/gif", "image/webp"])) {
+                        imagealphablending($dst, false);
+                        imagesavealpha($dst, true);
+                    }
+
+                    imagecopyresampled($dst, $gdSrc, 0, 0, 0, 0, $newWidth, $newHeight, $origWidth, $origHeight);
+
+                    switch ($type) {
+                        case "image/jpeg":
+                            imagejpeg($dst, $destination, 85);
+                            break;
+                        case "image/png":
+                            imagepng($dst, $destination);
+                            break;
+                        case "image/gif":
+                            imagegif($dst, $destination);
+                            break;
+                        case "image/webp":
+                            imagewebp($dst, $destination, 85);
+                            break;
+                        case "image/bmp":
+                            imagebmp($dst, $destination);
+                            break;
+                    }
+                }
+            }
+
             $content_key = $_POST["content_key"] ?? null;
             $shortName = $filename;
             $src = $finalPath;
             $alt = "";
-            $display_order = 0;
+            $display_order = getNextDisplayOrder($content_key);
             [$width, $height] = getimagesize($destination);
             $result = putImages($content_key, $shortName, $src, $alt, $display_order, $width, $height);
             if (!$result) {

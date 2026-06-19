@@ -151,7 +151,7 @@ export default function About() {
           textAlign: "center",
           height: "512px",
           width: "400px",
-          overflow: "",
+          overflow: "hidden",
         }}
       >
         <AnimatePresence mode="wait">
@@ -161,62 +161,3 @@ export default function About() {
     </Grid>
   );
 }
-
-// const images: Img[] = [
-//   {
-//     key: "40kDisp",
-//     src: "/uploads/40k_display.jpg",
-//     alt: "Sales display of Warhammer 40k minis.",
-//     width: 288,
-//     height: 512,
-//   },
-//   {
-//     key: "40kTable",
-//     src: "/uploads/40k_table.jpg",
-//     alt: "Image of a Warhammer 40k table top with minis and terrain models.",
-//     width: 384,
-//     height: 512,
-//   },
-//   {
-//     key: "dndBooks",
-//     src: "/uploads/dnd_books.jpg",
-//     alt: "Image of several of the same Dungeons and Dragons book on a sales shelf.",
-//     width: 288,
-//     height: 512,
-//   },
-//   {
-//     key: "dndGame",
-//     src: "/uploads/dnd_game.jpg",
-//     alt: "Image of a TTRPG game in progress with minis and terrain models.",
-//     width: 341,
-//     height: 192,
-//   },
-//   {
-//     key: "miniPaint1",
-//     src: "/uploads/mini_paint.jpg",
-//     alt: "Image of a painted scarecrow mini holding a lantern and sitting on a pumpkin.",
-//     width: 280,
-//     height: 426,
-//   },
-//   {
-//     key: "miniPaint2",
-//     src: "/uploads/mini_paint2.jpg",
-//     alt: "Image of a painted worm-like monster mini poised like a striking snake.",
-//     width: 384,
-//     height: 512,
-//   },
-//   {
-//     key: "mtgCard",
-//     src: "/uploads/mtg_card.jpg",
-//     alt: "Image of 5 really nice looking Magic the Gathering cards on a table.",
-//     width: 321,
-//     height: 427,
-//   },
-//   {
-//     key: "mtgParty",
-//     src: "/uploads/mtg_party.jpg",
-//     alt: "Several people in a room sitting at tables playing Magic the Gathering.",
-//     width: 341,
-//     height: 256,
-//   },
-// ];

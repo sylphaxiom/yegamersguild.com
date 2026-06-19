@@ -14,6 +14,7 @@ import { useIsMutating } from "@tanstack/react-query";
 import HoursField from "~/components/bits/HoursField";
 import BulletsField from "~/components/bits/BulletsField";
 import LinksField from "~/components/bits/LinksField";
+import ImageField from "~/components/bits/ImageField";
 
 interface Editor {
   key: string;
@@ -77,6 +78,11 @@ export default function Console() {
           label: "Bottom Ticker Text",
           type: "string",
         },
+        {
+          key: "ticker_images",
+          label: "Ticker Images",
+          type: "images",
+        },
       ],
     },
     {
@@ -99,6 +105,11 @@ export default function Console() {
           key: "about_blurb",
           label: "Blurb",
           type: "pipe",
+        },
+        {
+          key: "about_images",
+          label: "About Images",
+          type: "images",
         },
       ],
     },
@@ -241,7 +252,8 @@ export default function Console() {
                     contentKey={editor.key}
                   />
                 );
-              // etc.
+              case "images":
+                return <ImageField key={editor.key} contentKey={editor.key} />;
             }
           })}
           {section && (

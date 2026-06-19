@@ -5,7 +5,6 @@ import {
   Links,
   Meta,
   Outlet,
-  redirectDocument,
   Scripts,
   ScrollRestoration,
 } from "react-router";
@@ -48,9 +47,8 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
-const onRedirectCallback = (appState: AppState) => {
-  return redirectDocument(appState?.returnTo || window.location.pathname);
-  audience: ["https://api.sylphaxiom.com"];
+const onRedirectCallback = (appState?: AppState) => {
+  window.location.replace(appState?.returnTo ?? window.location.pathname);
 };
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -69,13 +67,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
           clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
           authorizationParams={{
             redirect_uri: import.meta.env.VITE_AUTH0_CALLBACK_URL_D,
+            audience: "https://api.sylphaxiom.com",
           }}
           useRefreshTokens
           useRefreshTokensFallback
           cacheLocation="localstorage"
-          onRedirectCallback={() => {
-            onRedirectCallback;
-          }}
+          onRedirectCallback={onRedirectCallback}
         >
           <React.Fragment>
             <ThemeProvider disableTransitionOnChange={false} theme={theme}>

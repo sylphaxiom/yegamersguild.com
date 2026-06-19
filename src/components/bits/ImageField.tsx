@@ -9,7 +9,15 @@ import {
   type Image,
 } from "../workhorse/queries";
 import { useAuth0 } from "@auth0/auth0-react";
-import { Box, Button, ButtonGroup, IconButton, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  ButtonGroup,
+  Grid,
+  IconButton,
+  TextField,
+  Typography,
+} from "@mui/material";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -51,7 +59,10 @@ function ImageRow({
     },
   });
   return (
-    <>
+    <Box
+      key={image.shortName}
+      sx={{ display: "flex", alignItems: "center", mt: 3, gap: 1, width: 1 }}
+    >
       <Box
         component="img"
         src={image.src}
@@ -68,11 +79,10 @@ function ImageRow({
         id={String(index)}
         label={"Alt Text"}
         value={altText}
+        sx={{ flex: 1 }}
         onChange={(e) => setAltText(e.target.value)}
-        fullWidth
-        helperText="This is the text that screen readers see to describe the image when it is not visible."
       />
-      <ButtonGroup>
+      <Box sx={{ display: "flex", alignItems: "center" }}>
         <Button
           variant="contained"
           type="button"
@@ -103,8 +113,8 @@ function ImageRow({
         <IconButton aria-label="Delete" onClick={() => onDelete()}>
           <DeleteIcon />
         </IconButton>
-      </ButtonGroup>
-    </>
+      </Box>
+    </Box>
   );
 }
 
@@ -175,22 +185,30 @@ export default function ImageField({ contentKey }: ImageFieldProps) {
         variant="contained"
         type="button"
         color="primary"
-        sx={{}}
+        sx={{ m: "2em 40%" }}
         onClick={() => fileRef.current?.click()}
       >
         Upload Image
       </Button>
-      {images.map((img, index) => (
-        <ImageRow
-          key={img.shortName}
-          image={img}
-          index={index}
-          isFirst={index === 0}
-          isLast={index === images.length - 1}
-          onDelete={() => remove(img.id)}
-          onReorder={(dir) => handleReorder(index, dir)}
-        />
-      ))}
+      <Grid container sx={{}}>
+        {images.map((img, index) => (
+          <>
+            <ImageRow
+              key={img.shortName}
+              image={img}
+              index={index}
+              isFirst={index === 0}
+              isLast={index === images.length - 1}
+              onDelete={() => remove(img.id)}
+              onReorder={(dir) => handleReorder(index, dir)}
+            />
+            <Typography variant="body2" sx={{ textIndent: "125px" }}>
+              This is the text that screen readers see to describe the image
+              when it is not visible.
+            </Typography>
+          </>
+        ))}
+      </Grid>
     </>
   );
 }
