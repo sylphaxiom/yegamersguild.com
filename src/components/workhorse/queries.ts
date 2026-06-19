@@ -11,6 +11,11 @@ export const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
         staleTime: 1000 * 60 * 5,
+        // In CI the external APIs may be unreachable. Skip retries so the loading
+        // state exits immediately and tests fail with a clear "empty" error rather
+        // than a misleading "element not found" timeout.
+        // VITE_CI=true is set in the GitHub Actions workflow env block.
+        retry: import.meta.env.VITE_CI ? 0 : 3,
       },
     },
   });
