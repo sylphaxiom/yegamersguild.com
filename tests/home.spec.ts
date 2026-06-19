@@ -21,7 +21,7 @@ test.describe('homepage', () => {
   test('ticker images load from CMS', async ({ page }) => {
     // Images come from the DB — we don't test specific src values,
     // just that at least one image is present and visible in the marquee.
-    const marquee = page.locator('[role="marquee"]').last(); // inner marquee wrapping the Ticker
+    const marquee = page.getByRole('marquee', { name: 'image ticker' });
     await expect(marquee).toBeVisible({ timeout: CMS_TIMEOUT });
     await expect(marquee.locator('img').first()).toBeVisible({ timeout: CMS_TIMEOUT });
   });
@@ -57,18 +57,19 @@ test.describe('homepage', () => {
   test('location section is visible with address', async ({ page }) => {
     const location = page.getByRole('complementary', { name: 'location' });
     await expect(location).toBeVisible({ timeout: CMS_TIMEOUT });
-    await expect(location.locator('.MuiTypography-h5').first()).not.toBeEmpty();
+    // Location renders address lines as <p> elements (Typography variant="h5" component="p")
+    await expect(location.locator('p').first()).not.toBeEmpty();
   });
 
   test('hours section is visible with day content', async ({ page }) => {
     const hours = page.getByRole('complementary', { name: 'hours' });
     await expect(hours).toBeVisible({ timeout: CMS_TIMEOUT });
-    await expect(hours.locator('.MuiTypography-h5').first()).not.toBeEmpty();
+    // Hours renders day text as <p> elements (Typography variant="h5" component="p")
+    await expect(hours.locator('p').first()).not.toBeEmpty();
   });
 
   test('about section is visible with bullet points', async ({ page }) => {
-    // Use the id — both About and Location have role="article", so getByRole is ambiguous
-    const about = page.locator('#about-cont');
+    const about = page.getByRole('article', { name: 'about' });
     await expect(about).toBeVisible({ timeout: CMS_TIMEOUT });
     await expect(about.locator('p').first()).not.toBeEmpty({ timeout: CMS_TIMEOUT });
   });

@@ -40,13 +40,29 @@ Admin tests require you to log in once so Playwright can save the session.
 
 ```
 tests/
-  auth.setup.ts        — One-time login; saves tests/auth.json
-  home.spec.ts         — Public homepage tests
-  shop.spec.ts         — Shop and product detail tests
+  auth.setup.ts         — One-time login; saves tests/auth.json
+  home.spec.ts          — Public homepage tests
+  shop.spec.ts          — Shop and product detail tests
   accessibility.spec.ts — Axe accessibility audit
-  admin.spec.ts        — Admin console navigation tests
+  admin.spec.ts         — Admin console navigation tests
   cms-mutations.spec.ts — CMS field save/restore tests
 ```
+
+---
+
+## Selector philosophy
+
+All tests use Playwright's web-first selectors — `getByRole`, `getByLabel`, `getByText`, and semantic HTML element types (`h2`, `p`, `legend`). No MUI internal CSS class names (`.MuiCard-root` etc.) appear anywhere in the test suite. Those class names are MUI implementation details and would break silently on an MUI upgrade.
+
+Where the application needed small changes to support unambiguous selectors, those changes were made as real improvements to the component's accessibility:
+
+| Component | Change made | Test that benefits |
+|-----------|-------------|-------------------|
+| `About.tsx` | Added `aria-label="about"` to the article | `getByRole('article', { name: 'about' })` |
+| `Header.tsx` | Added `aria-label="image ticker"` to inner marquee | `getByRole('marquee', { name: 'image ticker' })` |
+| `ProductCard.tsx` | Added `role="article"` to Card | `getByRole('article')` for all card queries |
+| `ProductCard.tsx` | Changed price Typography to `component="p"` | Price is no longer a spurious `<h6>` heading |
+| `DataGrid.tsx` | Added `role="toolbar" aria-label="product filters"` to chip container | `getByRole('toolbar', { name: 'product filters' }).getByRole('button')` |
 
 ---
 
@@ -75,35 +91,45 @@ Tests the public-facing homepage. All content comes from the CMS API, so tests c
 | Test | What it checks | How |
 |------|---------------|-----|
 | Logo image loads | Guild logo is visible with the right src | `getByRole('img', { name: /dragon/ })` |
-| Ticker images load from CMS | At least one image appears in the marquee | Locates `role="marquee"` then finds its `img` children |
+| Ticker images load from CMS | At least one image appears in the image ticker marquee | `getByRole('marquee', { name: 'image ticker' })` then finds `img` children |
 | Header text content renders | The top ticker text line is non-empty | Waits for `<figure>` to have text content |
-| Mode switch toggles theme | Clicking the mode button changes the `html` class | Checks `class` attribute before and after click |
+| Mode switch toggles theme | Clicking the mode button changes the `html` class | Checks `class` attribute before and after click with auto-retry |
 | Inventory button navigates to shop | Clicking "Check out our inventory" goes to `/shop` | Clicks button, asserts URL |
-| Location section visible with address | Location complementary region has content | Finds `role="complementary"` with `aria-label="location"` |
-| Hours section visible | Hours region has content | Finds `role="complementary"` with `aria-label="hours"` |
-| About section visible with bullets | About article region has content | Finds `role="article"` |
-| Google map is embedded | The map iframe is present | Locates `#google-map iframe` |
+| Location section visible with address | Location complementary region has a `<p>` with content | `getByRole('complementary', { name: 'location' })` |
+| Hours section visible | Hours region has a `<p>` with content | `getByRole('complementary', { name: 'hours' })` |
+| About section visible with bullets | About article region has a `<p>` with content | `getByRole('article', { name: 'about' })` |
+| Google map is embedded | The map iframe is present | `#google-map iframe` |
 
-**Why we removed the old ticker image tests:** The original tests checked for specific `src` attributes like `guild_pathfinder.png`. These images are now stored in and served from the database, so their src paths are dynamic (hashed filenames). Testing specific src values would require knowing the exact DB-generated filenames, which defeats the purpose.
+**Why two marquee elements:** Header.tsx wraps the entire ticker section in a `role="marquee"` Grid and also has an inner `<div role="marquee" aria-label="image ticker">` wrapping the Ticker component. The inner one now has a unique `aria-label` so it can be selected unambiguously. The outer one is kept for semantic grouping.
+
+**Why we use `<p>` for location/hours text:** Location.tsx renders its text with `<Typography variant="h5" component="p">` — so the DOM element is `<p>`, not `<h5>`. The selector targets the actual rendered element.
+
+**Why we removed the old ticker image tests:** Images are now stored in and served from the database with hashed filenames. Testing specific `src` values would require knowing DB-generated paths, which is not the right thing to test.
 
 ---
 
 ### `shop.spec.ts`
 
-Tests the shop page and product detail pages. These depend on the Square catalog API.
+Tests the shop page and product detail pages. These depend on the Square catalog API being accessible.
 
 | Test | What it checks |
 |------|---------------|
-| Navigates to /shop | URL resolves within 3 seconds |
-| Product cards load | At least one `.MuiCard-root` becomes visible |
-| Cards display name and price | Typography elements inside each card are non-empty |
-| Category filter chips visible | Chip elements are present after load |
-| Clicking a chip filters the grid | Card count is ≤ total; clicking again restores count |
-| Available Only filter | Filtered count is ≤ unfiltered count |
+| Shop page has a header | Guild logo visible on the shop page |
+| Product cards load | At least one `role="article"` card becomes visible |
+| Cards display name and price | Card heading is non-empty; price text matches `$` or "Price Varies" |
+| Category filter chips visible | Buttons in the filter toolbar are present and visible |
+| Clicking a chip filters the grid | Toggling a chip on and back off restores the original card count |
+| Available Only filter | Filtered count ≤ total count |
 | Clicking a card navigates to details | URL changes to `/shop/<id>` |
-| Detail page loads | `h2` heading is visible and non-empty |
-| Detail page shows description | Body text elements are non-empty |
-| Back navigation returns to grid | `goBack()` returns to `/shop` with cards visible |
+| Item name heading loads | `<h2>` heading visible and non-empty on details page |
+| Item detail shows description and price | Description `<p>` and price text are present |
+| Back button returns to shop grid | Clicking "Back to inventory list" returns to `/shop` |
+
+**Why `role="article"` replaces `.MuiCard-root`:** ProductCard wraps MUI's Card (a `<div>`) in a React Router `<Link>`. Neither had a semantic role, so the only way to select product cards was via MUI's internal CSS class. Adding `role="article"` to the Card makes the intent explicit and the selector durable.
+
+**Why the filter chip test uses toggle-and-restore:** We don't know in advance how many products match any given category (the catalog comes from Square). An assertion like `filteredCount < totalCount` would fail if all products share one category. Instead, we verify the toggle *behaves correctly*: clicking the chip once then again must restore the original count, proving the filter state round-tripped properly.
+
+**Why the back test clicks the button instead of `page.goBack()`:** Details.tsx renders an explicit "Back to inventory list" button. Testing the button is testing the application, not the browser. `page.goBack()` would pass even if the button were missing or broken.
 
 ---
 
@@ -113,7 +139,7 @@ Runs [axe-core](https://github.com/dequelabs/axe-core) on the homepage and asser
 
 **How it works:** `AxeBuilder({ page }).exclude('#google-map').analyze()` scans the rendered DOM for WCAG violations. The Google Maps iframe is excluded because it has known third-party accessibility issues outside our control.
 
-**Why this matters:** Catches things like missing `aria-label` attributes, insufficient color contrast, and invalid ARIA roles automatically on every test run.
+**Why we wait for CMS content first:** Layout.tsx shows a loading spinner until the `content` and `images` queries resolve. If axe runs during the loading state, there is no `<main>` landmark and no `<h1>` — both legitimate violations that would be false positives. Waiting for a `<figure>` to have content confirms CMS data has loaded and the full page is rendered before scanning.
 
 ---
 
@@ -146,11 +172,13 @@ Uses the session saved by `auth.setup.ts`.
 | Selecting Header shows text editors | Two TextFields appear: Top Ticker Text, Bottom Ticker Text |
 | Selecting Header shows image upload | Upload Image button appears |
 | Selecting About shows bullets and image upload | Add button and Upload Image button appear |
-| Selecting Hours shows day rows | "Monday" text and Closed checkboxes appear |
+| Selecting Hours shows day rows | Monday `<legend>` and Closed checkboxes appear |
 | Selecting Location shows address editor | Editor area is visible |
 | Selecting Quick Links shows links editor | Add button appears for managing link rows |
 | Preview appears when section selected | "Preview:" heading is visible |
 | Switching sections updates editor | Going from Header to Hours hides Header editor, shows Hours |
+
+**Why `legend` is used to find the Monday row:** `getByText('Monday')` matches three elements — the HoursField `<legend>`, and two paragraph nodes in the Location preview (`Monday:` and `Monday: 3pm - 10pm`). Using `page.locator('legend').filter({ hasText: 'Monday' })` is a semantic HTML selector, not a workaround; `<legend>` is the correct element type for a fieldset label.
 
 ---
 
@@ -164,8 +192,8 @@ Tests that CMS fields actually save to the database and reflect back in the UI. 
 |------|-----------------|
 | Save button disabled when unchanged | The `isDirty` guard prevents accidental saves |
 | StringField saves — round-trip confirmed | Edit, save via PUT, assert Save re-disables (isDirty=false after refetch) |
-| BulletsField Add appends a row | Clicking Add increases Delete button count (not TextField count — duplicate IDs make that unreliable) |
-| Hours Closed checkbox disables spinners | Ensures unchecked first, checks it, asserts Open/Close spinners are disabled |
+| BulletsField Add appends a row | Clicking Add increases Delete button count |
+| Hours Closed checkbox disables spinners | Checks checkbox, asserts Open/Close spinners disabled, then restores |
 | Image upload button triggers file picker | Clicking Upload Image opens the OS file dialog |
 | LinksField Add appends a row | Same Delete button counting approach as BulletsField |
 
@@ -173,34 +201,35 @@ Tests that CMS fields actually save to the database and reflect back in the UI. 
 
 ```
 1. Navigate to Header section
-2. Scope the form to the one containing "Top Ticker Text" (avoids matching sibling forms)
-3. Read the current value and save it
-4. Fill in "CMS Test Value"
-5. Click Save while simultaneously waiting for a PUT response from /api/v1/content.php
-6. Assert the PUT response was OK (200)
-7. Assert the Save button becomes disabled again — this proves isDirty=false, meaning
+2. Locate the field by label; navigate up to its ancestor <form> via XPath
+3. Read the current value and save it as `original`
+4. Fill in a timestamp-based test value (guaranteed unique even if a prior run failed)
+5. Assert the field holds the test value and the Save button is now enabled (isDirty=true)
+6. Click Save while simultaneously waiting for a PUT to api.sylphaxiom.com/content.php
+7. Assert the PUT response was OK (200)
+8. Assert the Save button becomes disabled again — proves isDirty=false, meaning
    the mutation completed, invalidateQueries fired, the refetch returned, and React
    re-rendered with the confirmed DB value
-8. Restore the original value in a finally block (runs even if an assertion fails)
+9. Restore the original value in a finally block (runs even if an assertion fails)
 ```
 
-The key insight: waiting for `saveBtn` to be disabled is a precise, state-based signal that the full round-trip (PUT → refetch → render) completed. A `waitForTimeout` would be both slower and less reliable.
+**Why ancestor XPath for the save button:** StringField renders as `<Box component="form">` containing a TextField and a Save Button. The Header section has multiple such forms. Using `field.locator('xpath=ancestor::form[1]').getByRole('button', { name: 'Save' })` navigates up from the known field to its containing form and finds that form's Save button — unambiguous and order-independent.
+
+**Why a timestamp-based test value:** If a previous test run failed mid-way and left the test value in the database, filling with the same string would leave `isDirty=false` and the Save button would never become enabled. A unique value (`__pw_${Date.now()}__`) is always different from whatever is currently in the DB.
+
+**Why `toHaveValue` and `toBeEnabled` come before `Promise.all`:** These two assertions confirm that the fill succeeded and isDirty is true before the save attempt starts. If either fails, the error points to the exact step that broke rather than surfacing as a cryptic `waitForResponse` timeout.
 
 #### Why try/finally matters for data restoration
 
-If the assertion at step 7 fails (e.g., the mutation errored), the test would throw before reaching the restore code. Without `try/finally`, the database would be left with "CMS Test Value" permanently. With `finally`, the restore always runs.
+If an assertion fails mid-test, the database would be left with the test value permanently. `finally` ensures the restore runs regardless of test outcome. The restore itself is wrapped in `try/catch` so a cleanup failure doesn't replace the original test failure as the reported error.
 
 #### How the Hours Closed checkbox test works
 
-HoursField's Closed checkbox sets `start: 0` and `end: 0` in local React state, which causes `isClosed = true` and passes `disabled={isClosed}` to both NumberSpinner components. This is UI-only — there is a separate Save button that must be clicked to persist, so the test can check and uncheck freely without mutating the database.
+HoursField's Closed checkbox sets `isClosed = true` in local React state, which passes `disabled={isClosed}` to the Open and Close NumberSpinner components. This is UI-only state — the database is only updated when Save is clicked. The test can check and uncheck freely without mutations.
 
-The test always runs regardless of whether Monday happens to be closed in the DB, by explicitly unchecking first if needed, then checking and asserting, then restoring.
+#### Why Delete buttons count BulletsField / LinksField rows
 
-#### Why Delete buttons are used to count BulletsField / LinksField rows
-
-Both BulletsField and LinksField pass `id={contentKey}` to every TextField in their map. This means all TextFields in BulletsField share `id="about_bullets"`, and browsers resolve duplicate IDs by returning only the first match. Playwright's `getByLabel` uses the label's `for` attribute to find the input, so it would return at most 1 element regardless of row count.
-
-Each row does have a unique, reliable marker: one `<IconButton aria-label="delete">`. Counting `getByLabel('delete')` gives the true row count.
+Both fields pass `id={contentKey}` to every TextField in their row map, so all TextFields in BulletsField share `id="about_bullets"`. `getByLabel()` resolves via the label's `for` attribute, which maps to only the first element with that ID. Each row has exactly one `<IconButton aria-label="delete">`, making Delete button count a reliable row count.
 
 ---
 
@@ -213,4 +242,4 @@ projects:
   admin       → admin, cms-mutations (depends on auth-setup, loads auth.json)
 ```
 
-The `webServer` block starts `npm run dev` automatically before tests run. If the server is already running (local development), it reuses the existing instance.
+The `webServer` block starts `npm run dev` automatically before tests run. If the server is already running (local development), it reuses the existing instance. Environment variables are loaded via `process.loadEnvFile()` at the top of the config (Node 22 built-in — no dotenv package needed).

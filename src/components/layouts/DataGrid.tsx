@@ -80,6 +80,8 @@ export default function DataGrid() {
     <Grid container>
       <Grid size={12} sx={{ justifyItems: "center" }}>
         <Box
+          role="toolbar"
+          aria-label="product filters"
           sx={{
             display: "flex",
             flexWrap: "wrap",

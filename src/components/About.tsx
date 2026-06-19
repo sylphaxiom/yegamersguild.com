@@ -112,7 +112,7 @@ export default function About() {
   }, [img, images]);
 
   return (
-    <Grid container id="about-cont" role="article" sx={{ p: 3 }}>
+    <Grid container id="about-cont" role="article" aria-label="about" sx={{ p: 3 }}>
       <Grid size={{ xs: 12, md: 6 }}>
         <Typography variant="h3" sx={{ pb: 4 }} component="h2">
           {aboutHeaderText}

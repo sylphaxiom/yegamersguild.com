@@ -43,9 +43,9 @@ test.describe('CMS mutations', () => {
     const field = page.getByLabel('Top Ticker Text');
     await expect(field).toBeVisible({ timeout: LOAD_TIMEOUT });
 
-    // The header_top StringField's Save is always first in the DOM — simpler and
-    // more reliable than a form.filter() scope which can be ambiguous.
-    const saveBtn = page.getByRole('button', { name: 'Save' }).first();
+    // Navigate up to the form element that owns this specific field, then find
+    // its Save button. This is order-independent and unambiguous.
+    const saveBtn = field.locator('xpath=ancestor::form[1]').getByRole('button', { name: 'Save' });
 
     const original = await field.inputValue();
     // Timestamp suffix guarantees uniqueness even if a prior run left a dirty DB value

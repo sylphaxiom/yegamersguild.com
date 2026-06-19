@@ -85,7 +85,7 @@ export default function Header() {
         <Typography variant="h4" component="figure" sx={{ pt: 1 }}>
           {headerTopText}
         </Typography>
-        <div style={{ position: "relative" }} role="marquee">
+        <div style={{ position: "relative" }} role="marquee" aria-label="image ticker">
           <Ticker duration={20}>
             {tickerImages?.map((img) => {
               return (
