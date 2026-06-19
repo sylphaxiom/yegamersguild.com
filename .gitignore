@@ -39,6 +39,7 @@ build/
 *bucket.php
 .env
 .auth
+tests/auth.json
 /secrets/
 */mods.json
 tmp*

@@ -7,5 +7,8 @@ export default [
             index("./components/layouts/DataGrid.tsx"),
             route(":item","./components/bits/Details.tsx"),
         ]),
-    ])
+        layout("./components/layouts/Admin.tsx",[
+            route("admin", "./routes/Console.tsx"),
+        ]),
+    ]),
 ] satisfies RouteConfig;

@@ -3,25 +3,19 @@ import * as motion from "motion/react-client";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { AnimatePresence } from "motion/react";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { useNavigate } from "react-router";
+import { fetchContent, fetchImages, type Image } from "./workhorse/queries";
+import { useQuery } from "@tanstack/react-query";
+import { iconMap } from "./workhorse/mappings";
 
-interface Img {
-  key: string;
-  src: string;
-  alt: string;
-  width: number;
-  height: number;
-}
-
-function buildImg({ key, src, alt, width, height }: Img) {
+function buildImg({ shortName, src, alt, width, height }: Image) {
   return (
     <motion.img
       transition={{ duration: 0.7, ease: "linear" }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      key={key}
+      key={shortName}
       src={src}
       alt={alt}
       width={width}
@@ -30,53 +24,117 @@ function buildImg({ key, src, alt, width, height }: Img) {
   );
 }
 
+function buildBlurb(blurb: string) {
+  const bits = blurb.split("|");
+  const Abit = bits.length > 1 ? bits[0] : null;
+  const Bbit = bits.length > 1 ? bits[1] : bits[0];
+  return (
+    <>
+      <Typography variant="h4" component="span" sx={{ pr: 1 }}>
+        {Abit}
+      </Typography>
+      {Bbit}
+    </>
+  );
+}
+
+export interface Bullets {
+  icon: string;
+  text: string;
+}
+
 export default function About() {
   const [img, setImg] = React.useState(0);
   const navigate = useNavigate();
+  let aboutHeaderText: string | undefined;
+  let blurbOutput: React.ReactElement | undefined;
+  let aboutBulletsText: Bullets[] | undefined;
+
+  // Grab content and images data from the server
+  const { data: allImages } = useQuery({
+    queryKey: ["images"],
+    queryFn: () => fetchImages(),
+  });
+  const { data: content } = useQuery({
+    queryKey: ["content"],
+    queryFn: () => fetchContent(),
+  });
+
+  const images = React.useMemo(() => {
+    if (!allImages?.objects) return undefined;
+    const filtered = [...allImages.objects].filter(
+      (image) => image.content_key === "about_images",
+    );
+    const sorted = filtered.sort(
+      (a, b) => Number(a.display_order) - Number(b.display_order),
+    );
+    return sorted;
+  }, [allImages]);
+
+  if (content?.objects) {
+    const aboutContent = content.objects.filter((content) =>
+      content.content_key.includes("about_"),
+    );
+    if (aboutContent) {
+      const aboutBlurb = aboutContent.find(
+        (content) => content.content_key === "about_blurb",
+      );
+      const aboutBullets = aboutContent.find(
+        (content) => content.content_key === "about_bullets",
+      );
+      const aboutHeader = aboutContent.find(
+        (content) => content.content_key === "about_header",
+      );
+      if (aboutBlurb) {
+        const aboutBlurbText = aboutBlurb.value;
+        blurbOutput = buildBlurb(aboutBlurbText);
+      }
+      if (aboutBullets) {
+        aboutBulletsText = JSON.parse(aboutBullets.value);
+      }
+      if (aboutHeader) {
+        aboutHeaderText = aboutHeader.value;
+      }
+    }
+  }
 
   React.useEffect(() => {
     const interval = setInterval(() => {
-      if (img === images.length - 1) {
-        setImg(0);
-      } else {
-        setImg(img + 1);
+      if (images) {
+        if (img === images.length - 1) {
+          setImg(0);
+        } else {
+          setImg(img + 1);
+        }
       }
     }, 5000);
     return () => clearInterval(interval);
-  }, [img]);
+  }, [img, images]);
 
   return (
-    <Grid container id="about-cont" role="article" sx={{ p: 3 }}>
-      <Grid size={{ xs: 12, sm: 8, md: 6 }}>
-        <Typography variant="h2" sx={{ pb: 4 }} component="h2">
-          About The Guild...
+    <Grid container id="about-cont" role="article" aria-label="about" sx={{ p: 3 }}>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <Typography variant="h3" sx={{ pb: 4 }} component="h2">
+          {aboutHeaderText}
         </Typography>
-        <Typography sx={{ mb: 2 }}>
-          <Typography variant="h4" component="span" sx={{ pr: 1 }}>
-            Ye Gamer's Guild
-          </Typography>
-          is a locally owned and operated gameshop in Greenwood, IN. We sell
-          TTRPG books, board games, Magic the Gathering cards, dice, minis, and
-          more!
-        </Typography>
-        <Stack direction={"row"} sx={{ alignItems: "center" }}>
-          <AutoAwesomeIcon sx={{ mx: 2 }} />
-          <Typography variant="h5" component={"p"} sx={{ my: 1 }}>
-            Group gaming spaces...
-          </Typography>
-        </Stack>
-        <Stack direction={"row"} sx={{ alignItems: "center" }}>
-          <AutoAwesomeIcon sx={{ mx: 2 }} />
-          <Typography variant="h5" component={"p"} sx={{ my: 1 }}>
-            Books, games, cards...
-          </Typography>
-        </Stack>
-        <Stack direction={"row"} sx={{ alignItems: "center" }}>
-          <AutoAwesomeIcon sx={{ mx: 2 }} />
-          <Typography variant="h5" component={"p"} sx={{ my: 1 }}>
-            Tournaments, events, snacks...
-          </Typography>
-        </Stack>
+        <Typography sx={{ mb: 2 }}>{blurbOutput}</Typography>
+        {aboutBulletsText?.map((bullet) => (
+          <Stack
+            direction={"row"}
+            key={bullet.text + "-stack"}
+            sx={{ alignItems: "center" }}
+          >
+            <span style={{ margin: "0 1em" }}>{iconMap[bullet.icon]}</span>
+            <Typography
+              variant="h5"
+              component={"p"}
+              key={bullet.text + "-text"}
+              sx={{ my: 1 }}
+            >
+              {bullet.text}
+            </Typography>
+          </Stack>
+        ))}
         <Box sx={{ textAlign: "center", py: 4 }}>
           <Button
             variant="contained"
@@ -93,70 +151,13 @@ export default function About() {
           textAlign: "center",
           height: "512px",
           width: "400px",
-          overflow: "",
+          overflow: "hidden",
         }}
       >
-        <AnimatePresence mode="wait">{buildImg(images[img])}</AnimatePresence>
+        <AnimatePresence mode="wait">
+          {images && buildImg(images[img])}
+        </AnimatePresence>
       </Grid>
     </Grid>
   );
 }
-
-const images: Img[] = [
-  {
-    key: "40kDisp",
-    src: "40k_display.jpg",
-    alt: "Sales display of Warhammer 40k minis.",
-    width: 288,
-    height: 512,
-  },
-  {
-    key: "40kTable",
-    src: "40k_table.jpg",
-    alt: "Image of a Warhammer 40k table top with minis and terrain models.",
-    width: 384,
-    height: 512,
-  },
-  {
-    key: "dndBooks",
-    src: "dnd_books.jpg",
-    alt: "Image of several of the same Dungeons and Dragons book on a sales shelf.",
-    width: 288,
-    height: 512,
-  },
-  {
-    key: "dndGame",
-    src: "dnd_game.jpg",
-    alt: "Image of a TTRPG game in progress with minis and terrain models.",
-    width: 341,
-    height: 192,
-  },
-  {
-    key: "miniPaint1",
-    src: "mini_paint.jpg",
-    alt: "Image of a painted scarecrow mini holding a lantern and sitting on a pumpkin.",
-    width: 280,
-    height: 426,
-  },
-  {
-    key: "miniPaint2",
-    src: "mini_paint2.jpg",
-    alt: "Image of a painted worm-like monster mini poised like a striking snake.",
-    width: 384,
-    height: 512,
-  },
-  {
-    key: "mtgCard",
-    src: "mtg_card.jpg",
-    alt: "Image of 5 really nice looking Magic the Gathering cards on a table.",
-    width: 321,
-    height: 427,
-  },
-  {
-    key: "mtgParty",
-    src: "mtg_party.jpg",
-    alt: "Several people in a room sitting at tables playing Magic the Gathering.",
-    width: 341,
-    height: 256,
-  },
-];

@@ -15,6 +15,7 @@ import theme from "./theme";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./components/workhorse/queries";
 import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
+import { Auth0Provider, type AppState } from "@auth0/auth0-react";
 
 export interface SqContext {
   clientId: string;
@@ -46,6 +47,10 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+const onRedirectCallback = (appState?: AppState) => {
+  window.location.replace(appState?.returnTo ?? window.location.pathname);
+};
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -57,14 +62,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body suppressHydrationWarning>
         <InitColorSchemeScript attribute="class" />
-        <React.Fragment>
-          <ThemeProvider disableTransitionOnChange={false} theme={theme}>
-            <CssBaseline enableColorScheme />
-            <QueryClientProvider client={queryClient}>
-              {children}
-            </QueryClientProvider>
-          </ThemeProvider>
-        </React.Fragment>
+        <Auth0Provider
+          domain={import.meta.env.VITE_AUTH0_DOMAIN}
+          clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
+          authorizationParams={{
+            redirect_uri: import.meta.env.VITE_AUTH0_CALLBACK_URL_D,
+            audience: "https://api.sylphaxiom.com",
+          }}
+          useRefreshTokens
+          useRefreshTokensFallback
+          cacheLocation="localstorage"
+          onRedirectCallback={onRedirectCallback}
+        >
+          <React.Fragment>
+            <ThemeProvider disableTransitionOnChange={false} theme={theme}>
+              <CssBaseline enableColorScheme />
+              <QueryClientProvider client={queryClient}>
+                {children}
+              </QueryClientProvider>
+            </ThemeProvider>
+          </React.Fragment>
+        </Auth0Provider>
         <ScrollRestoration />
         <Scripts />
       </body>

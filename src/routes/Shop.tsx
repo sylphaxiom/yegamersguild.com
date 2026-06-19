@@ -1,5 +1,6 @@
 import type { Route } from "./+types/Shop";
 import { Outlet } from "react-router";
+import Header from "~/components/Header";
 import { authMiddleware } from "~/components/workhorse/middleware";
 import { sqContext } from "~/root";
 
@@ -20,5 +21,10 @@ export async function clientLoader({ context }: Route.ClientLoaderArgs) {
 }
 
 export default function Shop() {
-  return <Outlet />;
+  return (
+    <>
+      <Header />
+      <Outlet />
+    </>
+  );
 }

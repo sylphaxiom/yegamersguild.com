@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@andremov/react-ticker": "^1.1.0",
+    "@auth0/auth0-react": "^2.16.2",
     "@axe-core/playwright": "^4.11.2",
     "@base-ui/react": "^1.4.1",
     "@emotion/react": "^11.14.0",

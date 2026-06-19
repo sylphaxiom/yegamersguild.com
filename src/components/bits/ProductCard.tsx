@@ -44,6 +44,7 @@ export default function ProductCard({
     >
       <Card
         elevation={4}
+        role="article"
         sx={{
           width: { xs: 200, sm: 300 },
           height: "auto",
@@ -135,7 +136,7 @@ export default function ProductCard({
             }}
             key={item.id + "-subtle-wrapper"}
           >
-            <Typography variant="subtitle1" key={item.id + "-price"}>
+            <Typography variant="subtitle1" component="p" key={item.id + "-price"}>
               {displayPrice}
             </Typography>
             {!isInStock && outOfStockMode === "subtle" && (

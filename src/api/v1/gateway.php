@@ -64,6 +64,7 @@ try {
     $_SESSION['environment'] = $environment;
     $client = 'yegamersguild';
     $_SESSION['clientName'] = $client;
+    $_SESSION['origin'] = $origin;
 } catch (Exception $e) {
     error_log("An error occurred while setting session variables clientId, auth_state, and environment.");
     http_response_code(400);

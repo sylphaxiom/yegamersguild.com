@@ -10,6 +10,9 @@ test.describe('homepage accessibility testing', () => { // 2
         await page.close()
     });
   test('should not have any automatically detectable accessibility issues', async ({ page }) => {
+    // Wait for CMS content to render — axe must scan a fully loaded page or it will
+    // flag false positives like missing <h1> (only appears once header text loads from API).
+    await expect(page.locator('figure').first()).not.toBeEmpty({ timeout: 10000 });
 
     const accessibilityScanResults = await new AxeBuilder({ page }).exclude('#google-map').analyze(); // 4
 
