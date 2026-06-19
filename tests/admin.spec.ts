@@ -55,7 +55,9 @@ test.describe('admin — authenticated', () => {
   test('selecting Hours shows day rows with Closed checkboxes', async ({ page }) => {
     await page.getByRole('button', { name: 'Hours' }).click();
     await expect(page.getByText('Editing Hours')).toBeVisible();
-    await expect(page.getByText('Monday')).toBeVisible({ timeout: LOAD_TIMEOUT });
+    // Use legend element — HoursField renders each day as a <legend>. getByText('Monday')
+    // is ambiguous because the Location preview also renders "Monday:" text.
+    await expect(page.locator('legend').filter({ hasText: 'Monday' })).toBeVisible({ timeout: LOAD_TIMEOUT });
     await expect(page.getByLabel('Closed').first()).toBeVisible();
   });
 

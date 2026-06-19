@@ -18,9 +18,9 @@ setup('authenticate as admin', async ({ page }) => {
   await page.waitForURL(/auth\.sylphaxiom\.com/, { timeout: 15000 });
 
   // Step 1 — Enter the Auth0 organization name
-  await expect(page.locator('input[name="organization"]')).toBeVisible({ timeout: 10000 });
-  await page.fill('input[name="organization"]', 'yegamersguild');
-  await page.click('button[type="submit"]');
+  await expect(page.getByRole('textbox', { name: 'Enter your organization name' })).toBeVisible({ timeout: 10000 });
+  await page.getByRole('textbox', { name: 'Enter your organization name' }).fill('yegamersguild');
+  await page.getByRole('button', { name: 'Continue' }).click();
 
   // Step 2 — Enter email and password
   await expect(page.locator('input[name="username"]')).toBeVisible({ timeout: 10000 });

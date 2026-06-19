@@ -67,7 +67,8 @@ test.describe('homepage', () => {
   });
 
   test('about section is visible with bullet points', async ({ page }) => {
-    const about = page.getByRole('article');
+    // Use the id — both About and Location have role="article", so getByRole is ambiguous
+    const about = page.locator('#about-cont');
     await expect(about).toBeVisible({ timeout: CMS_TIMEOUT });
     await expect(about.locator('p').first()).not.toBeEmpty({ timeout: CMS_TIMEOUT });
   });

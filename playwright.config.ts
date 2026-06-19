@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Load .env into process.env — Node 20.12+ built-in, no dotenv package needed
+process.loadEnvFile();
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,

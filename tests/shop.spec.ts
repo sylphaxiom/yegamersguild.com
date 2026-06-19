@@ -16,8 +16,8 @@ test.describe('shop page', () => {
     });
 
     test('product cards load', async ({ page }) => {
-        // Wait for either skeleton or card — skeleton may flash by quickly
-        await page.waitForSelector('.MuiSkeleton-root, .MuiCard-root', { timeout: 3000 });
+        // Wait for either skeleton or card — use LOAD_TIMEOUT, not a short fixed value
+        await page.waitForSelector('.MuiSkeleton-root, .MuiCard-root', { timeout: LOAD_TIMEOUT });
         const card = page.locator('.MuiCard-root').first();
         await expect(card).toBeVisible({ timeout: LOAD_TIMEOUT });
     });
@@ -82,7 +82,6 @@ test.describe('details page', () => {
     });
 
     test('skeleton appears then item detail loads', async ({ page }) => {
-        const skeleton = page.locator('.MuiSkeleton-root').first();
         // Either skeleton was shown briefly, or content already loaded
         const heading = page.locator('.MuiTypography-h2');
         await expect(heading).toBeVisible({ timeout: LOAD_TIMEOUT });
