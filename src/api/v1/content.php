@@ -52,6 +52,7 @@ error_log("========== Initialized content ==========");
 
 switch ($method) {
     case 'GET':
+        error_log("Getting content...");
         $content_key = $_GET['content_key'] ?? null;
         if (empty($content_key)) {
             $contentResult = getAllContent();
@@ -74,11 +75,12 @@ switch ($method) {
     case 'PUT':
         $input = json_decode(file_get_contents('php://input'), true);
         requireAuth($tokenHead);
-
+        error_log("Authenticated and updating content...");
         $value = $input['value'] ?? null;
         $content_key = $_GET['content_key'] ?? null;
 
         if (!$value || !$content_key) {
+            error_log("value or content_key were missing. Values are: $value | $content_key");
             http_response_code(400);
             echo json_encode([
                 'status' => 'Failure',
@@ -95,6 +97,7 @@ switch ($method) {
                 'message' => "Content for $content_key has been successfully updated.",
             ]);
         } else {
+            error_log("putContent returned false, there was an error in the DB transaction...");
             http_response_code(406);
             echo json_encode([
                 'status' => 'Failure',
@@ -103,6 +106,7 @@ switch ($method) {
         }
         break;
     default:
+        error_log("Default statement reached, the method was invalid...");
         http_response_code(405);
         echo json_encode([
             'status' =>

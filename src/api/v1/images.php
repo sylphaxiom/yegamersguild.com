@@ -48,10 +48,11 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 header("Content-Type: application/json");
 
-error_log("========== Initialized content ==========");
+error_log("========== Initialized images ==========");
 
 switch ($method) {
     case 'GET':
+        error_log("Getting images...");
         $content_key = $_GET['content_key'] ?? null;
         if (empty($content_key)) {
             $contentResult = getAllImages();
@@ -74,9 +75,10 @@ switch ($method) {
     case 'POST':
         requireAuth($tokenHead);
 
-        error_log("Reached POST case, adding image and metadata...");
+        error_log("Authenticated and adding image content...");
 
         if (empty($_FILES['images'])) {
+            error_log("Files were missing from the request...");
             http_response_code(400);
             echo json_encode([
                 'status' => 'Failure',
@@ -143,6 +145,7 @@ switch ($method) {
             $finalPath = "/uploads/$filename";
             $moved = move_uploaded_file($file['tmp_name'], $destination);
             if (!$moved) {
+                error_log("move_uploaded_file returned false, could not move $name to destination...");
                 http_response_code(500);
                 echo json_encode([
                     'status' => 'Failure',
@@ -201,6 +204,7 @@ switch ($method) {
             [$width, $height] = getimagesize($destination);
             $result = putImages($content_key, $shortName, $src, $alt, $display_order, $width, $height);
             if (!$result) {
+                error_log("putImages returned false, there was an error in the DB transaction...");
                 http_response_code(406);
                 echo json_encode([
                     'status' => 'Failure',
@@ -219,12 +223,13 @@ switch ($method) {
         $input = json_decode(file_get_contents('php://input'), true);
         requireAuth($tokenHead);
 
-        error_log("Reached PUT case, updating metadata only...");
+        error_log("Authenticated and updating image metadata...");
         $id = $input["id"] ?? null;
         $alt = $input["alt"] ?? null;
         $display_order = $input["display_order"] ?? null;
         $result = updateMetadata($id, $alt, $display_order);
         if (!$result) {
+            error_log("updateMetadata returned false, there was an error in the DB transaction...");
             http_response_code(406);
             echo json_encode([
                 'status' => 'Failure',
@@ -241,12 +246,13 @@ switch ($method) {
     case 'DELETE':
         $input = json_decode(file_get_contents('php://input'), true);
         requireAuth($tokenHead);
-
+        error_log("Authenticated and deleting image...");
         // remove file from disk
         // delete the row from content_images
         $id = $input['id'] ?? null;
         $imageData = getImageSrc($id);
         if (!$imageData) {
+            error_log("getImageSrc returned false, could not obtain image source for id: $id...");
             http_response_code(500);
             echo json_encode([
                 'status' => 'Fail',
@@ -257,6 +263,7 @@ switch ($method) {
         [$id, $src] = $imageData;
         $return = unlink("/home2/xikihgmy/public_html$src");
         if (!$return) {
+            error_log("unlink returned false, there was an error removing the file from disk: $src...");
             http_response_code(500);
             echo json_encode([
                 "status" => "Failure",
@@ -266,6 +273,7 @@ switch ($method) {
         }
         $return = deleteImage($id);
         if (!$return) {
+            error_log("deleteImage returned false, there was an error in the DB transaction...");
             http_response_code(500);
             echo json_encode([
                 "status" => "Failure",
@@ -280,6 +288,7 @@ switch ($method) {
         ]);
         break;
     default:
+        error_log("Default statement reached, the method was invalid...");
         http_response_code(405);
         echo json_encode([
             'status' =>
