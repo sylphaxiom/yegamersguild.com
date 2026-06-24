@@ -6,5 +6,6 @@ export default [
         layout("./components/layouts/Admin.tsx",[
             route("admin", "./routes/Console.tsx"),
         ]),
+        route("events", "./routes/Events.tsx"),
     ]),
 ] satisfies RouteConfig;
