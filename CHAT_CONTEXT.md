@@ -27,7 +27,7 @@ Use this file to resume the conversation on a new device. Paste it into a new Cl
 
 ## What This Conversation Did
 
-Removed the Square payment integration entirely and replaced it with an Events Calendar feature. Square files were retired to `.ret/`. The calendar has a month grid view at the top and an MUI Accordion list below showing events for the current month.
+Removed the Square payment integration entirely and replaced it with an Events Calendar feature. Square files were retired to `.ret/`. The calendar has a month grid view at the top and an event list/detail view below showing events for the current month.
 
 ---
 
@@ -41,7 +41,7 @@ Removed the Square payment integration entirely and replaced it with an Events C
 - **FormData** only for file uploads (multipart). Plain JSON objects for everything else.
 - **Event images** use `content_key = "evnt_<eventId>"` in the existing `content_images` table — no new image infrastructure needed.
 - **`deleteEvent`** in `EVNTDB_bucket.php` cleans up `content_images WHERE content_key = "evnt_{$id}"` before deleting the event row.
-- **Query keys** — per-event image queries use `["images", "evnt_<id>"]` — each gets its own cache entry, this is correct React Query pattern.
+- **Query keys** — images use a single `["images"]` cache entry; filtering by `content_key` is done client-side (same pattern as `ImageField.tsx`). Event images use `content_key = "evnt_<id>"`.
 - MySQL DATETIME returns as plain string `"YYYY-MM-DD HH:MM:SS"` from PHP — type hint as `string`.
 - MySQL TINYINT(1) returns as `0`/`1` from `json_encode` — type as `number` in TypeScript, not `boolean`.
 
@@ -74,8 +74,7 @@ Removed the Square payment integration entirely and replaced it with an Events C
 - Filters events to current month (`monthEvents`)
 - Builds `eventsByDay: Map<number, Events[]>` from monthEvents
 - Renders calendar grid with MUI Grid (7 columns), header row (prev/month/next), day-of-week labels, DayCell per day
-- Accordion below calendar: one per monthEvent, `expanded={selectedEvent?.id === evnt.id}`, onChange sets selectedEvent
-- `AccordionDetails` has placeholder comment — **Step 5 not yet built**
+- Below calendar: renders `<EventListDisplay>` (see Remaining Tasks — currently still has old MUI Accordion placeholder)
 
 ### `src/components/bits/DayCell.tsx`
 - Props: `day: number`, `events: Events[]`, `selectedEvent: Events | null`, `onSelect`, `sxProps?`
@@ -87,20 +86,36 @@ Removed the Square payment integration entirely and replaced it with an Events C
 
 ## Remaining Tasks
 
-### Component Plan
-
-**Step 5 — Event detail (inside AccordionDetails)**
-- 2-column layout: description on left, image on right
-- Image fetched via `fetchImages("evnt_" + selectedEvent.id)` — only renders if images exist for that key
-- Fields: title, start/end datetime, description, optional image
-- Image query key: `["images", "evnt_<id>"]` — per-event cache entries, correct pattern
-
 ### Overall Project Plan
 
 | Task | Status |
 |---|---|
+| **EventListDisplay.tsx** — event list + detail component (see design below) | ⏳ Pending |
+| Replace accordion block in `EventsCalendar.tsx` with `<EventListDisplay>` | ⏳ Pending |
 | EventsField.tsx — admin CRUD component (follows StringField/ImageField pattern) | ⏳ Pending |
 | Add Events section + `"events"` editor case to `Console.tsx` | ⏳ Pending |
+
+### EventListDisplay Design
+
+**Single component** (`src/components/bits/EventListDisplay.tsx`) that handles both mobile and desktop layouts.
+
+**Props:** `events: Events[]`, `selectedEvent: Events | null`, `onSelect: (e: Events) => void`
+
+**Internal `EventDetail` component** (same file, not exported):
+- Props: `event: Events`, `images: Image[]`
+- Filters images client-side: `images.filter(img => img.content_key === "evnt_" + event.id)`
+- Renders: image (if any) → title → start/end date (formatted short, e.g. "Jun 15") → description
+
+**`EventListDisplay` body:**
+- `isMobile = useMediaQuery(theme.breakpoints.down("sm"))`
+- `useQuery(["images"], fetchImages)` — single fetch, pass `objects` down to `EventDetail`
+- **Mobile branch:** vertical list; each row shows title + date; `Collapse in={selectedEvent?.id === event.id}` wraps `EventDetail` below the row
+- **Desktop branch:** flex row 50/50; left column is clickable rows (title + date, highlight + `ChevronRightIcon` when selected); right column shows `EventDetail` for `selectedEvent`, or a "No event selected" placeholder
+
+**`EventsCalendar.tsx` changes needed:**
+- Remove existing MUI Accordion block
+- Add logic to default-select the first event on today's date when `monthEvents` changes (useEffect or derived — if today is not in current month or no events today, `selectedEvent` stays null)
+- Render `<EventListDisplay events={monthEvents} selectedEvent={selectedEvent} onSelect={setSelectedEvent} />`
 
 ---
 
