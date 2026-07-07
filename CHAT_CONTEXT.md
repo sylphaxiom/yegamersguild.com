@@ -96,51 +96,58 @@ Removed the Square payment integration entirely and replaced it with an Events C
 
 | Task | Status |
 |---|---|
-| `EventListDisplay.tsx` desktop 50/50 layout styling | ⏳ Pending (deferred) |
-| **`EventsField.tsx`** — list + mode switching | 🔧 Mostly done (see notes) |
-| **`EventsCreate.tsx`** — create form | ⏳ Stub only |
-| **`EventsEdit.tsx`** — edit form + image | ⏳ Stub only |
-| Add Events section + `"events"` editor case to `Console.tsx` | ⏳ Pending |
+| `EventListDisplay.tsx` desktop 50/50 layout styling | ⏳ Deferred |
+| **`EventsField.tsx`** — shared form component | ✅ Done |
+| **`EventsCreate.tsx`** — mutation wrapper (create) | ✅ Done |
+| **`EventsEdit.tsx`** — mutation wrapper (edit) + ImageField via imageKey | ✅ Done |
+| **`EventsAdmin.tsx`** — orchestration/mode switcher | ✅ Done |
+| Add Events section + `"events"` editor case to `Console.tsx` | ⏳ Next |
 
-### EventsField Design
+---
 
-Three components in `src/components/bits/`:
+### Component Architecture (finalized)
 
-**`EventsField.tsx`** (mostly done — needs fixes)
-- State: `mode: "list" | "create" | "edit"`, `editingEvent: Events | null` ✅
-- `useQuery(["events"], fetchEvents)` ✅
-- Delete mutation via `deleteEvent` + invalidate ✅
-- List rows: title + raw `start_datetime` string + Edit/Delete icons ✅
-- Switches to `<EventsCreate />` or `<EventsEdit event onDone>` based on mode ✅
-- **Issues to fix:**
-  - Outer Box is `display:flex` with no `flexDirection:"column"` — "Add Event" button and all rows render horizontally
-  - `<EventsCreate />` is rendered without an `onDone` prop — no way to return to list after save/cancel
-  - "Add Event" button is always visible even in create/edit mode — should only show in list mode
-  - `putEvent` and `TextField` are imported but unused (will be used in EventsEdit/EventsCreate)
+Clean separation of concerns across four components:
 
-**`EventsCreate.tsx`** (stub — empty fragment, needs implementation)
+**`src/components/layouts/EventsAdmin.tsx`** — orchestration only
+- Owns `mode: "list" | "create" | "edit"` and `editingEvent: Events | null`
+- `useQuery(["events"], fetchEvents)` + delete mutation
+- Renders list in list mode, `<EventsCreate>` or `<EventsEdit>` in other modes
+- Does not know about form fields
+- Renamed from `EventsField.tsx`, moved from `bits/` to `layouts/`
+- **Needs fixes:** `flexDirection:"column"` on outer Box, "Add Event" only in list mode, pass `onDone` to `<EventsCreate />`
+
+**`src/components/bits/EventsField.tsx`** — shared form UI (to be created)
+- Owns all field state internally (title, description, startDT, endDT, allDay)
+- Props: `initialValues?: Partial<EventData>`, `onSubmit: (data: EventData) => void`, `onCancel: () => void`, `isPending: boolean`
+- Treats `EventData` as pure I/O — no knowledge of mutations
+- Save/Cancel buttons live here
+
+**`src/components/bits/EventsCreate.tsx`** — create mutation wrapper
 - Props: `onDone: () => void`
-- Form fields: `title` (required), `description`, `start_datetime` (required), `end_datetime`, `all_day` toggle
-- Datetime fields: MUI `TextField` with `type="datetime-local"` — no extra deps, browser/OS native picker
-- Save → `postEvent(EventData, token)` → invalidate `["events"]` → `onDone()`
-- Cancel → `onDone()`
+- Renders `<EventsField>` with empty defaults
+- Owns `postEvent` mutation + token via `getAccessTokenSilently()`
+- `onSubmit` → applies datetime format conversion → calls `postEvent` → invalidates `["events"]` → `onDone()`
 
-**`EventsEdit.tsx`** (stub — empty Box with correct props interface, needs implementation)
+**`src/components/bits/EventsEdit.tsx`** — edit mutation wrapper + image
 - Props: `event: Events`, `onDone: () => void`
-- Same fields as Create, pre-populated from `event`
-- Below fields: `<ImageField contentKey={"evnt_" + event.id} />` for event image management
-- Save → `putEvent(Events, token)` → invalidate `["events"]` → `onDone()`
-- Cancel → `onDone()`
+- Renders `<EventsField initialValues={event}>` + `<ImageField contentKey={"evnt_" + event.id} />`
+- Owns `putEvent` mutation + token
+- `onSubmit` → applies datetime format conversion → calls `putEvent` → invalidates `["events"]` → `onDone()`
 
-**Datetime format helpers** (define in each form component or a shared util):
-- Load (DB → input): `str.replace(" ", "T").slice(0, 16)` — `"2024-06-15 14:30:00"` → `"2024-06-15T14:30"`
-- Save (input → DB): `str.replace("T", " ") + ":00"` — `"2024-06-15T14:30"` → `"2024-06-15 14:30:00"`
-- `end_datetime` is optional — only apply conversion if the value is non-empty
+---
+
+### Datetime format helpers (used in EventsCreate and EventsEdit)
+- DB → input: `str.replace(" ", "T").slice(0, 16)` — `"2024-06-15 14:30:00"` → `"2024-06-15T14:30"`
+- Input → DB: `str.replace("T", " ") + ":00"` — `"2024-06-15T14:30"` → `"2024-06-15 14:30:00"`
+- `end_datetime` optional — only convert if non-empty
+
+---
 
 ### Console.tsx changes
 - Add `"events"` to `Editor` type union
 - Add section: `{ id: "events", label: "Events", contentKeys: [], imageKey: null, editors: [{ key: "events", label: "Events", type: "events" }] }`
-- Add `case "events": return <EventsField key={editor.key} />` to editor switch
+- Add `case "events": return <EventsAdmin key={editor.key} />` to editor switch
 - Add `case "events": return null` to `renderPreview`
 
 ---
