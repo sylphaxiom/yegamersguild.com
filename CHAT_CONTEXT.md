@@ -97,30 +97,45 @@ Removed the Square payment integration entirely and replaced it with an Events C
 | Task | Status |
 |---|---|
 | `EventListDisplay.tsx` desktop 50/50 layout styling | ⏳ Pending (deferred) |
-| **`EventsField.tsx`** — admin CRUD component | ⏳ Next |
+| **`EventsField.tsx`** — list + mode switching | 🔧 Mostly done (see notes) |
+| **`EventsCreate.tsx`** — create form | ⏳ Stub only |
+| **`EventsEdit.tsx`** — edit form + image | ⏳ Stub only |
 | Add Events section + `"events"` editor case to `Console.tsx` | ⏳ Pending |
 
 ### EventsField Design
 
-**File:** `src/components/bits/EventsField.tsx`  
-**Props:** none (token obtained internally via `useAuth0()` → `getAccessTokenSilently()`)  
-**State:** `mode: "list" | "create" | "edit"`, `editingEvent: Events | null`
+Three components in `src/components/bits/`:
 
-**List mode** (default):
-- `useQuery(["events"], fetchEvents)` — renders each event as a row: title + start date + Edit/Delete buttons
-- "Add Event" button → switches to create mode
+**`EventsField.tsx`** (mostly done — needs fixes)
+- State: `mode: "list" | "create" | "edit"`, `editingEvent: Events | null` ✅
+- `useQuery(["events"], fetchEvents)` ✅
+- Delete mutation via `deleteEvent` + invalidate ✅
+- List rows: title + raw `start_datetime` string + Edit/Delete icons ✅
+- Switches to `<EventsCreate />` or `<EventsEdit event onDone>` based on mode ✅
+- **Issues to fix:**
+  - Outer Box is `display:flex` with no `flexDirection:"column"` — "Add Event" button and all rows render horizontally
+  - `<EventsCreate />` is rendered without an `onDone` prop — no way to return to list after save/cancel
+  - "Add Event" button is always visible even in create/edit mode — should only show in list mode
+  - `putEvent` and `TextField` are imported but unused (will be used in EventsEdit/EventsCreate)
 
-**Create mode:**
-- Text fields only: `title` (required), `description`, `start_datetime` (required), `end_datetime`, `all_day` toggle
-- Save → `postEvent(EventData, token)` → invalidate `["events"]` → return to list
-- Cancel → return to list
+**`EventsCreate.tsx`** (stub — empty fragment, needs implementation)
+- Props: `onDone: () => void`
+- Form fields: `title` (required), `description`, `start_datetime` (required), `end_datetime`, `all_day` toggle
+- Datetime fields: MUI `TextField` with `type="datetime-local"` — no extra deps, browser/OS native picker
+- Save → `postEvent(EventData, token)` → invalidate `["events"]` → `onDone()`
+- Cancel → `onDone()`
 
-**Edit mode:**
-- Same fields pre-populated + `<ImageField contentKey={"evnt_" + editingEvent.id} />` below
-- Save → `putEvent(Events, token)` → invalidate `["events"]` → return to list
-- Cancel → return to list, clear `editingEvent`
+**`EventsEdit.tsx`** (stub — empty Box with correct props interface, needs implementation)
+- Props: `event: Events`, `onDone: () => void`
+- Same fields as Create, pre-populated from `event`
+- Below fields: `<ImageField contentKey={"evnt_" + event.id} />` for event image management
+- Save → `putEvent(Events, token)` → invalidate `["events"]` → `onDone()`
+- Cancel → `onDone()`
 
-**Delete:** `deleteEvent(id, token)` from list row → invalidate `["events"]`
+**Datetime format helpers** (define in each form component or a shared util):
+- Load (DB → input): `str.replace(" ", "T").slice(0, 16)` — `"2024-06-15 14:30:00"` → `"2024-06-15T14:30"`
+- Save (input → DB): `str.replace("T", " ") + ":00"` — `"2024-06-15T14:30"` → `"2024-06-15 14:30:00"`
+- `end_datetime` is optional — only apply conversion if the value is non-empty
 
 ### Console.tsx changes
 - Add `"events"` to `Editor` type union

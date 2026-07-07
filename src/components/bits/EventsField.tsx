@@ -1,74 +1,103 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import * as React from "react";
-import { fetchContent, putContent, queryClient } from "../workhorse/queries";
+import {
+  deleteEvent,
+  fetchEvents,
+  putEvent,
+  queryClient,
+  type Events,
+} from "../workhorse/queries";
 import { useAuth0 } from "@auth0/auth0-react";
-import { Box, Button, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  Divider,
+  IconButton,
+  TextField,
+  Typography,
+} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import EventsCreate from "./EventsCreate";
+import EventsEdit from "./EventsEdit";
 
-export interface EventsFieldProps {
-  label: string;
-  contentKey: string;
-  isPipe: boolean;
-}
-
-export default function EventsField({
-  label,
-  contentKey,
-  isPipe,
-}: EventsFieldProps) {
+export default function EventsField() {
   const { getAccessTokenSilently } = useAuth0();
+  const [mode, setMode] = React.useState<"list" | "create" | "edit">("list");
+  const [editingEvent, setEditingEvent] = React.useState<Events | null>(null);
+  const { data } = useQuery({
+    queryKey: ["events"],
+    queryFn: () => fetchEvents(),
+  });
+  const events = data?.objects ?? [];
 
-  const { data: content } = useQuery({
-    queryKey: ["content"],
-    queryFn: () => fetchContent(),
-  });
-  const currentValue =
-    content?.objects?.find((c) => c.content_key === contentKey)?.value ?? "";
-  const [dbValue, setDbValue] = React.useState(currentValue);
-  // Mutation
-  const { mutate, isPending } = useMutation({
-    mutationFn: async (value: string) => {
+  const { mutate: remove } = useMutation({
+    mutationFn: async (id: number) => {
       const token = await getAccessTokenSilently();
-      return putContent(contentKey, value, token);
+      return deleteEvent(id, token);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["content"] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["events"] }),
   });
-  const isDirty = dbValue !== currentValue;
 
   return (
-    <Box
-      component="form"
-      onSubmit={(e) => {
-        e.preventDefault();
-        mutate(dbValue);
-      }}
-      sx={{ display: "flex", gap: 2, alignItems: "center", py: 2 }}
-    >
-      <TextField
-        id={contentKey}
-        label={label}
-        value={dbValue}
-        onChange={(e) => setDbValue(e.target.value)}
-        fullWidth
-        multiline
-        helperText={
-          isPipe
-            ? "Use '|' character (without surrounding spaces) to enlarge the text preceding it."
-            : undefined
-        }
-        slotProps={{ formHelperText: { sx: { fontSize: "0.95rem" } } }}
-        disabled={isPending}
-      />
+    <Box sx={{ display: "flex", gap: 2, alignItems: "center", py: 2 }}>
       <Button
         variant="contained"
         type="submit"
         color="primary"
         sx={{}}
-        disabled={isPending || !isDirty}
+        onClick={() => {
+          setMode("create");
+        }}
       >
-        Save
+        Add Event
       </Button>
+      <Divider />
+      {mode === "list" &&
+        events.map((evnt) => (
+          <Box
+            key={evnt.id}
+            sx={{ display: "flex", gap: 1, alignItems: "center" }}
+          >
+            <Typography key={evnt.id + "_title"} variant="body1">
+              {evnt.title}
+            </Typography>
+            <Typography
+              key={evnt.id + "_start"}
+              variant="body1"
+              color="text.secondary"
+            >
+              {evnt.start_datetime}
+            </Typography>
+            <IconButton
+              key={evnt.id + "_edit"}
+              aria-label="Down"
+              onClick={() => {
+                setMode("edit");
+                setEditingEvent(evnt);
+              }}
+            >
+              <EditIcon />
+            </IconButton>
+            <IconButton
+              key={evnt.id + "_delete"}
+              aria-label="Delete"
+              onClick={() => remove(evnt.id)}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Box>
+        ))}
+      {mode === "create" && <EventsCreate />}
+      {mode === "edit" && editingEvent && (
+        <EventsEdit
+          event={editingEvent}
+          onDone={() => {
+            setMode("list");
+            setEditingEvent(null);
+          }}
+        />
+      )}
     </Box>
   );
 }
