@@ -62,25 +62,31 @@ Removed the Square payment integration entirely and replaced it with an Events C
 - **`src/components/workhorse/queries.ts`** — added `EventsResponse`, `Events`, `EventData` interfaces; `fetchEvents`, `postEvent`, `putEvent`, `deleteEvent` functions
 - **`src/routes.ts`** — added `route("events", "./routes/Events.tsx")`
 - **`src/routes/Events.tsx`** — prefetches events, renders `<Header />` + `<EventsCalendar events={events} />`
-- **`src/components/EventsCalendar.tsx`** — calendar grid + accordion (Steps 1–4 complete, Step 5 placeholder in AccordionDetails)
-- **`src/components/bits/DayCell.tsx`** — day cell component with glow highlight, chip per event, ButtonBase click
+- **`src/components/EventsCalendar.tsx`** — calendar grid + `<EventListDisplay>` below; `useEffect` defaults to first event on today's date when month changes
+- **`src/components/bits/DayCell.tsx`** — day cell with glow highlight, chip per event, ButtonBase click sets selectedEvent to events[0]
+- **`src/components/EventListDisplay.tsx`** — responsive event list + detail; mobile uses Collapse, desktop uses 50/50 layout (layout styling deferred); `EventsDetail` internal component filters images by `evnt_<id>`
 
 ---
 
 ## Current State of Key Files
 
 ### `src/components/EventsCalendar.tsx`
-- Owns `currentDate: Date` (useState to new Date()) and `selectedEvent: Events | null`
-- Filters events to current month (`monthEvents`)
-- Builds `eventsByDay: Map<number, Events[]>` from monthEvents
-- Renders calendar grid with MUI Grid (7 columns), header row (prev/month/next), day-of-week labels, DayCell per day
-- Below calendar: renders `<EventListDisplay>` (see Remaining Tasks — currently still has old MUI Accordion placeholder)
+- Owns `currentDate: Date` and `selectedEvent: Events | null`
+- Filters events to current month (`monthEvents`), builds `eventsByDay: Map<number, Events[]>`
+- `useEffect([month, year])` — if current month: selects first event on today's date; else clears selection
+- Renders: "Shop Events" heading → calendar grid → `<Divider>` → `<EventListDisplay events={monthEvents} selectedEvent={selectedEvent} onSelect={setSelectedEvent} />`
+
+### `src/components/EventListDisplay.tsx`
+- Props: `events: Events[]`, `selectedEvent: Events | null`, `onSelect: (e: Events) => void`
+- Fetches all images via `useQuery(["images"], fetchImages)`, filters client-side in `EventsDetail`
+- Mobile: `Collapse` per event row; Desktop: 50/50 flex (layout styling still pending)
+- Internal `EventsDetail`: filters `images` by `content_key === "evnt_" + event.id`, conditionally renders image
 
 ### `src/components/bits/DayCell.tsx`
 - Props: `day: number`, `events: Events[]`, `selectedEvent: Events | null`, `onSelect`, `sxProps?`
-- Highlight: `events.some(e => e.id === selectedEvent?.id)` → inset glow using `theme.palette.primary.main`
+- Highlight: `events.some(e => e.id === selectedEvent?.id)` → inset glow (`theme.palette.primary.main`)
 - ButtonBase onClick: `events.length > 0 && onSelect(events[0])`
-- Day number top-left (`alignSelf: "flex-start"`), chips centered below
+- Day number top-left, chips centered below
 
 ---
 
@@ -90,32 +96,37 @@ Removed the Square payment integration entirely and replaced it with an Events C
 
 | Task | Status |
 |---|---|
-| **EventListDisplay.tsx** — event list + detail component (see design below) | ⏳ Pending |
-| Replace accordion block in `EventsCalendar.tsx` with `<EventListDisplay>` | ⏳ Pending |
-| EventsField.tsx — admin CRUD component (follows StringField/ImageField pattern) | ⏳ Pending |
+| `EventListDisplay.tsx` desktop 50/50 layout styling | ⏳ Pending (deferred) |
+| **`EventsField.tsx`** — admin CRUD component | ⏳ Next |
 | Add Events section + `"events"` editor case to `Console.tsx` | ⏳ Pending |
 
-### EventListDisplay Design
+### EventsField Design
 
-**Single component** (`src/components/bits/EventListDisplay.tsx`) that handles both mobile and desktop layouts.
+**File:** `src/components/bits/EventsField.tsx`  
+**Props:** none (token obtained internally via `useAuth0()` → `getAccessTokenSilently()`)  
+**State:** `mode: "list" | "create" | "edit"`, `editingEvent: Events | null`
 
-**Props:** `events: Events[]`, `selectedEvent: Events | null`, `onSelect: (e: Events) => void`
+**List mode** (default):
+- `useQuery(["events"], fetchEvents)` — renders each event as a row: title + start date + Edit/Delete buttons
+- "Add Event" button → switches to create mode
 
-**Internal `EventDetail` component** (same file, not exported):
-- Props: `event: Events`, `images: Image[]`
-- Filters images client-side: `images.filter(img => img.content_key === "evnt_" + event.id)`
-- Renders: image (if any) → title → start/end date (formatted short, e.g. "Jun 15") → description
+**Create mode:**
+- Text fields only: `title` (required), `description`, `start_datetime` (required), `end_datetime`, `all_day` toggle
+- Save → `postEvent(EventData, token)` → invalidate `["events"]` → return to list
+- Cancel → return to list
 
-**`EventListDisplay` body:**
-- `isMobile = useMediaQuery(theme.breakpoints.down("sm"))`
-- `useQuery(["images"], fetchImages)` — single fetch, pass `objects` down to `EventDetail`
-- **Mobile branch:** vertical list; each row shows title + date; `Collapse in={selectedEvent?.id === event.id}` wraps `EventDetail` below the row
-- **Desktop branch:** flex row 50/50; left column is clickable rows (title + date, highlight + `ChevronRightIcon` when selected); right column shows `EventDetail` for `selectedEvent`, or a "No event selected" placeholder
+**Edit mode:**
+- Same fields pre-populated + `<ImageField contentKey={"evnt_" + editingEvent.id} />` below
+- Save → `putEvent(Events, token)` → invalidate `["events"]` → return to list
+- Cancel → return to list, clear `editingEvent`
 
-**`EventsCalendar.tsx` changes needed:**
-- Remove existing MUI Accordion block
-- Add logic to default-select the first event on today's date when `monthEvents` changes (useEffect or derived — if today is not in current month or no events today, `selectedEvent` stays null)
-- Render `<EventListDisplay events={monthEvents} selectedEvent={selectedEvent} onSelect={setSelectedEvent} />`
+**Delete:** `deleteEvent(id, token)` from list row → invalidate `["events"]`
+
+### Console.tsx changes
+- Add `"events"` to `Editor` type union
+- Add section: `{ id: "events", label: "Events", contentKeys: [], imageKey: null, editors: [{ key: "events", label: "Events", type: "events" }] }`
+- Add `case "events": return <EventsField key={editor.key} />` to editor switch
+- Add `case "events": return null` to `renderPreview`
 
 ---
 
