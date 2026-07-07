@@ -5,15 +5,9 @@ import Grid from "@mui/material/Grid";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import IconButton from "@mui/material/IconButton";
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Divider,
-  Typography,
-} from "@mui/material";
+import { Divider, Typography } from "@mui/material";
 import DayCell from "./bits/DayCell";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import EventListDisplay from "./EventListDisplay";
 
 export interface EventsProps {
   events: Events[];
@@ -60,6 +54,16 @@ export default function EventsCalendar({ events }: EventsProps) {
     ...Array(trailingBlanks).fill(null),
   ];
 
+  React.useEffect(() => {
+    const today = new Date();
+    if (today.getMonth() === month && today.getFullYear() === year) {
+      const todayEvents = eventsByDay.get(today.getDate()) ?? [];
+      setSelectedEvent(todayEvents[0] ?? null);
+    } else {
+      setSelectedEvent(null);
+    }
+  }, [month, year]);
+
   return (
     <>
       <Typography variant="h3" sx={{ textAlign: "center", mb: 4 }}>
@@ -99,7 +103,7 @@ export default function EventsCalendar({ events }: EventsProps) {
           }}
         >
           {weekDays.map((wkday) => (
-            <Grid size={1}>
+            <Grid size={1} key={wkday}>
               <Typography
                 sx={{
                   border: "2px solid",
@@ -141,20 +145,11 @@ export default function EventsCalendar({ events }: EventsProps) {
         </Grid>
       </Box>
       <Divider variant="fullWidth" sx={{ my: 4 }} />
-      {monthEvents.map((evnt) => (
-        <Accordion
-          expanded={selectedEvent?.id === evnt.id}
-          onChange={() => setSelectedEvent(evnt)}
-        >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography>{evnt.title}</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography variant="body1">{evnt.description}</Typography>
-            <Box component="img" width={100} height={100} />
-          </AccordionDetails>
-        </Accordion>
-      ))}
+      <EventListDisplay
+        events={monthEvents}
+        selectedEvent={selectedEvent}
+        onSelect={setSelectedEvent}
+      />
     </>
   );
 }
