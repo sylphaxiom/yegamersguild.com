@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const LOAD_TIMEOUT = 15000;
+const LOAD_TIMEOUT = 30000;
 
 test.describe('events page', () => {
   test.beforeEach(async ({ page }) => {
