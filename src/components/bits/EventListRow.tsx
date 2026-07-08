@@ -10,7 +10,6 @@ export interface EventListRowProps {
   selectedEvent?: Events | null;
   onSelect?: (e: Events) => void;
   thumbnail?: Image;
-  hideContent?: boolean;
 }
 
 export default function EventListRow({

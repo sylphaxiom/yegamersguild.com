@@ -47,11 +47,11 @@ test.describe('homepage', () => {
     await expect(html).toHaveAttribute('class', initialClass ?? '');
   });
 
-  test('inventory button navigates to shop', async ({ page }) => {
-    const button = page.getByRole('button', { name: 'Check out our inventory' });
+  test('calendar button navigates to events page', async ({ page }) => {
+    const button = page.getByRole('button', { name: 'Check out our calendar of events' });
     await expect(button).toBeVisible({ timeout: CMS_TIMEOUT });
     await button.click();
-    await expect(page).toHaveURL('/shop');
+    await expect(page).toHaveURL('/events');
   });
 
   test('location section is visible with address', async ({ page }) => {

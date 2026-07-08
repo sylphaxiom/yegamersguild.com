@@ -27,8 +27,8 @@ test.describe('admin — authenticated', () => {
     await expect(page.getByText('Admin Console')).toBeVisible();
   });
 
-  test('all five sections are listed', async ({ page }) => {
-    for (const label of ['Header', 'About', 'Hours', 'Location', 'Quick Links']) {
+  test('all six sections are listed', async ({ page }) => {
+    for (const label of ['Header', 'About', 'Hours', 'Location', 'Quick Links', 'Events']) {
       await expect(page.getByRole('button', { name: label })).toBeVisible();
     }
   });
@@ -75,6 +75,17 @@ test.describe('admin — authenticated', () => {
   test('preview section appears when a section is selected', async ({ page }) => {
     await page.getByRole('button', { name: 'Location' }).click();
     await expect(page.getByText('Preview:')).toBeVisible();
+  });
+
+  test('selecting Events shows Add Event button', async ({ page }) => {
+    await page.getByRole('button', { name: 'Events' }).click();
+    await expect(page.getByText('Editing Events')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add Event' })).toBeVisible({ timeout: LOAD_TIMEOUT });
+  });
+
+  test('selecting Events does not show a preview section', async ({ page }) => {
+    await page.getByRole('button', { name: 'Events' }).click();
+    await expect(page.getByText('Preview:')).not.toBeVisible();
   });
 
   test('switching sections updates the editor view', async ({ page }) => {
