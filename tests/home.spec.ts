@@ -6,6 +6,9 @@ test.describe('homepage', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveTitle("Ye Gamer's Guild");
+    // Wait for Layout's loading spinner to clear — role="main" only renders after
+    // both CMS queries resolve. API can be slow in CI so give it 30s.
+    await expect(page.locator('[role="main"]')).toBeVisible({ timeout: 30000 });
   });
 
   test.afterEach(async ({ page }) => {
@@ -47,11 +50,11 @@ test.describe('homepage', () => {
     await expect(html).toHaveAttribute('class', initialClass ?? '');
   });
 
-  test('inventory button navigates to shop', async ({ page }) => {
-    const button = page.getByRole('button', { name: 'Check out our inventory' });
+  test('calendar button navigates to events page', async ({ page }) => {
+    const button = page.getByRole('button', { name: 'Check out our calendar of events' });
     await expect(button).toBeVisible({ timeout: CMS_TIMEOUT });
     await button.click();
-    await expect(page).toHaveURL('/shop');
+    await expect(page).toHaveURL('/events');
   });
 
   test('location section is visible with address', async ({ page }) => {

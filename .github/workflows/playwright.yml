@@ -17,8 +17,8 @@ jobs:
         run: npm ci
       - name: Install Playwright Browsers
         run: npx playwright install chromium --with-deps
-      - name: Run Playwright tests
-        run: npx playwright test
+      - name: Run Playwright tests (public only — admin requires local auth setup)
+        run: npx playwright test --project=public
         env:
           # Admin credentials (GitHub Secrets)
           TEST_ADMIN_EMAIL: ${{ secrets.TEST_ADMIN_EMAIL }}

@@ -1,7 +1,7 @@
 <?php
 require_once "/home2/xikihgmy/includes/bucket.php";
-require_once "CMSDB_bucket.php";
-require_once "vendor/autoload.php";
+// require_once "CMSDB_bucket.php";
+// require_once "EVNTDB_bucket.php";
 
 ///////////////////////////////////////////////////////////////////////////////
 // These functions will do whatever operations need to be done between DB 

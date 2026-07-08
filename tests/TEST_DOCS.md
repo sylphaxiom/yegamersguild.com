@@ -2,6 +2,22 @@
 
 This project uses [Playwright](https://playwright.dev/) for end-to-end testing. Tests run against the local dev server (`localhost:5173`) which in turn calls the real API at `api.sylphaxiom.com`.
 
+---
+
+## Fresh Checkout / First-Time Setup
+
+`tests/auth.json` is gitignored and will not exist on a fresh clone. Without it, all admin tests fail immediately. Run auth-setup once before anything else:
+
+```bash
+npx playwright test --project=auth-setup
+```
+
+This navigates to `/admin`, follows the Auth0 redirect, logs in using your `.env` credentials, and saves the session to `tests/auth.json`. All subsequent runs (including from the VS Code extension) will reuse that file.
+
+> **You only need to do this once per machine.** Re-run it if your session expires or you get auth errors in admin tests.
+
+---
+
 ## Running Tests
 
 ```bash
@@ -11,12 +27,14 @@ npx playwright test
 # Run only public page tests (no auth required)
 npx playwright test --project=public
 
-# Run only admin tests (requires credentials — see Auth Setup below)
+# Run only admin tests (requires auth.json — see above)
 npx playwright test --project=admin
 
 # Open the HTML report after a run
 npx playwright show-report
 ```
+
+---
 
 ## Auth Setup
 
@@ -28,7 +46,7 @@ Admin tests require you to log in once so Playwright can save the session.
    TEST_ADMIN_PASSWORD=your-password
    ```
 
-2. The first time you run the admin project, Playwright runs `tests/auth.setup.ts` which navigates to `/admin`, follows the Auth0 redirect, fills in your credentials, and saves the browser session to `tests/auth.json`.
+2. Run `npx playwright test --project=auth-setup` — this navigates to `/admin`, follows the Auth0 redirect, fills in your credentials, and saves the browser session to `tests/auth.json`.
 
 3. All subsequent admin tests load that saved session and skip the login flow entirely.
 
@@ -42,7 +60,7 @@ Admin tests require you to log in once so Playwright can save the session.
 tests/
   auth.setup.ts         — One-time login; saves tests/auth.json
   home.spec.ts          — Public homepage tests
-  shop.spec.ts          — Shop and product detail tests
+  events.spec.ts        — Events calendar page tests
   accessibility.spec.ts — Axe accessibility audit
   admin.spec.ts         — Admin console navigation tests
   cms-mutations.spec.ts — CMS field save/restore tests
@@ -60,9 +78,7 @@ Where the application needed small changes to support unambiguous selectors, tho
 |-----------|-------------|-------------------|
 | `About.tsx` | Added `aria-label="about"` to the article | `getByRole('article', { name: 'about' })` |
 | `Header.tsx` | Added `aria-label="image ticker"` to inner marquee | `getByRole('marquee', { name: 'image ticker' })` |
-| `ProductCard.tsx` | Added `role="article"` to Card | `getByRole('article')` for all card queries |
-| `ProductCard.tsx` | Changed price Typography to `component="p"` | Price is no longer a spurious `<h6>` heading |
-| `DataGrid.tsx` | Added `role="toolbar" aria-label="product filters"` to chip container | `getByRole('toolbar', { name: 'product filters' }).getByRole('button')` |
+| `EventsCalendar.tsx` | Added `id="calendarBox"` to the calendar container | Used to scope all calendar selectors |
 
 ---
 
@@ -94,42 +110,28 @@ Tests the public-facing homepage. All content comes from the CMS API, so tests c
 | Ticker images load from CMS | At least one image appears in the image ticker marquee | `getByRole('marquee', { name: 'image ticker' })` then finds `img` children |
 | Header text content renders | The top ticker text line is non-empty | Waits for `<figure>` to have text content |
 | Mode switch toggles theme | Clicking the mode button changes the `html` class | Checks `class` attribute before and after click with auto-retry |
-| Inventory button navigates to shop | Clicking "Check out our inventory" goes to `/shop` | Clicks button, asserts URL |
+| Calendar button navigates to events | Clicking "Check out our calendar of events" goes to `/events` | Clicks button, asserts URL |
 | Location section visible with address | Location complementary region has a `<p>` with content | `getByRole('complementary', { name: 'location' })` |
 | Hours section visible | Hours region has a `<p>` with content | `getByRole('complementary', { name: 'hours' })` |
 | About section visible with bullets | About article region has a `<p>` with content | `getByRole('article', { name: 'about' })` |
 | Google map is embedded | The map iframe is present | `#google-map iframe` |
 
-**Why two marquee elements:** Header.tsx wraps the entire ticker section in a `role="marquee"` Grid and also has an inner `<div role="marquee" aria-label="image ticker">` wrapping the Ticker component. The inner one now has a unique `aria-label` so it can be selected unambiguously. The outer one is kept for semantic grouping.
-
-**Why we use `<p>` for location/hours text:** Location.tsx renders its text with `<Typography variant="h5" component="p">` — so the DOM element is `<p>`, not `<h5>`. The selector targets the actual rendered element.
-
-**Why we removed the old ticker image tests:** Images are now stored in and served from the database with hashed filenames. Testing specific `src` values would require knowing DB-generated paths, which is not the right thing to test.
-
 ---
 
-### `shop.spec.ts`
+### `events.spec.ts`
 
-Tests the shop page and product detail pages. These depend on the Square catalog API being accessible.
+Tests the public events calendar page. Content (events) comes from the API — tests check structure and behavior rather than specific event data.
 
-| Test | What it checks |
-|------|---------------|
-| Shop page has a header | Guild logo visible on the shop page |
-| Product cards load | At least one `role="article"` card becomes visible |
-| Cards display name and price | Card heading is non-empty; price text matches `$` or "Price Varies" |
-| Category filter chips visible | Buttons in the filter toolbar are present and visible |
-| Clicking a chip filters the grid | Toggling a chip on and back off restores the original card count |
-| Available Only filter | Filtered count ≤ total count |
-| Clicking a card navigates to details | URL changes to `/shop/<id>` |
-| Item name heading loads | `<h2>` heading visible and non-empty on details page |
-| Item detail shows description and price | Description `<p>` and price text are present |
-| Back button returns to shop grid | Clicking "Back to inventory list" returns to `/shop` |
+| Test | What it checks | How |
+|------|---------------|-----|
+| Page title is correct | Browser tab title is "Ye Gamer's Guild" | `toHaveTitle` |
+| Header logo is visible | Guild logo appears on the events page | `getByRole('img', { name: /dragon/ })` |
+| Calendar displays current year | Month heading contains the current year | `#calendarBox` h4 heading contains current year string |
+| Day abbreviations are all visible | Sun, Mon, Tue, Wed, Thu, Fri, Sat headings present | `getByRole('heading', { name: day })` scoped to `#calendarBox` |
+| Month navigation changes and restores | Clicking next changes the heading; clicking prev restores it | Captures initial text, clicks next (button index 1), asserts change, clicks prev (button index 0), asserts restored |
+| Event list area renders below divider | The `<hr>` divider between calendar and list is visible | `page.locator('hr')` |
 
-**Why `role="article"` replaces `.MuiCard-root`:** ProductCard wraps MUI's Card (a `<div>`) in a React Router `<Link>`. Neither had a semantic role, so the only way to select product cards was via MUI's internal CSS class. Adding `role="article"` to the Card makes the intent explicit and the selector durable.
-
-**Why the filter chip test uses toggle-and-restore:** We don't know in advance how many products match any given category (the catalog comes from Square). An assertion like `filteredCount < totalCount` would fail if all products share one category. Instead, we verify the toggle *behaves correctly*: clicking the chip once then again must restore the original count, proving the filter state round-tripped properly.
-
-**Why the back test clicks the button instead of `page.goBack()`:** Details.tsx renders an explicit "Back to inventory list" button. Testing the button is testing the application, not the browser. `page.goBack()` would pass even if the button were missing or broken.
+**Why button index for navigation:** The prev/next IconButtons have no aria-label and render before the day cell ButtonBases in the DOM. Within `#calendarBox`, index 0 is always prev and index 1 is always next. Blank day cells render as plain `<div>` elements (no button), so day cell buttons don't interfere with the index.
 
 ---
 
@@ -168,14 +170,16 @@ Uses the session saved by `auth.setup.ts`.
 | Test | What it checks |
 |------|---------------|
 | Admin header and logo visible | Guild logo and "Admin Console" heading are present |
-| All five sections listed | Header, About, Hours, Location, Quick Links buttons exist |
+| All six sections listed | Header, About, Hours, Location, Quick Links, Events buttons exist |
 | Selecting Header shows text editors | Two TextFields appear: Top Ticker Text, Bottom Ticker Text |
 | Selecting Header shows image upload | Upload Image button appears |
 | Selecting About shows bullets and image upload | Add button and Upload Image button appear |
 | Selecting Hours shows day rows | Monday `<legend>` and Closed checkboxes appear |
 | Selecting Location shows address editor | Editor area is visible |
 | Selecting Quick Links shows links editor | Add button appears for managing link rows |
-| Preview appears when section selected | "Preview:" heading is visible |
+| Selecting Events shows Add Event button | "Add Event" button is visible in the events admin list |
+| Selecting Events does not show preview | "Preview:" heading is absent for the Events section |
+| Preview appears when section selected | "Preview:" heading is visible when Location is selected |
 | Switching sections updates editor | Going from Header to Hours hides Header editor, shows Hours |
 
 **Why `legend` is used to find the Monday row:** `getByText('Monday')` matches three elements — the HoursField `<legend>`, and two paragraph nodes in the Location preview (`Monday:` and `Monday: 3pm - 10pm`). Using `page.locator('legend').filter({ hasText: 'Monday' })` is a semantic HTML selector, not a workaround; `<legend>` is the correct element type for a fieldset label.
@@ -237,8 +241,8 @@ Both fields pass `id={contentKey}` to every TextField in their row map, so all T
 
 ```
 projects:
-  auth-setup  → runs auth.setup.ts once
-  public      → home, shop, accessibility (no storageState)
+  auth-setup  → runs auth.setup.ts once (generates tests/auth.json)
+  public      → home, events, accessibility (no storageState)
   admin       → admin, cms-mutations (depends on auth-setup, loads auth.json)
 ```
 

@@ -2,9 +2,7 @@ import axios from "axios";
 import { QueryClient } from "@tanstack/react-query";
 
 type ResponseStatus = 
-        | 'Authorized'
         | 'Failure'
-        | 'Redirect'
         | 'Success'
 
 export const queryClient = new QueryClient({
@@ -25,132 +23,11 @@ const api = axios.create({
     withCredentials:true
 })
 
-export async function knockKnock(
-    state:string,
-    clientId:string,
-): Promise<{
-    status:ResponseStatus;
-    message:string;
-    state:string;
-    token?:string;
-    error?:string;
-    url?:string;
-}> {
-    const response = await api
-    .get(`/gateway.php`, {
-        params:{
-            state:state,
-            clientId:clientId,
-            environment:'sand',
-        }
-    })
-    .catch((error)=>{
-        console.log("An error occurred in the gateway: %s", error);
-        throw error
-    })
-    return response.data;
-}
-
-export async function checker(state:string): Promise<{
-    isValid:boolean;
-}> {
-    const response = await api
-    .get(`/checker.php`, {
-        params: {
-            state:state
-        }
-    })
-    .catch((error)=>{
-        console.log("An error occurred in the checker: %s", error);
-        throw error
-    })
-    return response.data;
-}
-
-export interface Price {
-    amount:number;
-    currency:string;
-}
-
-export interface CatalogVariation {
-    id: string;
-    name: string; // nullable, ?? check
-    sku: string; // nullable, ?? check
-    price: Price | 'VARIABLE_PRICE';
-}
-
-export interface CatalogItem {
-    id: string;
-    name: string;
-    images: string[];
-    description: string; // nullable, ?? check
-    categories: string[];
-    variations:CatalogVariation[];
-}
-
-export interface CatalogResponse {
-    status: string;
-    state: string;
-    count?: number;
-    objects?: CatalogItem[]
-    error?: string;
-}
-
-export interface InventoryResponse {
-    status: string;
-    state: string;
-    count?: number;
-    objects: Record<string,number>
-    error?: string;
-}
-
-export async function fetchCatalog(
-    state:string,
-    token:string,
-    itemId?:string,
-): Promise<CatalogResponse> {
-    const response = await api
-    .get(`/catalog.php`, {
-        headers:{
-            Authorization: `Bearer ${token}`
-        },
-        params: {
-            state:state,
-            ...(itemId && {itemId}),
-        }
-    })
-    .catch((error)=>{
-        console.log("An error occurred fetching the catalog: %s", error);
-        throw error
-    })
-    return response.data;
-}
-
-export async function fetchInventory(
-    state:string,
-    token:string,
-    variationIds:string[]
-): Promise<InventoryResponse> {
-    const response = await api
-    .get(`/inventory.php`, {
-        headers:{
-            Authorization: `Bearer ${token}`
-        },
-        params:{
-            state:state,
-            variationIds: variationIds.join(','),
-        }
-    })
-    .catch((error)=>{
-        console.log("An error occurred fetching the inventory: %s", error);
-        throw error
-    })
-    return response.data;
-}
-
 //////////////////////////////////////////////////
 // These are for the content management system  //
 //////////////////////////////////////////////////
+
+// Content queries/types
 
 export interface ContentResponse {
     status: string;
@@ -163,23 +40,6 @@ export interface TextContent {
     label: string;
     value: string;
     updated_at: number;
-}
-
-export interface ImagesResposne {
-    status: string;
-    message: string;
-    objects?: Image[];
-}
-
-export interface Image {
-    id: number;
-    shortName: string;
-    content_key: string;
-    src: string;
-    alt: string;
-    display_order: number;
-    width: number;
-    height: number;
 }
 
 export interface StandardResponse {
@@ -201,20 +61,6 @@ export async function fetchContent(): Promise<ContentResponse> {
     return response.data;
 }
 
-export async function fetchImages(): Promise<ImagesResposne> {
-    const response = await api
-    .get(`/images.php`, {
-        headers:{
-            Fish: import.meta.env.VITE_FISH,
-        },
-    })
-    .catch((error)=>{
-        console.log("An error occurred fetching the images: %s", error);
-        throw error
-    })
-    return response.data;
-}
-
 export async function putContent(content_key: string, value: string, token: string): Promise<StandardResponse> {
     const response = await api
     .put(`/content.php`, { content_key, value }, {
@@ -226,6 +72,44 @@ export async function putContent(content_key: string, value: string, token: stri
     })
     .catch((error) => {
         console.log("An error occurred updating content: %s", error);
+        throw error
+    })
+    return response.data;
+}
+
+// Image queries/types
+
+export interface ImagesResposne {
+    status: string;
+    message: string;
+    objects?: Image[];
+}
+
+export interface Image {
+    id: number;
+    shortName: string;
+    content_key: string;
+    src: string;
+    alt: string;
+    display_order: number;
+    width: number;
+    height: number;
+}
+
+export interface ImageMetadata {
+    alt: string;
+    display_order: number;
+}
+
+export async function fetchImages(): Promise<ImagesResposne> {
+    const response = await api
+    .get(`/images.php`, {
+        headers:{
+            Fish: import.meta.env.VITE_FISH,
+        },
+    })
+    .catch((error)=>{
+        console.log("An error occurred fetching the images: %s", error);
         throw error
     })
     return response.data;
@@ -246,11 +130,6 @@ export async function postImage(content_key: string, formData: FormData, token: 
         throw error
     })
     return response.data;
-}
-
-export interface ImageMetadata {
-    alt: string;
-    display_order: number;
 }
 
 export async function putImage(id: number, metadata: ImageMetadata, token: string): Promise<StandardResponse> {
@@ -279,6 +158,93 @@ export async function deleteImage(id: number, token: string): Promise<StandardRe
     })
     .catch((error) => {
         console.log("An error occurred deleting an image: %s", error);
+        throw error
+    })
+    return response.data;
+}
+
+// Event queries/types
+
+export interface EventsResponse {
+    status:string;
+    message:string;
+    objects?:Events[]
+}
+
+export interface Events {
+    id:number;
+    title:string;
+    description?:string;
+    start_datetime:string;
+    end_datetime?:string;
+    all_day:number;
+    created_at:string;
+    updated_at:string;
+}
+
+export interface EventData {
+    title:string;
+    description?:string;
+    start_datetime:string;
+    end_datetime?:string;
+    all_day:number;
+}
+
+export async function fetchEvents(): Promise<EventsResponse> {
+    const response = await api
+    .get(`/events.php`, {
+        headers:{
+            Fish: import.meta.env.VITE_FISH,
+        },
+    })
+    .catch((error)=>{
+        console.log("An error occurred fetching the events: %s", error);
+        throw error
+    })
+    return response.data;
+}
+
+export async function postEvent(eventData: EventData, token: string): Promise<StandardResponse> {
+    const response = await api
+    .post(`/events.php`, eventData, {
+        headers: {
+            Fish: import.meta.env.VITE_FISH,
+            Authorization: `Bearer ${token}`,
+        },
+    })
+    .catch((error) => {
+        console.log("An error occurred uploading an event: %s", error);
+        throw error
+    })
+    return response.data;
+}
+
+export async function putEvent(eventData: Events, token: string): Promise<StandardResponse> {
+    const response = await api
+    .put(`/events.php`, eventData, {
+        headers: {
+            Fish: import.meta.env.VITE_FISH,
+            Authorization: `Bearer ${token}`,
+        },
+    })
+    .catch((error) => {
+        console.log("An error occurred updating Event metadata: %s", error);
+        throw error
+    })
+    return response.data;
+}
+
+export async function deleteEvent(id: number, token: string): Promise<StandardResponse> {
+    const response = await api
+    .delete(`/events.php`, {
+        headers: {
+            Fish: import.meta.env.VITE_FISH,
+            Authorization: `Bearer ${token}`,
+        },
+        data: { id },
+    })
+    .catch((error) => {
+        console.log("An error occurred deleting an Event: %s", error);
         throw error
     })
     return response.data;

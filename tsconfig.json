@@ -1,5 +1,11 @@
 {
-  "include": ["**/*", ".react-router/types/**/*", "./src/*"],
+  "include": [
+    "**/*",
+    ".react-router/types/**/*",
+    "./src/*",
+    ".ret/Details.tsx",
+    ".ret/ProductCard.tsx"
+  ],
   "exclude": ["*/api/v1/*"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
