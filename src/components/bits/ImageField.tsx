@@ -133,7 +133,7 @@ export default function ImageField({ contentKey }: ImageFieldProps) {
     mutationFn: async (file: File) => {
       const token = await getAccessTokenSilently();
       const formData = new FormData();
-      formData.append("image", file);
+      formData.append("images[]", file);
       formData.append("content_key", contentKey);
       return postImage(contentKey, formData, token);
     },

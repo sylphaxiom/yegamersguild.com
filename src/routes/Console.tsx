@@ -15,6 +15,7 @@ import HoursField from "~/components/bits/HoursField";
 import BulletsField from "~/components/bits/BulletsField";
 import LinksField from "~/components/bits/LinksField";
 import ImageField from "~/components/bits/ImageField";
+import EventsAdmin from "~/components/layouts/EventsAdmin";
 
 interface Editor {
   key: string;
@@ -26,7 +27,8 @@ interface Editor {
     | "hours"
     | "address"
     | "links"
-    | "images";
+    | "images"
+    | "events";
 }
 
 interface Section {
@@ -172,7 +174,16 @@ export default function Console() {
         },
       ],
     },
+    {
+      id: "events",
+      label: "Events",
+      contentKeys: [],
+      imageKey: null,
+      editors: [{ key: "events", label: "Events", type: "events" }],
+    },
   ];
+  const preview = section ? renderPreview(section.id) : null;
+
   return (
     <Grid container columns={4} sx={{ borderTop: "1px solid #ccc" }}>
       <Grid size={1} sx={{ borderRight: "1px solid #ccc" }}>
@@ -254,9 +265,11 @@ export default function Console() {
                 );
               case "images":
                 return <ImageField key={editor.key} contentKey={editor.key} />;
+              case "events":
+                return <EventsAdmin key={editor.key} />;
             }
           })}
-          {section && (
+          {preview !== null && (
             <>
               <Typography variant="h4" component="h3" sx={{ mt: 4, mb: 2 }}>
                 Preview:
@@ -272,7 +285,7 @@ export default function Console() {
                   p: 2,
                 }}
               >
-                {isRefreshing ? <Thinking /> : renderPreview(section.id)}
+                {isRefreshing ? <Thinking /> : preview}
               </Box>
             </>
           )}

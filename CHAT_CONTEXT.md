@@ -44,6 +44,8 @@ Removed the Square payment integration entirely and replaced it with an Events C
 - **Query keys** — images use a single `["images"]` cache entry; filtering by `content_key` is done client-side (same pattern as `ImageField.tsx`). Event images use `content_key = "evnt_<id>"`.
 - MySQL DATETIME returns as plain string `"YYYY-MM-DD HH:MM:SS"` from PHP — type hint as `string`.
 - MySQL TINYINT(1) returns as `0`/`1` from `json_encode` — type as `number` in TypeScript, not `boolean`.
+- **Image upload field name** — `formData.append("images[]", file)` — the `[]` bracket notation ensures PHP gives `$_FILES['images']['name']` as an array (required by `reArrayFiles` in `cms_procedures.php`).
+- **Local dev image 404s** — uploaded images save to production server's `/uploads/` dir; local dev has no `/uploads/` directory so `<img>` tags 404 in dev. Expected — works on production.
 
 ---
 
@@ -63,8 +65,39 @@ Removed the Square payment integration entirely and replaced it with an Events C
 - **`src/routes.ts`** — added `route("events", "./routes/Events.tsx")`
 - **`src/routes/Events.tsx`** — prefetches events, renders `<Header />` + `<EventsCalendar events={events} />`
 - **`src/components/EventsCalendar.tsx`** — calendar grid + `<EventListDisplay>` below; `useEffect` defaults to first event on today's date when month changes
-- **`src/components/bits/DayCell.tsx`** — day cell with glow highlight, chip per event, ButtonBase click sets selectedEvent to events[0]
-- **`src/components/EventListDisplay.tsx`** — responsive event list + detail; mobile uses Collapse, desktop uses 50/50 layout (layout styling deferred); `EventsDetail` internal component filters images by `evnt_<id>`
+- **`src/components/bits/DayCell.tsx`** — day cell with inset glow highlight, chip per event, ButtonBase click sets selectedEvent to events[0]
+- **`src/components/EventListDisplay.tsx`** — event list + detail; mobile uses Collapse, desktop uses 50/50 layout (layout **styling still pending**)
+- **`src/components/bits/EventsField.tsx`** — shared form UI; owns all field state; Save/Cancel buttons; ImageField rendered conditionally via `imageKey` prop
+- **`src/components/bits/EventsCreate.tsx`** — postEvent mutation wrapper; renders EventsField with empty defaults
+- **`src/components/bits/EventsEdit.tsx`** — putEvent mutation wrapper; renders EventsField with initialValues + imageKey
+- **`src/components/layouts/EventsAdmin.tsx`** — orchestration; list/create/edit mode switcher; delete mutation; rendered from Console.tsx
+- **`src/routes/Console.tsx`** — events section added; `preview !== null` guard prevents preview block from showing for events
+
+### Verified Working ✅
+- Calendar renders correctly for current month (July 2026 tested)
+- Today's date cell highlights with inset glow
+- Events appear as chips on correct calendar days
+- Month navigation works (year rollover handled)
+- Event create — tested and working
+- Event edit — tested and working
+- Image upload — file saves to server correctly; local dev 404 on display is expected
+- EventListDisplay shows selected event title + description below calendar
+
+---
+
+## Remaining Tasks
+
+| Task | Status |
+|---|---|
+| EventListDisplay UI polish — desktop 50/50, mobile collapse, detail view | ✅ Done |
+| Event delete — tested and working (removes event + content_images row) | ✅ Done |
+| DayCell chip overflow — size="small", max 2 chips + "+N more" | ✅ Done |
+| Datetime formatting via `formatDT` in EventListRow and EventsDetail | ✅ Done |
+| `EventListDisplay` image display in EventsDetail (404 in dev, works on prod) | ✅ Verified |
+| EventsAdmin list raw datetime — needs `formatDT` applied | ⏳ Todo |
+| Console.tsx description text empty for events section | ⏳ Minor cosmetic |
+| Redirect to edit after create (requires PHP to return new event on POST) | ⏳ Deferred |
+| **Push to test and demo to client** | ⏳ Next |
 
 ---
 
@@ -88,67 +121,28 @@ Removed the Square payment integration entirely and replaced it with an Events C
 - ButtonBase onClick: `events.length > 0 && onSelect(events[0])`
 - Day number top-left, chips centered below
 
----
-
-## Remaining Tasks
-
-### Overall Project Plan
-
-| Task | Status |
-|---|---|
-| `EventListDisplay.tsx` desktop 50/50 layout styling | ⏳ Deferred |
-| **`EventsField.tsx`** — shared form component | ✅ Done |
-| **`EventsCreate.tsx`** — mutation wrapper (create) | ✅ Done |
-| **`EventsEdit.tsx`** — mutation wrapper (edit) + ImageField via imageKey | ✅ Done |
-| **`EventsAdmin.tsx`** — orchestration/mode switcher | ✅ Done |
-| Add Events section + `"events"` editor case to `Console.tsx` | ⏳ Next |
-
----
-
-### Component Architecture (finalized)
-
-Clean separation of concerns across four components:
-
-**`src/components/layouts/EventsAdmin.tsx`** — orchestration only
+### `src/components/layouts/EventsAdmin.tsx`
 - Owns `mode: "list" | "create" | "edit"` and `editingEvent: Events | null`
 - `useQuery(["events"], fetchEvents)` + delete mutation
-- Renders list in list mode, `<EventsCreate>` or `<EventsEdit>` in other modes
-- Does not know about form fields
-- Renamed from `EventsField.tsx`, moved from `bits/` to `layouts/`
-- **Needs fixes:** `flexDirection:"column"` on outer Box, "Add Event" only in list mode, pass `onDone` to `<EventsCreate />`
+- List mode: shows event list with Edit/Delete buttons + "Add Event" button
+- Switches to `<EventsCreate onDone={...} />` or `<EventsEdit event={...} onDone={...} />` based on mode
 
-**`src/components/bits/EventsField.tsx`** — shared form UI (to be created)
-- Owns all field state internally (title, description, startDT, endDT, allDay)
-- Props: `initialValues?: Partial<EventData>`, `onSubmit: (data: EventData) => void`, `onCancel: () => void`, `isPending: boolean`
-- Treats `EventData` as pure I/O — no knowledge of mutations
-- Save/Cancel buttons live here
+### `src/components/bits/EventsField.tsx`
+- Owns all field state: title, allDay (number), description, startDT, endDT
+- startDT lazy initializer: DB→input conversion if initialValues present, else local time
+- Datetime conversion on submit: input→DB format
+- `imageKey` prop → renders `<ImageField contentKey={imageKey} />` between fields and Save/Cancel
 
-**`src/components/bits/EventsCreate.tsx`** — create mutation wrapper
+### `src/components/bits/EventsCreate.tsx`
 - Props: `onDone: () => void`
-- Renders `<EventsField>` with empty defaults
-- Owns `postEvent` mutation + token via `getAccessTokenSilently()`
-- `onSubmit` → applies datetime format conversion → calls `postEvent` → invalidates `["events"]` → `onDone()`
+- postEvent mutation + getAccessTokenSilently
+- Renders `<EventsField onSubmit={handleSubmit} onCancel={onDone} isPending={isPending} />`
 
-**`src/components/bits/EventsEdit.tsx`** — edit mutation wrapper + image
+### `src/components/bits/EventsEdit.tsx`
 - Props: `event: Events`, `onDone: () => void`
-- Renders `<EventsField initialValues={event}>` + `<ImageField contentKey={"evnt_" + event.id} />`
-- Owns `putEvent` mutation + token
-- `onSubmit` → applies datetime format conversion → calls `putEvent` → invalidates `["events"]` → `onDone()`
-
----
-
-### Datetime format helpers (used in EventsCreate and EventsEdit)
-- DB → input: `str.replace(" ", "T").slice(0, 16)` — `"2024-06-15 14:30:00"` → `"2024-06-15T14:30"`
-- Input → DB: `str.replace("T", " ") + ":00"` — `"2024-06-15T14:30"` → `"2024-06-15 14:30:00"`
-- `end_datetime` optional — only convert if non-empty
-
----
-
-### Console.tsx changes
-- Add `"events"` to `Editor` type union
-- Add section: `{ id: "events", label: "Events", contentKeys: [], imageKey: null, editors: [{ key: "events", label: "Events", type: "events" }] }`
-- Add `case "events": return <EventsAdmin key={editor.key} />` to editor switch
-- Add `case "events": return null` to `renderPreview`
+- putEvent mutation + getAccessTokenSilently
+- handleSubmit merges id/created_at/updated_at from event prop
+- Renders `<EventsField initialValues={event} onSubmit={handleSubmit} onCancel={onDone} isPending={isPending} imageKey={"evnt_" + event.id} />`
 
 ---
 
@@ -174,6 +168,13 @@ export interface EventData {  // used for POST (create) — no id/timestamps
     all_day: number;
 }
 ```
+
+---
+
+## Datetime format helpers (used in EventsField)
+- DB → input: `str.replace(" ", "T").slice(0, 16)` — `"2024-06-15 14:30:00"` → `"2024-06-15T14:30"`
+- Input → DB: `str.replace("T", " ") + ":00"` — `"2024-06-15T14:30"` → `"2024-06-15 14:30:00"`
+- `end_datetime` optional — only convert if non-empty
 
 ---
 

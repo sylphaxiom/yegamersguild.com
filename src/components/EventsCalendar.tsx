@@ -7,7 +7,7 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import IconButton from "@mui/material/IconButton";
 import { Divider, Typography } from "@mui/material";
 import DayCell from "./bits/DayCell";
-import EventListDisplay from "./EventListDisplay";
+import EventListDisplay from "./layouts/EventListDisplay";
 
 export interface EventsProps {
   events: Events[];
@@ -16,15 +16,8 @@ export interface EventsProps {
 export default function EventsCalendar({ events }: EventsProps) {
   const [currentDate, setCurrentDate] = React.useState<Date>(new Date());
   const [selectedEvent, setSelectedEvent] = React.useState<Events | null>(null);
-  const weekDays = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ];
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
   const goToPrev = () =>
     setCurrentDate(
       new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1),

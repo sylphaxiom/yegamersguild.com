@@ -3,6 +3,7 @@ import * as React from "react";
 import {
   deleteEvent,
   fetchEvents,
+  fetchImages,
   queryClient,
   type Events,
 } from "../workhorse/queries";
@@ -12,6 +13,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import EventsCreate from "../bits/EventsCreate";
 import EventsEdit from "../bits/EventsEdit";
+import { formatDT } from "../workhorse/utils";
 
 export default function EventsAdmin() {
   const { getAccessTokenSilently } = useAuth0();
@@ -22,6 +24,10 @@ export default function EventsAdmin() {
     queryFn: () => fetchEvents(),
   });
   const events = data?.objects ?? [];
+  const { data: images } = useQuery({
+    queryKey: ["images"],
+    queryFn: () => fetchImages(),
+  });
 
   const { mutate: remove } = useMutation({
     mutationFn: async (id: number) => {
@@ -54,40 +60,58 @@ export default function EventsAdmin() {
           >
             Add Event
           </Button>
-          {events.map((evnt) => (
-            <Box
-              key={evnt.id}
-              sx={{ display: "flex", gap: 1, alignItems: "center" }}
-            >
-              <Typography key={evnt.id + "_title"} variant="body1">
-                {evnt.title}
-              </Typography>
-              <Typography
-                key={evnt.id + "_start"}
-                variant="body1"
-                color="text.secondary"
+          {events.map((evnt) => {
+            const thumbnail = images?.objects?.find(
+              (img) => img.content_key === "evnt_" + evnt?.id,
+            );
+            return (
+              <Box
+                key={evnt.id}
+                sx={{ display: "flex", gap: 1, alignItems: "center" }}
               >
-                {evnt.start_datetime}
-              </Typography>
-              <IconButton
-                key={evnt.id + "_edit"}
-                aria-label="Down"
-                onClick={() => {
-                  setMode("edit");
-                  setEditingEvent(evnt);
-                }}
-              >
-                <EditIcon />
-              </IconButton>
-              <IconButton
-                key={evnt.id + "_delete"}
-                aria-label="Delete"
-                onClick={() => remove(evnt.id)}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Box>
-          ))}
+                {thumbnail ? (
+                  <Box
+                    component="img"
+                    width={48}
+                    height={48}
+                    src={thumbnail.src}
+                    alt={thumbnail.alt}
+                  />
+                ) : (
+                  <Box sx={{ width: 48, height: 48, flexShrink: 0 }} />
+                )}
+                <Typography key={evnt.id + "_title"} variant="body1">
+                  {evnt.title}
+                </Typography>
+                <Typography
+                  key={evnt.id + "_start"}
+                  variant="body1"
+                  color="text.secondary"
+                >
+                  {formatDT(evnt.start_datetime, evnt.all_day)}
+                  {evnt.end_datetime &&
+                    ` - ${formatDT(evnt.end_datetime, evnt.all_day)}`}
+                </Typography>
+                <IconButton
+                  key={evnt.id + "_edit"}
+                  aria-label="Down"
+                  onClick={() => {
+                    setMode("edit");
+                    setEditingEvent(evnt);
+                  }}
+                >
+                  <EditIcon />
+                </IconButton>
+                <IconButton
+                  key={evnt.id + "_delete"}
+                  aria-label="Delete"
+                  onClick={() => remove(evnt.id)}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+            );
+          })}
         </>
       )}
       {mode === "create" && <EventsCreate onDone={() => setMode("list")} />}

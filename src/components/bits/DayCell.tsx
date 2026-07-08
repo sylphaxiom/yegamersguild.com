@@ -29,6 +29,9 @@ export default function DayCell({
   } else {
     styles = {};
   }
+  const visible = events.slice(0, 2);
+  const overflow = events.length - 2;
+
   return (
     <Grid size={1} sx={sxProps}>
       <ButtonBase
@@ -40,15 +43,24 @@ export default function DayCell({
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "flex-start",
+          overflow: "hidden",
         }}
         onClick={() => events.length > 0 && onSelect(events[0])}
       >
         <Typography variant="h5" sx={{ mx: 1, alignSelf: "flex-start" }}>
           {day}
         </Typography>
-        {events.map((event) => (
-          <Chip label={event.title} key={event.id} />
+        {visible.map((event) => (
+          <Chip
+            size="small"
+            label={event.title}
+            key={event.id}
+            sx={{ maxWidth: "90%" }}
+          />
         ))}
+        {overflow > 0 && (
+          <Typography variant="caption">+{overflow} more</Typography>
+        )}
       </ButtonBase>
     </Grid>
   );
