@@ -3,6 +3,7 @@
 $allowed_origins = [
     'http://localhost:5173',
     'https://test.sylphaxiom.com',
+    'https://yegamersguild.com',
 ];
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
