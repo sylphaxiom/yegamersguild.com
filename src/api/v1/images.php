@@ -142,8 +142,8 @@ switch ($method) {
                     exit(1);
             }
             $filename = uniqid('', true) . $ext;
-            $destination = "/home2/xikihgmy/public_html/uploads/$filename";
-            $finalPath = "/uploads/$filename";
+            $destination = __DIR__ . "/guild/$filename";
+            $finalPath = "https://api.sylphaxiom.com/guild/$filename";
             $moved = move_uploaded_file($file['tmp_name'], $destination);
             if (!$moved) {
                 error_log("move_uploaded_file returned false, could not move $name to destination...");
@@ -262,7 +262,7 @@ switch ($method) {
             exit(1);
         }
         [$id, $src] = $imageData;
-        $return = unlink("/home2/xikihgmy/public_html$src");
+        $return = unlink(__DIR__ . '/guild/' . basename($src));
         if (!$return) {
             error_log("unlink returned false, there was an error removing the file from disk: $src...");
             http_response_code(500);
