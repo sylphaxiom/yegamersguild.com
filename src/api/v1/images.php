@@ -197,6 +197,8 @@ switch ($method) {
                 }
             }
 
+            chmod($destination, 0644);
+
             $content_key = $_POST["content_key"] ?? null;
             $shortName = $filename;
             $src = $finalPath;
