@@ -7,7 +7,7 @@ import {
   queryClient,
   type Events,
 } from "../workhorse/queries";
-import { useAuth0 } from "@auth0/auth0-react";
+import useAccessToken from "../workhorse/useAccessToken";
 import { Box, Button, IconButton, Typography } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -17,7 +17,7 @@ import { formatDT } from "../workhorse/utils";
 import { describeRule } from "../workhorse/recurrence";
 
 export default function EventsAdmin() {
-  const { getAccessTokenSilently } = useAuth0();
+  const getAccessTokenSilently = useAccessToken();
   const [mode, setMode] = React.useState<"list" | "create" | "edit">("list");
   const [editingEvent, setEditingEvent] = React.useState<Events | null>(null);
   const { data } = useQuery({
