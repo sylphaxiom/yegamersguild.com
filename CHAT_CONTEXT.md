@@ -190,3 +190,18 @@ export interface EventData {  // used for POST (create) — no id/timestamps
 | `images.php` | POST | Fish + JWT | Uploads image file to `content_images` |
 | `images.php` | PUT | Fish + JWT | Updates image metadata |
 | `images.php` | DELETE | Fish + JWT | Removes image file + DB row |
+
+---
+
+## Recurring Events
+
+- **DB:** new nullable `events.recurrence TEXT` column holding a JSON rule (see `RecurrenceRule` in `queries.ts`). Migration:
+  `ALTER TABLE events ADD COLUMN recurrence TEXT DEFAULT NULL AFTER all_day;`
+- **Rule shape:** `{ freq: "daily"|"weekly"|"monthly", interval, byweekday?: number[] (0=Sun), monthly_mode?: "day_of_month"|"nth_weekday"|"last_weekday", until?: "YYYY-MM-DD", exdates?: "YYYY-MM-DD"[] }`. `null` = one-time event.
+- **events.php:** `normalizeRecurrence()` validates/normalises the rule and returns 400 if it's malformed. POST/PUT pass the JSON string as a new last argument to `putEvent()`/`updateEvent()`. GET decodes the column back into an object.
+- **EVNTDB_bucket.php (gitignored, update by hand on the server):**
+  - `putEvent(..., $all_day, ?string $recurrence = null)`: add `recurrence` to the INSERT column list and an extra `s` in `bind_param`.
+  - `updateEvent(..., $all_day, ?string $recurrence = null)`: add `recurrence = ?` to the UPDATE and an extra `s` in `bind_param`.
+  - `getAllEvents()`: make sure `recurrence` is selected (already true with `SELECT *`).
+- **Frontend:** `workhorse/recurrence.ts` expands rules into `Occurrence`s (an `Events` plus a unique `occurrence_key`) for the month being viewed. The calendar selects by `occurrence_key`, while images and edit/delete still use the event `id`. The admin form section is `bits/RecurrenceField.tsx`.
+- Skip dates (`exdates`) cancel single occurrences, e.g. holidays. Editing a recurring event edits the whole series.

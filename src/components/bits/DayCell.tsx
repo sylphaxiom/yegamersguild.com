@@ -1,14 +1,14 @@
 import * as React from "react";
-import type { Events } from "../workhorse/queries";
+import type { Occurrence } from "../workhorse/recurrence";
 import { ButtonBase, Chip, Grid, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 import { useTheme } from "@mui/material";
 
 interface DayCellProps {
   day: number;
-  events: Events[];
-  selectedEvent: Events | null;
-  onSelect: React.Dispatch<React.SetStateAction<Events | null>>;
+  events: Occurrence[];
+  selectedEvent: Occurrence | null;
+  onSelect: React.Dispatch<React.SetStateAction<Occurrence | null>>;
   sxProps?: SxProps<Theme>;
 }
 
@@ -22,7 +22,7 @@ export default function DayCell({
   const theme = useTheme();
   let styles;
 
-  if (events.some((e) => e.id === selectedEvent?.id)) {
+  if (events.some((e) => e.occurrence_key === selectedEvent?.occurrence_key)) {
     styles = {
       boxShadow: "inset 0 0 20px " + theme.palette.primary.main,
     };
@@ -54,7 +54,7 @@ export default function DayCell({
           <Chip
             size="small"
             label={event.title}
-            key={event.id}
+            key={event.occurrence_key}
             sx={{ maxWidth: "90%" }}
           />
         ))}

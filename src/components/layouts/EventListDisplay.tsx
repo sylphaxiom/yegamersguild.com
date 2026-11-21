@@ -11,11 +11,12 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import EventListRow from "../bits/EventListRow";
 import { formatDT } from "../workhorse/utils";
+import { describeRule, type Occurrence } from "../workhorse/recurrence";
 
 interface EventsListProps {
-  events: Events[];
-  selectedEvent: Events | null;
-  onSelect: (e: Events) => void;
+  events: Occurrence[];
+  selectedEvent: Occurrence | null;
+  onSelect: (e: Occurrence) => void;
 }
 
 interface EventsDetailProps {
@@ -39,16 +40,15 @@ export default function EventListDisplay({
         (img) => img.content_key === "evnt_" + event?.id,
       );
       return (
-        <React.Fragment key={event.id}>
+        <React.Fragment key={event.occurrence_key}>
           <EventListRow
             event={event}
             index={index}
-            key={event.id}
             selectedEvent={selectedEvent}
             onSelect={onSelect}
             thumbnail={thumbnail}
           />
-          <Collapse in={selectedEvent?.id === event.id}>
+          <Collapse in={selectedEvent?.occurrence_key === event.occurrence_key}>
             <EventsDetail
               event={event}
               images={data?.objects || []}
@@ -77,7 +77,7 @@ export default function EventListDisplay({
             <EventListRow
               event={event}
               index={index}
-              key={event.id}
+              key={event.occurrence_key}
               selectedEvent={selectedEvent}
               onSelect={onSelect}
               thumbnail={thumbnail}
@@ -102,6 +102,7 @@ export default function EventListDisplay({
 function EventsDetail({ event, images, isMobile }: EventsDetailProps) {
   const selectedImage: Image =
     images.filter((img) => img.content_key === "evnt_" + event.id)[0] ?? null;
+  const repeats = describeRule(event.recurrence, event.start_datetime);
   return (
     <Box
       sx={{
@@ -126,6 +127,11 @@ function EventsDetail({ event, images, isMobile }: EventsDetailProps) {
         {event.end_datetime &&
           ` - ${formatDT(event.end_datetime, event.all_day)}`}
       </Typography>
+      {repeats && (
+        <Typography variant="body2" color="text.secondary" sx={{ pb: 2 }}>
+          {repeats}
+        </Typography>
+      )}
       <Typography variant="body1">{event.description}</Typography>
     </Box>
   );

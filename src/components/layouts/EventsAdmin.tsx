@@ -14,6 +14,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import EventsCreate from "../bits/EventsCreate";
 import EventsEdit from "../bits/EventsEdit";
 import { formatDT } from "../workhorse/utils";
+import { describeRule } from "../workhorse/recurrence";
 
 export default function EventsAdmin() {
   const { getAccessTokenSilently } = useAuth0();
@@ -91,6 +92,15 @@ export default function EventsAdmin() {
                   {formatDT(evnt.start_datetime, evnt.all_day)}
                   {evnt.end_datetime &&
                     ` - ${formatDT(evnt.end_datetime, evnt.all_day)}`}
+                  {evnt.recurrence && (
+                    <Typography
+                      component="span"
+                      variant="body2"
+                      sx={{ display: "block" }}
+                    >
+                      {describeRule(evnt.recurrence, evnt.start_datetime)}
+                    </Typography>
+                  )}
                 </Typography>
                 <IconButton
                   key={evnt.id + "_edit"}

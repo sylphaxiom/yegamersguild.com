@@ -36,6 +36,7 @@ CREATE TABLE `events` (
     `start_datetime` DATETIME NOT NULL,
     `end_datetime` DATETIME DEFAULT NULL,
     `all_day` TINYINT(1) NOT NULL DEFAULT 0,
+    `recurrence` TEXT DEFAULT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci
@@ -48,3 +49,6 @@ CREATE TABLE `token` (
     `merchantName` varchar(25) NOT NULL,
     PRIMARY KEY (`merchantName`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci
+
+-- Migration: recurring events (run once against an existing database)
+-- ALTER TABLE `events` ADD COLUMN `recurrence` TEXT DEFAULT NULL AFTER `all_day`;
