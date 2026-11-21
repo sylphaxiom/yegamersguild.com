@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { EventData } from "../workhorse/queries";
+import type { EventData, RecurrenceRule } from "../workhorse/queries";
 import {
   Button,
   Checkbox,
@@ -8,6 +8,8 @@ import {
   TextField,
 } from "@mui/material";
 import ImageField from "./ImageField";
+import RecurrenceField from "./RecurrenceField";
+import { parseRule } from "../workhorse/recurrence";
 
 export interface EventsFieldProps {
   initialValues?: Partial<EventData>;
@@ -47,6 +49,10 @@ export default function EventsField({
       : undefined,
   );
 
+  const [recurrence, setRecurrence] = React.useState<RecurrenceRule | null>(
+    () => parseRule(initialValues?.recurrence),
+  );
+
   return (
     <Grid
       component="form"
@@ -59,6 +65,7 @@ export default function EventsField({
           start_datetime: startDT.replace("T", " ") + ":00",
           end_datetime: endDT ? endDT.replace("T", " ") + ":00" : undefined,
           all_day: allDay,
+          recurrence: recurrence,
         })
       }
       sx={{ display: "flex", gap: 2, alignItems: "center", py: 2 }}
@@ -114,6 +121,14 @@ export default function EventsField({
           onChange={(e) => setEndDT(e.target.value)}
           fullWidth
           disabled={isPending || allDay === 1}
+        />
+      </Grid>
+      <Grid size={12}>
+        <RecurrenceField
+          value={recurrence}
+          onChange={setRecurrence}
+          startDT={startDT}
+          disabled={isPending}
         />
       </Grid>
       <Grid size={12}>{imageKey && <ImageField contentKey={imageKey} />}</Grid>

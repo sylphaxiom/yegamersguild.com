@@ -8,6 +8,7 @@ import IconButton from "@mui/material/IconButton";
 import { Divider, Typography } from "@mui/material";
 import DayCell from "./bits/DayCell";
 import EventListDisplay from "./layouts/EventListDisplay";
+import { expandEvents, parseDT, type Occurrence } from "./workhorse/recurrence";
 
 export interface EventsProps {
   events: Events[];
@@ -15,7 +16,9 @@ export interface EventsProps {
 
 export default function EventsCalendar({ events }: EventsProps) {
   const [currentDate, setCurrentDate] = React.useState<Date>(new Date());
-  const [selectedEvent, setSelectedEvent] = React.useState<Events | null>(null);
+  const [selectedEvent, setSelectedEvent] = React.useState<Occurrence | null>(
+    null,
+  );
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   const goToPrev = () =>
@@ -28,13 +31,23 @@ export default function EventsCalendar({ events }: EventsProps) {
     );
   const month = currentDate.getMonth();
   const year = currentDate.getFullYear();
-  const monthEvents = events.filter((event) => {
-    const d = new Date(event.start_datetime);
-    return d.getMonth() === month && d.getFullYear() === year;
-  });
-  const eventsByDay = new Map<number, Events[]>();
+  // Expand recurring events into their concrete occurrences for this month,
+  // keeping only the ones that start in the month being viewed.
+  const monthEvents = React.useMemo(
+    () =>
+      expandEvents(
+        events,
+        new Date(year, month, 1),
+        new Date(year, month + 1, 1),
+      ).filter((occ) => {
+        const d = parseDT(occ.start_datetime);
+        return d.getMonth() === month && d.getFullYear() === year;
+      }),
+    [events, month, year],
+  );
+  const eventsByDay = new Map<number, Occurrence[]>();
   for (const event of monthEvents) {
-    const day = new Date(event.start_datetime).getDate();
+    const day = parseDT(event.start_datetime).getDate();
     eventsByDay.set(day, [...(eventsByDay.get(day) ?? []), event]);
   }
   const firstDayOfWeek = new Date(year, month, 1).getDay();
