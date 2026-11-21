@@ -45,6 +45,89 @@ if (!Bucket::fishDance($fishHead)) {
     exit(1);
 }
 
+/**
+ * Validate and normalise a recurrence rule from the request body.
+ * Returns a JSON string for the `events.recurrence` column, or null for a
+ * one-time event. Throws InvalidArgumentException on a malformed rule.
+ *
+ * Shape: { freq: daily|weekly|monthly, interval: int>=1,
+ *          byweekday?: int[0-6], monthly_mode?: day_of_month|nth_weekday|last_weekday,
+ *          until?: "YYYY-MM-DD", exdates?: "YYYY-MM-DD"[] }
+ */
+function normalizeRecurrence($raw): ?string
+{
+    if ($raw === null || $raw === '' || $raw === false) {
+        return null;
+    }
+    if (is_string($raw)) {
+        $raw = json_decode($raw, true);
+    }
+    if (!is_array($raw)) {
+        throw new InvalidArgumentException('recurrence must be an object');
+    }
+    $freq = $raw['freq'] ?? null;
+    if (!in_array($freq, ['daily', 'weekly', 'monthly'], true)) {
+        throw new InvalidArgumentException('recurrence.freq must be daily, weekly or monthly');
+    }
+    $interval = (int) ($raw['interval'] ?? 1);
+    if ($interval < 1 || $interval > 99) {
+        throw new InvalidArgumentException('recurrence.interval must be between 1 and 99');
+    }
+    $isDate = function ($d) {
+        return is_string($d) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $d)
+            && checkdate((int) substr($d, 5, 2), (int) substr($d, 8, 2), (int) substr($d, 0, 4));
+    };
+    $rule = ['freq' => $freq, 'interval' => $interval];
+
+    if ($freq === 'weekly') {
+        $days = array_values(array_unique(array_filter(
+            array_map('intval', (array) ($raw['byweekday'] ?? [])),
+            fn($d) => $d >= 0 && $d <= 6
+        )));
+        sort($days);
+        if ($days) {
+            $rule['byweekday'] = $days;
+        }
+    }
+    if ($freq === 'monthly') {
+        $mode = $raw['monthly_mode'] ?? 'day_of_month';
+        if (!in_array($mode, ['day_of_month', 'nth_weekday', 'last_weekday'], true)) {
+            throw new InvalidArgumentException('recurrence.monthly_mode is invalid');
+        }
+        $rule['monthly_mode'] = $mode;
+    }
+    if (!empty($raw['until'])) {
+        if (!$isDate($raw['until'])) {
+            throw new InvalidArgumentException('recurrence.until must be YYYY-MM-DD');
+        }
+        $rule['until'] = $raw['until'];
+    }
+    if (!empty($raw['exdates'])) {
+        $ex = array_values(array_unique(array_filter((array) $raw['exdates'], $isDate)));
+        sort($ex);
+        if ($ex) {
+            $rule['exdates'] = $ex;
+        }
+    }
+    return json_encode($rule);
+}
+
+/** Read + validate the recurrence from the request, or send a 400 and exit. */
+function recurrenceFromInput(array $input): ?string
+{
+    try {
+        return normalizeRecurrence($input['recurrence'] ?? null);
+    } catch (InvalidArgumentException $e) {
+        error_log("Invalid recurrence: " . $e->getMessage());
+        http_response_code(400);
+        echo json_encode([
+            'status' => 'Failure',
+            'message' => 'Invalid repeat settings: ' . $e->getMessage(),
+        ]);
+        exit(1);
+    }
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 header("Content-Type: application/json");
@@ -55,6 +138,15 @@ switch ($method) {
     case 'GET':
         error_log("Getting all events...");
         $contentResult = getAllEvents();
+        // `recurrence` is stored as a JSON string; hand it to the client as an object.
+        if (is_array($contentResult)) {
+            foreach ($contentResult as &$row) {
+                if (isset($row['recurrence']) && is_string($row['recurrence'])) {
+                    $row['recurrence'] = json_decode($row['recurrence'], true);
+                }
+            }
+            unset($row);
+        }
         http_response_code(200);
         echo json_encode([
             'status' => "Success",
@@ -80,7 +172,8 @@ switch ($method) {
             ]);
             exit(1);
         }
-        $result = putEvent($title, $description, $start_datetime, $end_datetime, $all_day);
+        $recurrence = recurrenceFromInput($input);
+        $result = putEvent($title, $description, $start_datetime, $end_datetime, $all_day, $recurrence);
         if (!$result) {
             error_log("putEvent returned false, there was an error in the DB transaction...");
             http_response_code(406);
@@ -115,7 +208,8 @@ switch ($method) {
             ]);
             exit(1);
         }
-        $result = updateEvent($id, $title, $description, $start_datetime, $end_datetime, $all_day);
+        $recurrence = recurrenceFromInput($input);
+        $result = updateEvent($id, $title, $description, $start_datetime, $end_datetime, $all_day, $recurrence);
         if (!$result) {
             error_log("updateEvent returned false, there was an error in the DB transaction...");
             http_response_code(406);

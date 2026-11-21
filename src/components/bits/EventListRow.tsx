@@ -2,13 +2,14 @@ import * as React from "react";
 import { Box, ButtonBase, Divider, Typography } from "@mui/material";
 import EventIcon from "@mui/icons-material/Event";
 import { formatDT } from "../workhorse/utils";
-import type { Events, Image } from "../workhorse/queries";
+import type { Image } from "../workhorse/queries";
+import type { Occurrence } from "../workhorse/recurrence";
 
 export interface EventListRowProps {
-  event: Events;
+  event: Occurrence;
   index: number;
-  selectedEvent?: Events | null;
-  onSelect?: (e: Events) => void;
+  selectedEvent?: Occurrence | null;
+  onSelect?: (e: Occurrence) => void;
   thumbnail?: Image;
 }
 
@@ -19,16 +20,19 @@ export default function EventListRow({
   onSelect,
   thumbnail,
 }: EventListRowProps) {
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>, ev: Events) => {
+  const handleClick = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    ev: Occurrence,
+  ) => {
     e.preventDefault();
     onSelect?.(ev);
   };
 
   return (
-    <React.Fragment key={event.id + "-frag"}>
-      {index > 0 && <Divider key={event.id + "-divider"} />}
+    <React.Fragment key={event.occurrence_key + "-frag"}>
+      {index > 0 && <Divider key={event.occurrence_key + "-divider"} />}
       <ButtonBase
-        key={event.id + "-button"}
+        key={event.occurrence_key + "-button"}
         onClick={(e) => handleClick(e, event)}
         sx={{
           display: "flex",
@@ -39,10 +43,10 @@ export default function EventListRow({
           padding: 1,
         }}
       >
-        <Typography key={event.id} variant="h5">
+        <Typography variant="h5">
           {event.title}
         </Typography>
-        {!(selectedEvent?.id === event.id) && (
+        {!(selectedEvent?.occurrence_key === event.occurrence_key) && (
           <Typography variant="body1" sx={{ pb: 2 }}>
             {formatDT(event.start_datetime, event.all_day)}
             {event.end_datetime &&
@@ -59,7 +63,7 @@ export default function EventListRow({
             flexShrink: 0,
           }}
         >
-          {selectedEvent?.id === event.id ? (
+          {selectedEvent?.occurrence_key === event.occurrence_key ? (
             <EventIcon />
           ) : (
             thumbnail && (

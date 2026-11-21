@@ -171,6 +171,22 @@ export interface EventsResponse {
     objects?:Events[]
 }
 
+export type RecurrenceFreq = "daily" | "weekly" | "monthly";
+
+/**
+ * Stored as JSON in the `events.recurrence` column. A null/absent rule means
+ * the event happens once. Occurrences are expanded client-side in
+ * workhorse/recurrence.ts.
+ */
+export interface RecurrenceRule {
+    freq:RecurrenceFreq;
+    interval:number;                 // every N days/weeks/months (>= 1)
+    byweekday?:number[];             // weekly only: 0=Sun ... 6=Sat
+    monthly_mode?:"day_of_month" | "nth_weekday" | "last_weekday"; // monthly only
+    until?:string;                   // "YYYY-MM-DD", inclusive. Absent = forever
+    exdates?:string[];               // "YYYY-MM-DD" occurrences that are skipped/cancelled
+}
+
 export interface Events {
     id:number;
     title:string;
@@ -178,6 +194,7 @@ export interface Events {
     start_datetime:string;
     end_datetime?:string;
     all_day:number;
+    recurrence?:RecurrenceRule | null;
     created_at:string;
     updated_at:string;
 }
@@ -188,6 +205,7 @@ export interface EventData {
     start_datetime:string;
     end_datetime?:string;
     all_day:number;
+    recurrence?:RecurrenceRule | null;
 }
 
 export async function fetchEvents(): Promise<EventsResponse> {
