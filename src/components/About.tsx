@@ -98,18 +98,17 @@ export default function About() {
     }
   }
 
+  const imageCount = images?.length ?? 0;
+  // Wrap the index so a list that shrinks (or empties) never points past the end
+  const current = imageCount > 0 ? images?.[img % imageCount] : undefined;
+
   React.useEffect(() => {
+    if (imageCount < 2) return;
     const interval = setInterval(() => {
-      if (images) {
-        if (img === images.length - 1) {
-          setImg(0);
-        } else {
-          setImg(img + 1);
-        }
-      }
+      setImg((prev) => (prev + 1) % imageCount);
     }, 5000);
     return () => clearInterval(interval);
-  }, [img, images]);
+  }, [imageCount]);
 
   return (
     <Grid
@@ -161,7 +160,7 @@ export default function About() {
         }}
       >
         <AnimatePresence mode="wait">
-          {images && buildImg(images[img])}
+          {current && buildImg(current)}
         </AnimatePresence>
       </Grid>
     </Grid>
