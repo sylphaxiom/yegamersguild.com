@@ -33,6 +33,7 @@ Removed the Square payment integration entirely and replaced it with an Events C
 
 ## Key Conventions Established
 
+- **Branch names** — descriptive, prefixed by type: `feat/…`, `fix/…`, `chore/…` (e.g. `feat/recurring-calendar-events`). Don't use auto-generated names like `claude/<random>`.
 - **Fish header** — shared secret sent on all API requests (CSRF-like). Checked before everything else in every PHP endpoint.
 - **`requireAuth()`** in `cms_procedures.php` — validates JWTs via CURL to Auth0's `/userinfo`.
 - **HTTP conventions** — POST = create (no id), PUT = update (id required).
