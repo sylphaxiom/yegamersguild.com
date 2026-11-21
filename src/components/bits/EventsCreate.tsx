@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { postEvent, queryClient, type EventData } from "../workhorse/queries";
-import { useAuth0 } from "@auth0/auth0-react";
+import useAccessToken from "../workhorse/useAccessToken";
 import * as React from "react";
 import EventsField from "./EventsField";
 
@@ -9,7 +9,7 @@ export interface EventsCreateProps {
 }
 
 export default function EventsCreate({ onDone }: EventsCreateProps) {
-  const { getAccessTokenSilently } = useAuth0();
+  const getAccessTokenSilently = useAccessToken();
   const { mutate, isPending } = useMutation({
     mutationFn: async (value: EventData) => {
       const token = await getAccessTokenSilently();

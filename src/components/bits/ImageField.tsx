@@ -8,7 +8,7 @@ import {
   queryClient,
   type Image,
 } from "../workhorse/queries";
-import { useAuth0 } from "@auth0/auth0-react";
+import useAccessToken from "../workhorse/useAccessToken";
 import {
   Box,
   Button,
@@ -43,7 +43,7 @@ function ImageRow({
   onReorder,
 }: ImageRowProps) {
   const [altText, setAltText] = React.useState<string>(image.alt);
-  const { getAccessTokenSilently } = useAuth0();
+  const getAccessTokenSilently = useAccessToken();
   const { mutate } = useMutation({
     mutationFn: async (value: string) => {
       const token = await getAccessTokenSilently();
@@ -118,7 +118,7 @@ function ImageRow({
 }
 
 export default function ImageField({ contentKey }: ImageFieldProps) {
-  const { getAccessTokenSilently } = useAuth0();
+  const getAccessTokenSilently = useAccessToken();
   const fileRef = React.useRef<HTMLInputElement>(null);
   const { data: content } = useQuery({
     queryKey: ["images"],

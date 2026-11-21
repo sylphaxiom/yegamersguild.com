@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import * as React from "react";
 import { fetchContent, putContent, queryClient } from "../workhorse/queries";
-import { useAuth0 } from "@auth0/auth0-react";
+import useAccessToken from "../workhorse/useAccessToken";
 import {
   Box,
   Button,
@@ -21,7 +21,7 @@ export interface BulletsFieldProps {
 }
 
 export default function BulletsField({ label, contentKey }: BulletsFieldProps) {
-  const { getAccessTokenSilently } = useAuth0();
+  const getAccessTokenSilently = useAccessToken();
 
   const { data: content } = useQuery({
     queryKey: ["content"],

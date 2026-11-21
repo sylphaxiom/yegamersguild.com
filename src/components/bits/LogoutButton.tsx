@@ -28,21 +28,30 @@ function clearAuthStorage() {
 
 /**
  * Full logout:
- *  1. Drops all cached API data held by TanStack Query.
- *  2. Clears Auth0's token cache from local/session storage.
- *  3. Calls Auth0's logout(), which also removes the SDK's
+ *  1. Revokes the refresh token at Auth0 (/oauth/revoke) so it can't be used
+ *     to mint new access tokens even if it was copied out of the browser.
+ *  2. Drops all cached API data held by TanStack Query.
+ *  3. Clears Auth0's token cache from local/session storage.
+ *  4. Calls Auth0's logout(), which also removes the SDK's
  *     "auth0.<clientId>.is.authenticated" cookie and redirects to Auth0's
  *     /v2/logout to end the Auth0 session itself, so the next visit to
  *     /admin requires signing in again.
- *  4. Auth0 then sends the browser back to the home page.
+ *  5. Auth0 then sends the browser back to the home page.
  */
 export default function LogoutButton() {
-  const { logout } = useAuth0();
+  const { logout, revokeRefreshToken } = useAuth0();
   const isMutating = useIsMutating();
   const [loggingOut, setLoggingOut] = React.useState(false);
 
   const handleLogout = async () => {
     setLoggingOut(true);
+    // Must run before the local cache is cleared: the SDK reads the refresh
+    // token from it. A failure here (e.g. offline) must not block logging out.
+    try {
+      await revokeRefreshToken();
+    } catch (err) {
+      console.warn("Refresh token revocation failed; continuing logout.", err);
+    }
     await queryClient.cancelQueries();
     queryClient.clear();
     clearAuthStorage();
