@@ -30,6 +30,7 @@ lerna-debug.log*
 dist
 dist-ssr
 *.local
+*.zip
 
 # Custom stuff
 .ret/
@@ -42,5 +43,6 @@ build/
 tests/auth.json
 /secrets/
 */mods.json
+*/deploy.json
 tmp*
 src/api/v1/vendor/*
