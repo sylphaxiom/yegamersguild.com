@@ -66,7 +66,7 @@ export default function Header() {
         <img
           width={"50%"}
           height={"auto"}
-          src="/guild_logo_wood_metal_1200-1000.png"
+          src="/guild_logo_crop.png"
           alt="Logo for Ye Gamer\'s Guild, which is a dragon behind a shield with the name in a banner below it."
           style={{
             margin: "0 auto",
@@ -85,7 +85,11 @@ export default function Header() {
         <Typography variant="h4" component="figure" sx={{ pt: 1 }}>
           {headerTopText}
         </Typography>
-        <div style={{ position: "relative" }} role="marquee" aria-label="image ticker">
+        <div
+          style={{ position: "relative" }}
+          role="marquee"
+          aria-label="image ticker"
+        >
           <Ticker duration={20}>
             {tickerImages?.map((img) => {
               return (
